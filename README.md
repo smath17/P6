@@ -1,4 +1,10 @@
 # P6
 RoboCup-Soccer-2D
 
-made you look
+# Initialize Teams:
+Start an rc client for each player
+Run "(init *teamname*)" to initalize a player for that team
+
+made you look, fuk
+
+👨‍🌾
