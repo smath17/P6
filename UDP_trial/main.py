@@ -2,9 +2,10 @@ import socket
 
 if __name__ == "__main__":
 
-    msgFromClient = "(init Bobbers)"
-
-    bytesToSend = str.encode(msgFromClient)
+    initPlayer = "(init Bobbers)"
+    movePlayer = "(move 0, 0)"
+    bytesToInit = str.encode(initPlayer)
+    bytesToMove = str.encode(movePlayer)
 
     serverAddressPort = ("127.0.0.1", 6000)
 
@@ -14,10 +15,12 @@ if __name__ == "__main__":
     UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
 
     # Send to server using created UDP socket
-    UDPClientSocket.sendto(bytesToSend, serverAddressPort)
+    UDPClientSocket.sendto(bytesToInit, serverAddressPort)
+    UDPClientSocket.sendto(bytesToMove, serverAddressPort)
 
     msgFromServer = UDPClientSocket.recvfrom(bufferSize)
 
     msg = "Message from Server {}".format(msgFromServer[0])
 
     print(msg)
+    print("You looked")
