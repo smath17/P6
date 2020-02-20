@@ -6,6 +6,7 @@ if __name__ == "__main__":
     movePlayer = "(move 1 0)"
     bytesToInit = str.encode(initPlayer)
     bytesToMove = str.encode(movePlayer)
+    byteKick = str.encode("(kick 20 0)")
 
     serverAddressPort = ("127.0.0.1", 6000)
 
@@ -50,6 +51,8 @@ if __name__ == "__main__":
     UDPClient11Socket.sendto(bytesToMove, serverAddressPort)
 
     while True:
+        UDPClient4Socket.sendto(bytesToMove, serverAddressPort)
+        UDPClient4Socket.sendto(byteKick, serverAddressPort)
 
         msgFromServer = UDPClient1Socket.recvfrom(bufferSize)
 
