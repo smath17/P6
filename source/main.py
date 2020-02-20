@@ -3,7 +3,7 @@ import socket
 if __name__ == "__main__":
 
     initPlayer = "(init Bobbers)"
-    movePlayer = "(move 1 0)"
+    movePlayer = "(move 20 0)"
     bytesToInit = str.encode(initPlayer)
     bytesToMove = str.encode(movePlayer)
     byteKick = str.encode("(kick 20 0)")
@@ -54,7 +54,7 @@ if __name__ == "__main__":
         UDPClient4Socket.sendto(bytesToMove, serverAddressPort)
         UDPClient4Socket.sendto(byteKick, serverAddressPort)
 
-        msgFromServer = UDPClient1Socket.recvfrom(bufferSize)
+        msgFromServer = UDPClient4Socket.recvfrom(bufferSize)
 
         msg = "Message from Server {}".format(msgFromServer[0])
 
