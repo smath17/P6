@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
     while True:
         #UDPClient4Socket.sendto(bytesToMove, serverAddressPort)
-        UDPClient4Socket.sendto(byteDash, serverAddressPort)
+        UDPClient4Socket.sendto(bytesDash, serverAddressPort)
 
         msgFromServer = UDPClient4Socket.recvfrom(bufferSize)
 
