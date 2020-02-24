@@ -64,15 +64,15 @@ if __name__ == "__main__":
         try:  # used try so that if user pressed other than the given key error will not be shown
             if keyboard.is_pressed('d'):  # if key 'q' is pressed
                 UDPClient4Socket.sendto(byteDash, serverAddressPort)
-                break  # finishing the loop
+                continue  # finishing the loop
             if keyboard.is_pressed('w'):  # if key 'q' is pressed
                 UDPClient4Socket.sendto(byteDashUp, serverAddressPort)
-                break  # finishing the loop
+                continue  # finishing the loop
             if keyboard.is_pressed('x'):  # if key 'q' is pressed
                 UDPClient4Socket.sendto(byteKick, serverAddressPort)
-                break  # finishing the loop
+                continue  # finishing the loop
         except:
-            break  # if user pressed a key other than the given key the loop will break
+            continue  # if user pressed a key other than the given key the loop will break
 
 
         #UDPClient1Socket.sendto(byteDash, serverAddressPort)
