@@ -51,10 +51,14 @@ if __name__ == "__main__":
     UDPClient10Socket.sendto(bytesToMove, serverAddressPort)
     UDPClient11Socket.sendto(bytesToMove, serverAddressPort)
 
+    i = 0
     while True:
+        i = i + 1
         #UDPClient4Socket.sendto(bytesToMove, serverAddressPort)
-        UDPClient4Socket.sendto(byteKick, serverAddressPort)
-        UDPClient4Socket.sendto(byteDash, serverAddressPort)
+        if i % 2 == 0:
+            UDPClient4Socket.sendto(byteKick, serverAddressPort)
+        else:
+            UDPClient4Socket.sendto(byteDash, serverAddressPort)
 
         UDPClient1Socket.sendto(byteDash, serverAddressPort)
         UDPClient1Socket.sendto(byteKick, serverAddressPort)
