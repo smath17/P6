@@ -44,7 +44,7 @@ if __name__ == "__main__":
     UDPClient11Socket.sendto(bytesToInit, serverAddressPort)
 
     # Send to server using created UDP socket
-    UDPClient1Socket.sendto(bytesToMove, serverAddressPort)
+    UDPClient1Socket.sendto(str.encode("(move -50 0)"), serverAddressPort)
     UDPClient2Socket.sendto(bytesToMove, serverAddressPort)
     UDPClient3Socket.sendto(bytesToMove, serverAddressPort)
     UDPClient4Socket.sendto(bytesToMove, serverAddressPort)
@@ -59,25 +59,25 @@ if __name__ == "__main__":
     while True:
 
         try:  # used try so that if user pressed other than the given key error will not be shown
-            if keyboard.is_pressed('RIGHT_KEY'):  # if key 'q' is pressed
-                UDPClient4Socket.sendto(byteDash, serverAddressPort)
-                continue  # finishing the loop
-            if keyboard.is_pressed('DOWN_KEY'):  # if key 'q' is pressed
-                UDPClient4Socket.sendto(byteDashDown, serverAddressPort)
-                continue  # finishing the loop
-            if keyboard.is_pressed('UP_KEY'):  # if key 'q' is pressed
-                UDPClient4Socket.sendto(byteDashUp, serverAddressPort)
-                continue  # finishing the loop
-            if keyboard.is_pressed('LEFT_KEY'):  # if key 'q' is pressed
-                UDPClient4Socket.sendto(byteDashBack, serverAddressPort)
-                continue  # finishing the loop
-            if keyboard.is_pressed('x'):  # if key 'q' is pressed
-                UDPClient4Socket.sendto(byteKick, serverAddressPort)
-                continue  # finishing the loop
+            if keyboard.is_pressed('right'):
+                UDPClient1Socket.sendto(byteDash, serverAddressPort)
+                continue
+            if keyboard.is_pressed('down'):
+                UDPClient1Socket.sendto(byteDashDown, serverAddressPort)
+                continue
+            if keyboard.is_pressed('up'):
+                UDPClient1Socket.sendto(byteDashUp, serverAddressPort)
+                continue
+            if keyboard.is_pressed('left'):
+                UDPClient1Socket.sendto(byteDashBack, serverAddressPort)
+                continue
+            if keyboard.is_pressed('x'):
+                UDPClient1Socket.sendto(byteKick, serverAddressPort)
+                continue
         except:
-            continue  # if user pressed a key other than the given key the loop will break
+            continue
 
-        msgFromServer = UDPClient4Socket.recvfrom(bufferSize)
+        msgFromServer = UDPClient1Socket.recvfrom(bufferSize)
 
         msg = "Message from Server {}".format(msgFromServer[0])
 
