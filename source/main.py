@@ -7,7 +7,7 @@ if __name__ == "__main__":
     bytesToInit = str.encode(initPlayer)
     bytesToMove = str.encode(movePlayer)
     byteDash = str.encode("(dash 100)")
-    byteKick = str.encode("(kick 20 0)")
+    byteKick = str.encode("(kick 100 0)")
 
     serverAddressPort = ("127.0.0.1", 6000)
 
