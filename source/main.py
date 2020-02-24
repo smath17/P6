@@ -12,6 +12,8 @@ if __name__ == "__main__":
     byteDashUp = str.encode("(dash 100 -90)")
     byteDashBack = str.encode("(dash 100 180)")
     byteKick = str.encode("(kick 100 0)")
+    byteRotateRight = str.encode("(turn 20)")
+    byteRotateLeft = str.encode("(turn -20)")
 
     serverAddressPort = ("127.0.0.1", 6000)
 
@@ -59,7 +61,7 @@ if __name__ == "__main__":
     while True:
 
         try:  # used try so that if user pressed other than the given key error will not be shown
-            if keyboard.is_pressed('d'):
+            if keyboard.is_pressed('w'):
                 UDPClient1Socket.sendto(byteDash, serverAddressPort)
                 continue
             if keyboard.is_pressed('s'):
@@ -71,8 +73,14 @@ if __name__ == "__main__":
             if keyboard.is_pressed('a'):
                 UDPClient1Socket.sendto(byteDashBack, serverAddressPort)
                 continue
-            if keyboard.is_pressed('k'):
+            if keyboard.is_pressed('space'):
                 UDPClient1Socket.sendto(byteKick, serverAddressPort)
+                continue
+            if keyboard.is_pressed('left'):
+                UDPClient1Socket.sendto(byteRotateLeft, serverAddressPort)
+                continue
+            if keyboard.is_pressed('right'):
+                UDPClient1Socket.sendto(byteRotateRight, serverAddressPort)
                 continue
         except:
             continue
