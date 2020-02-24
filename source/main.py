@@ -1,4 +1,5 @@
 import socket
+import keyboard
 
 if __name__ == "__main__":
 
@@ -7,6 +8,7 @@ if __name__ == "__main__":
     bytesToInit = str.encode(initPlayer)
     bytesToMove = str.encode(movePlayer)
     byteDash = str.encode("(dash 100)")
+    byteDashUp = str.encode("(dash 100 90)")
     byteKick = str.encode("(kick 100 0)")
 
     serverAddressPort = ("127.0.0.1", 6000)
@@ -53,12 +55,25 @@ if __name__ == "__main__":
 
     i = 0
     while True:
-        i = i + 1
+        #i = i + 1
         #UDPClient4Socket.sendto(bytesToMove, serverAddressPort)
-        if i % 2 == 0:
-            UDPClient4Socket.sendto(byteKick, serverAddressPort)
-        else:
-            UDPClient4Socket.sendto(byteDash, serverAddressPort)
+        #if i % 2 == 0:
+
+        #else:
+
+        try:  # used try so that if user pressed other than the given key error will not be shown
+            if keyboard.is_pressed('d'):  # if key 'q' is pressed
+                UDPClient4Socket.sendto(byteDash, serverAddressPort)
+                break  # finishing the loop
+            if keyboard.is_pressed('w'):  # if key 'q' is pressed
+                UDPClient4Socket.sendto(byteDashUp, serverAddressPort)
+                break  # finishing the loop
+            if keyboard.is_pressed('x'):  # if key 'q' is pressed
+                UDPClient4Socket.sendto(byteKick, serverAddressPort)
+                break  # finishing the loop
+        except:
+            break  # if user pressed a key other than the given key the loop will break
+
 
         #UDPClient1Socket.sendto(byteDash, serverAddressPort)
         #UDPClient1Socket.sendto(byteKick, serverAddressPort)
