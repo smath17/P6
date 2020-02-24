@@ -55,6 +55,36 @@ if __name__ == "__main__":
         #UDPClient4Socket.sendto(bytesToMove, serverAddressPort)
         UDPClient4Socket.sendto(byteDash, serverAddressPort)
         UDPClient4Socket.sendto(byteKick, serverAddressPort)
+
+        UDPClient1Socket.sendto(byteDash, serverAddressPort)
+        UDPClient1Socket.sendto(byteKick, serverAddressPort)
+
+        UDPClient2Socket.sendto(byteDash, serverAddressPort)
+        UDPClient2Socket.sendto(byteKick, serverAddressPort)
+
+        UDPClient3Socket.sendto(byteDash, serverAddressPort)
+        UDPClient3Socket.sendto(byteKick, serverAddressPort)
+
+        UDPClient5Socket.sendto(byteDash, serverAddressPort)
+        UDPClient5Socket.sendto(byteKick, serverAddressPort)
+
+        UDPClient6Socket.sendto(byteDash, serverAddressPort)
+        UDPClient6Socket.sendto(byteKick, serverAddressPort)
+
+        UDPClient7Socket.sendto(byteDash, serverAddressPort)
+        UDPClient7Socket.sendto(byteKick, serverAddressPort)
+
+        UDPClient8Socket.sendto(byteDash, serverAddressPort)
+        UDPClient8Socket.sendto(byteKick, serverAddressPort)
+
+        UDPClient9Socket.sendto(byteDash, serverAddressPort)
+        UDPClient9Socket.sendto(byteKick, serverAddressPort)
+
+        UDPClient10Socket.sendto(byteDash, serverAddressPort)
+        UDPClient10Socket.sendto(byteKick, serverAddressPort)
+
+        UDPClient11Socket.sendto(byteDash, serverAddressPort)
+        UDPClient11Socket.sendto(byteKick, serverAddressPort)
         
         msgFromServer = UDPClient4Socket.recvfrom(bufferSize)
 
