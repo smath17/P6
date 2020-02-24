@@ -59,19 +59,19 @@ if __name__ == "__main__":
     while True:
 
         try:  # used try so that if user pressed other than the given key error will not be shown
-            if keyboard.is_pressed('right'):
+            if keyboard.is_pressed('d'):
                 UDPClient1Socket.sendto(byteDash, serverAddressPort)
                 continue
-            if keyboard.is_pressed('down'):
+            if keyboard.is_pressed('s'):
                 UDPClient1Socket.sendto(byteDashDown, serverAddressPort)
                 continue
-            if keyboard.is_pressed('up'):
+            if keyboard.is_pressed('w'):
                 UDPClient1Socket.sendto(byteDashUp, serverAddressPort)
                 continue
-            if keyboard.is_pressed('left'):
+            if keyboard.is_pressed('a'):
                 UDPClient1Socket.sendto(byteDashBack, serverAddressPort)
                 continue
-            if keyboard.is_pressed('x'):
+            if keyboard.is_pressed('k'):
                 UDPClient1Socket.sendto(byteKick, serverAddressPort)
                 continue
         except:
