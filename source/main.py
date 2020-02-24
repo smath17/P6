@@ -43,6 +43,19 @@ if __name__ == "__main__":
     UDPClient10Socket.sendto(bytesToInit, serverAddressPort)
     UDPClient11Socket.sendto(bytesToInit, serverAddressPort)
 
+    # Send to server using created UDP socket
+    UDPClient1Socket.sendto(bytesToMove, serverAddressPort)
+    UDPClient2Socket.sendto(bytesToMove, serverAddressPort)
+    UDPClient3Socket.sendto(bytesToMove, serverAddressPort)
+    UDPClient4Socket.sendto(bytesToMove, serverAddressPort)
+    UDPClient5Socket.sendto(bytesToMove, serverAddressPort)
+    UDPClient6Socket.sendto(bytesToMove, serverAddressPort)
+    UDPClient7Socket.sendto(bytesToMove, serverAddressPort)
+    UDPClient8Socket.sendto(bytesToMove, serverAddressPort)
+    UDPClient9Socket.sendto(bytesToMove, serverAddressPort)
+    UDPClient10Socket.sendto(bytesToMove, serverAddressPort)
+    UDPClient11Socket.sendto(bytesToMove, serverAddressPort)
+
     while True:
 
         try:  # used try so that if user pressed other than the given key error will not be shown
