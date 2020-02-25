@@ -14,7 +14,7 @@ def previous_player():
     if current_player < 0:
         current_player = player_count - 1
 
-    print("current player is " + (current_player + 1))
+    print("current player is {}".format(current_player + 1))
 
 
 def next_player():
@@ -23,7 +23,7 @@ def next_player():
     if current_player >= player_count:
         current_player = 0
 
-    print("current player is " + (current_player + 1))
+    print("current player is {}".format(current_player + 1))
 
 
 if __name__ == "__main__":
