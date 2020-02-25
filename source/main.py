@@ -24,7 +24,14 @@ bufferSize = 1024
 
 while True:
     try:  # used try so that if user pressed other than the given key error will not be shown
-        if keyboard.is_pressed('x'):
+        if keyboard.is_pressed('q'):
+            currentPlayer = currentPlayer - 1
+            if currentPlayer < 0:
+                currentPlayer = playerCount - 1
+
+            print("current player is " + (currentPlayer + 1))
+            continue
+        if keyboard.is_pressed('e'):
             currentPlayer = currentPlayer + 1
             if currentPlayer >= playerCount:
                 currentPlayer = 0
@@ -34,13 +41,13 @@ while True:
         if keyboard.is_pressed('w') or keyboard.is_pressed("up"):
             team1[currentPlayer].send_action("(dash 100)")
             continue
-        if keyboard.is_pressed('a') or keyboard.is_pressed("down"):
+        if keyboard.is_pressed('a'):
             team1[currentPlayer].send_action("(dash 100 -90)")
             continue
         if keyboard.is_pressed('d'):
             team1[currentPlayer].send_action("(dash 100 90)")
             continue
-        if keyboard.is_pressed('s'):
+        if keyboard.is_pressed('s') or keyboard.is_pressed("down"):
             team1[currentPlayer].send_action("(dash 100 180)")
             continue
         if keyboard.is_pressed('space'):
