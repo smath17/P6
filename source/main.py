@@ -1,102 +1,72 @@
 import socket
 import keyboard
 
+from PlayerController import Player
 
-if __name__ == "__main__":
+teamname1 = "Bobbers"
+playerCount = 11
+currentPlayer = 0
 
-    initPlayer = "(init Bobbers)"
-    movePlayer = "(move -20 0)"
-    bytesToInit = str.encode(initPlayer)
-    bytesToMove = str.encode(movePlayer)
-    byteDash = str.encode("(dash 100)")
-    byteKick = str.encode("(kick 100 0)")
-    byteLightKick = str.encode("(kick 25)")
-    byteDashRight = str.encode("(dash 100 90)")
-    byteDashLeft = str.encode("(dash 100 -90)")
-    byteDashBack = str.encode("(dash 100 180)")
-    byteRotateRight = str.encode("(turn 20)")
-    byteRotateLeft = str.encode("(turn -20)")
-    byteCatch = str.encode("(catch 0)")
-    byteTackle = str.encode("(tackle 0)")
+# Create a list of players
+team1 = [Player(teamname1) for i in range(playerCount)]
 
-    serverAddressPort = ("127.0.0.1", 6000)
+# Initially move all players from team1 onto the field
+y = -30
+for player in team1:
+    player.send_action("(move -20 {})".format(y))  # This is a string formatted to include y in the {}
+    y = y + 5
 
-    bufferSize = 1024
+byteDash = str.encode("(dash 100)")
+byteKick = str.encode("(kick 100 0)")
 
-    # Create a UDP socket at client side
-    UDPClient1Socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-    UDPClient2Socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-    UDPClient3Socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-    UDPClient4Socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-    UDPClient5Socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-    UDPClient6Socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-    UDPClient7Socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-    UDPClient8Socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-    UDPClient9Socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-    UDPClient10Socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-    UDPClient11Socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+bufferSize = 1024
 
-    # Send to server using created UDP socket
-    UDPClient1Socket.sendto(bytesToInit, serverAddressPort)
-    UDPClient2Socket.sendto(bytesToInit, serverAddressPort)
-    UDPClient3Socket.sendto(bytesToInit, serverAddressPort)
-    UDPClient4Socket.sendto(bytesToInit, serverAddressPort)
-    UDPClient5Socket.sendto(bytesToInit, serverAddressPort)
-    UDPClient6Socket.sendto(bytesToInit, serverAddressPort)
-    UDPClient7Socket.sendto(bytesToInit, serverAddressPort)
-    UDPClient8Socket.sendto(bytesToInit, serverAddressPort)
-    UDPClient9Socket.sendto(bytesToInit, serverAddressPort)
-    UDPClient10Socket.sendto(bytesToInit, serverAddressPort)
-    UDPClient11Socket.sendto(bytesToInit, serverAddressPort)
 
-    # Send to server using created UDP socket
-    UDPClient1Socket.sendto(str.encode("(move -50 0)"), serverAddressPort)
-    UDPClient2Socket.sendto(bytesToMove, serverAddressPort)
-    UDPClient3Socket.sendto(bytesToMove, serverAddressPort)
-    UDPClient4Socket.sendto(bytesToMove, serverAddressPort)
-    UDPClient5Socket.sendto(bytesToMove, serverAddressPort)
-    UDPClient6Socket.sendto(bytesToMove, serverAddressPort)
-    UDPClient7Socket.sendto(bytesToMove, serverAddressPort)
-    UDPClient8Socket.sendto(bytesToMove, serverAddressPort)
-    UDPClient9Socket.sendto(bytesToMove, serverAddressPort)
-    UDPClient10Socket.sendto(bytesToMove, serverAddressPort)
-    UDPClient11Socket.sendto(bytesToMove, serverAddressPort)
+while True:
+    try:  # used try so that if user pressed other than the given key error will not be shown
+        if keyboard.is_pressed('x'):
+            currentPlayer = currentPlayer + 1
+            if currentPlayer >= playerCount:
+                currentPlayer = 0
 
-    while True:
-
-        try:  # used try so that if user pressed other than the given key error will not be shown
-            if keyboard.is_pressed('w') or keyboard.is_pressed("up"):
-                UDPClient1Socket.sendto(byteDash, serverAddressPort)
-                continue
-            if keyboard.is_pressed('a') or keyboard.is_pressed("down"):
-                UDPClient1Socket.sendto(byteDashLeft, serverAddressPort)
-                continue
-            if keyboard.is_pressed('d'):
-                UDPClient1Socket.sendto(byteDashRight, serverAddressPort)
-                continue
-            if keyboard.is_pressed('s'):
-                UDPClient1Socket.sendto(byteDashBack, serverAddressPort)
-                continue
-            if keyboard.is_pressed('space'):
-                UDPClient1Socket.sendto(byteKick, serverAddressPort)
-                continue
-            if keyboard.is_pressed('ctrl'):
-                UDPClient1Socket.sendto(byteCatch, serverAddressPort)
-                continue
-            if keyboard.is_pressed('shift'):
-                UDPClient1Socket.sendto(byteTackle, serverAddressPort)
-                continue
-            if keyboard.is_pressed('left'):
-                UDPClient1Socket.sendto(byteRotateLeft, serverAddressPort)
-                continue
-            if keyboard.is_pressed('right'):
-                UDPClient1Socket.sendto(byteRotateRight, serverAddressPort)
-                continue
-        except:
+            print("current player is " + (currentPlayer + 1))
             continue
+        if keyboard.is_pressed('w') or keyboard.is_pressed("up"):
+            team1[currentPlayer].send_action("dash 100")
+            continue
+        if keyboard.is_pressed('a') or keyboard.is_pressed("down"):
+            team1[currentPlayer].send_action("(dash 100 -90)")
+            continue
+        if keyboard.is_pressed('d'):
+            team1[currentPlayer].send_action("(dash 100 90)")
+            continue
+        if keyboard.is_pressed('s'):
+            team1[currentPlayer].send_action("(dash 100 180)")
+            continue
+        if keyboard.is_pressed('space'):
+            team1[currentPlayer].send_action("(kick 100 0)")
+            continue
+        if keyboard.is_pressed('ctrl'):
+            team1[currentPlayer].send_action("(catch 0)")
+            continue
+        if keyboard.is_pressed('shift'):
+            team1[currentPlayer].send_action("(tackle 0)")
+            continue
+        if keyboard.is_pressed('left'):
+            team1[currentPlayer].send_action("(turn -20)")
+            continue
+        if keyboard.is_pressed('right'):
+            team1[currentPlayer].send_action("(turn 20)")
+            continue
+    except:
+        continue
 
-        msgFromServer = UDPClient1Socket.recvfrom(bufferSize)
+#   for player in team1:
+#       player.send_action("(dash 100)")
 
-        msg = "Message from Server {}".format(msgFromServer[0])
+    msgFromServer = team1[4].rec_msg()
 
-        #print(msg)
+    msg = "Message from Server {}".format(msgFromServer[0])
+
+    print(msg)
+
