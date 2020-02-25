@@ -7,7 +7,7 @@ class Player:
         # local hosted server on port 6000 by default
         self.serverAddressPort = ("127.0.0.1", 6000)
         # Server messages has to be sent as bytes
-        initString = "(init" + teamname + ")"
+        initString = "(init " + teamname + ")"
 
         # Create client via UDP socket
         self.UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
