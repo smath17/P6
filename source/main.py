@@ -4,7 +4,7 @@ import keyboard
 
 def bytekick(power):
     print(power)
-    power = power / 100
+    power = power / 100000
     return str.encode("(kick {} 0)".format(power))
 
 
