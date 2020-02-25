@@ -1,3 +1,5 @@
 
 # python virtual environment
 /source/venv
+# pycache
+/source/__pycache__
