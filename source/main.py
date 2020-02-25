@@ -3,6 +3,7 @@ import keyboard
 
 
 def bytekick(power):
+    print(power)
     return str.encode("(kick {} 0)".format(power))
 
 
@@ -97,4 +98,4 @@ if __name__ == "__main__":
 
         msg = "Message from Server {}".format(msgFromServer[0])
 
-        print(msg)
+        #print(msg)
