@@ -64,7 +64,7 @@ while True:
 #   for player in team1:
 #       player.send_action("(dash 100)")
 
-    msgFromServer = team1[4].rec_msg()
+    msgFromServer = team1[currentPlayer].rec_msg()
 
     msg = "Message from Server {}".format(msgFromServer)
 
