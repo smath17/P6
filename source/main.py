@@ -21,8 +21,8 @@ if __name__ == "__main__":
         for player in team1:
             player.send_action("(dash 100)")
 
-        msgFromServer = team1[4].rec_msg()
+        team1[4].rec_msg()
 
-        msg = "Message from Server {}".format(msgFromServer[0])
+        # msg = "Message from Server {}".format(msgFromServer[0])
 
-        print(msg)
+        # print(msg)
