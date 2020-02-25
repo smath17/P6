@@ -5,6 +5,7 @@ class Player:
 
     def __init__(self, teamname):
         # local hosted server on port 6000 by default
+        self.buffersize = 1024
         self.serverAddressPort = ("127.0.0.1", 6000)
         # Server messages has to be sent as bytes
         initString = "(init " + teamname + ")"
@@ -18,3 +19,6 @@ class Player:
     # Wrapper function for UDP communication + byte encoding
     def send_action(self, action):
         self.UDPClientSocket.sendto(str.encode(action), self.serverAddressPort)
+
+    def rec_msg(self):
+        self.UDPClientSocket.recvfrom(self.buffersize)
