@@ -1,6 +1,11 @@
 import socket
 import keyboard
 
+
+def bytekick(power):
+    return str.encode("(kick {} 0)".format(power))
+
+
 if __name__ == "__main__":
 
     initPlayer = "(init Bobbers)"
@@ -8,12 +13,12 @@ if __name__ == "__main__":
     bytesToInit = str.encode(initPlayer)
     bytesToMove = str.encode(movePlayer)
     byteDash = str.encode("(dash 100)")
-    byteDashDown = str.encode("(dash 100 90)")
-    byteDashUp = str.encode("(dash 100 -90)")
+    byteDashRight = str.encode("(dash 100 90)")
+    byteDashLeft = str.encode("(dash 100 -90)")
     byteDashBack = str.encode("(dash 100 180)")
-    byteKick = str.encode("(kick 100 0)")
     byteRotateRight = str.encode("(turn 20)")
     byteRotateLeft = str.encode("(turn -20)")
+    kickPower = 0
 
     serverAddressPort = ("127.0.0.1", 6000)
 
@@ -64,17 +69,20 @@ if __name__ == "__main__":
             if keyboard.is_pressed('w'):
                 UDPClient1Socket.sendto(byteDash, serverAddressPort)
                 continue
-            if keyboard.is_pressed('s'):
-                UDPClient1Socket.sendto(byteDashDown, serverAddressPort)
-                continue
-            if keyboard.is_pressed('w'):
-                UDPClient1Socket.sendto(byteDashUp, serverAddressPort)
-                continue
             if keyboard.is_pressed('a'):
+                UDPClient1Socket.sendto(byteDashLeft, serverAddressPort)
+                continue
+            if keyboard.is_pressed('d'):
+                UDPClient1Socket.sendto(byteDashRight, serverAddressPort)
+                continue
+            if keyboard.is_pressed('s'):
                 UDPClient1Socket.sendto(byteDashBack, serverAddressPort)
                 continue
             if keyboard.is_pressed('space'):
-                UDPClient1Socket.sendto(byteKick, serverAddressPort)
+                while keyboard.is_pressed('space'):
+                    kickPower = kickPower + 1
+
+                UDPClient1Socket.sendto(bytekick(kickPower), serverAddressPort)
                 continue
             if keyboard.is_pressed('left'):
                 UDPClient1Socket.sendto(byteRotateLeft, serverAddressPort)
