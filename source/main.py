@@ -11,7 +11,7 @@ if __name__ == "__main__":
     y = -30
     for player in team1:
         player.send_action("(move -20 {})".format(y))
-        y = y + 10
+        y = y + 5
 
     initPlayer = "(init Bobbers)"
     movePlayer = "(move -20 0)"
@@ -63,7 +63,8 @@ if __name__ == "__main__":
     # UDPClient11Socket.sendto(bytesToMove, serverAddressPort)
 
     while True:
-        team1[4].send_action("(dash 100)")
+        for player in team1:
+            player.send_action("(dash 100)")
 
         # UDPClient4Socket.sendto(byteDash, serverAddressPort)
         # UDPClient4Socket.sendto(byteKick, serverAddressPort)
