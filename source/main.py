@@ -32,7 +32,7 @@ while True:
             print("current player is " + (currentPlayer + 1))
             continue
         if keyboard.is_pressed('w') or keyboard.is_pressed("up"):
-            team1[currentPlayer].send_action("dash 100")
+            team1[currentPlayer].send_action("(dash 100)")
             continue
         if keyboard.is_pressed('a') or keyboard.is_pressed("down"):
             team1[currentPlayer].send_action("(dash 100 -90)")
