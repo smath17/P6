@@ -66,7 +66,7 @@ while True:
 
     msgFromServer = team1[4].rec_msg()
 
-    msg = "Message from Server {}".format(msgFromServer[0])
+    msg = "Message from Server {}".format(msgFromServer)
 
     print(msg)
 
