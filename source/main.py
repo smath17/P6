@@ -41,8 +41,8 @@ if __name__ == "__main__":
 
     bufferSize = 1024
 
-    keyboard.on_press_key('q', previous_player())
-    keyboard.on_press_key('e', next_player())
+    keyboard.on_press_key('q', previous_player)
+    keyboard.on_press_key('e', next_player)
 
     while True:
         try:  # used try so that if user pressed other than the given key error will not be shown
