@@ -3,8 +3,8 @@ import keyboard
 
 
 def bytekick(power):
-    print(power)
     power = power / 100000
+    print(power)
     return str.encode("(kick {} 0)".format(power))
 
 
