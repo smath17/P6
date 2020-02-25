@@ -4,6 +4,7 @@ import keyboard
 
 def bytekick(power):
     print(power)
+    power = power / 100
     return str.encode("(kick {} 0)".format(power))
 
 
@@ -80,6 +81,7 @@ if __name__ == "__main__":
                 UDPClient1Socket.sendto(byteDashBack, serverAddressPort)
                 continue
             if keyboard.is_pressed('space'):
+                kickPower = 0
                 while keyboard.is_pressed('space'):
                     kickPower = kickPower + 1
 
