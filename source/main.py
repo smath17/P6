@@ -4,76 +4,84 @@ import keyboard
 from PlayerController import Player
 
 teamname1 = "Bobbers"
-playerCount = 11
-currentPlayer = 0
-
-# Create a list of players
-team1 = [Player(teamname1) for i in range(playerCount)]
-
-# Initially move all players from team1 onto the field
-y = -30
-for player in team1:
-    player.send_action("(move -20 {})".format(y))  # This is a string formatted to include y in the {}
-    y = y + 5
-
-byteDash = str.encode("(dash 100)")
-byteKick = str.encode("(kick 100 0)")
-
-bufferSize = 1024
+player_count = 11
+current_player = 0
 
 
-while True:
-    try:  # used try so that if user pressed other than the given key error will not be shown
-        if keyboard.is_pressed('q'):
-            currentPlayer = currentPlayer - 1
-            if currentPlayer < 0:
-                currentPlayer = playerCount - 1
+def previous_player():
+    global current_player
+    current_player = current_player - 1
+    if current_player < 0:
+        current_player = player_count - 1
 
-            print("current player is " + (currentPlayer + 1))
+    print("current player is " + (current_player + 1))
+
+
+def next_player():
+    global current_player
+    current_player = current_player + 1
+    if current_player >= player_count:
+        current_player = 0
+
+    print("current player is " + (current_player + 1))
+
+
+if __name__ == "__main__":
+    # Create a list of players
+    team1 = [Player(teamname1) for i in range(player_count)]
+
+    # Initially move all players from team1 onto the field
+    y = -30
+    for player in team1:
+        player.send_action("(move -20 {})".format(y))  # This is a string formatted to include y in the {}
+        y = y + 5
+
+    byteDash = str.encode("(dash 100)")
+    byteKick = str.encode("(kick 100 0)")
+
+    bufferSize = 1024
+
+    keyboard.on_press_key('q', previous_player())
+    keyboard.on_press_key('e', next_player())
+
+    while True:
+        try:  # used try so that if user pressed other than the given key error will not be shown
+            if keyboard.is_pressed('w') or keyboard.is_pressed("up"):
+                team1[current_player].send_action("(dash 100)")
+                continue
+            if keyboard.is_pressed('a'):
+                team1[current_player].send_action("(dash 100 -90)")
+                continue
+            if keyboard.is_pressed('d'):
+                team1[current_player].send_action("(dash 100 90)")
+                continue
+            if keyboard.is_pressed('s') or keyboard.is_pressed("down"):
+                team1[current_player].send_action("(dash 100 180)")
+                continue
+            if keyboard.is_pressed('space'):
+                team1[current_player].send_action("(kick 100 0)")
+                continue
+            if keyboard.is_pressed('ctrl'):
+                team1[current_player].send_action("(catch 0)")
+                continue
+            if keyboard.is_pressed('shift'):
+                team1[current_player].send_action("(tackle 0)")
+                continue
+            if keyboard.is_pressed('left'):
+                team1[current_player].send_action("(turn -20)")
+                continue
+            if keyboard.is_pressed('right'):
+                team1[current_player].send_action("(turn 20)")
+                continue
+        except:
             continue
-        if keyboard.is_pressed('e'):
-            currentPlayer = currentPlayer + 1
-            if currentPlayer >= playerCount:
-                currentPlayer = 0
 
-            print("current player is " + (currentPlayer + 1))
-            continue
-        if keyboard.is_pressed('w') or keyboard.is_pressed("up"):
-            team1[currentPlayer].send_action("(dash 100)")
-            continue
-        if keyboard.is_pressed('a'):
-            team1[currentPlayer].send_action("(dash 100 -90)")
-            continue
-        if keyboard.is_pressed('d'):
-            team1[currentPlayer].send_action("(dash 100 90)")
-            continue
-        if keyboard.is_pressed('s') or keyboard.is_pressed("down"):
-            team1[currentPlayer].send_action("(dash 100 180)")
-            continue
-        if keyboard.is_pressed('space'):
-            team1[currentPlayer].send_action("(kick 100 0)")
-            continue
-        if keyboard.is_pressed('ctrl'):
-            team1[currentPlayer].send_action("(catch 0)")
-            continue
-        if keyboard.is_pressed('shift'):
-            team1[currentPlayer].send_action("(tackle 0)")
-            continue
-        if keyboard.is_pressed('left'):
-            team1[currentPlayer].send_action("(turn -20)")
-            continue
-        if keyboard.is_pressed('right'):
-            team1[currentPlayer].send_action("(turn 20)")
-            continue
-    except:
-        continue
+#      for player in team1:
+#           player.send_action("(dash 100)")
 
-#   for player in team1:
-#       player.send_action("(dash 100)")
+        msgFromServer = team1[current_player].rec_msg()
 
-    msgFromServer = team1[currentPlayer].rec_msg()
+        msg = "Message from Server {}".format(msgFromServer)
 
-    msg = "Message from Server {}".format(msgFromServer)
-
-    print(msg)
+        print(msg)
 
