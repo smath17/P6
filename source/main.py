@@ -1,5 +1,5 @@
 # from PlayerController import Player
-from source.PlayerController import Player
+from PlayerController import Player
 
 if __name__ == "__main__":
 
