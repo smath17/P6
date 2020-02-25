@@ -8,7 +8,7 @@ player_count = 11
 current_player = 0
 
 
-def previous_player():
+def previous_player(args):
     global current_player
     current_player = current_player - 1
     if current_player < 0:
@@ -17,7 +17,7 @@ def previous_player():
     print("current player is {}".format(current_player + 1))
 
 
-def next_player():
+def next_player(args):
     global current_player
     current_player = current_player + 1
     if current_player >= player_count:
