@@ -22,5 +22,5 @@ class Player:
 
     def rec_msg(self):
         msg_from_server = self.UDPClientSocket.recvfrom(self.buffersize)
-        msg = "Message from server: {}".format(msg_from_server[0])
+        msg = "Message from server: {}".format(msg_from_server[0].decode())
         print(msg)
