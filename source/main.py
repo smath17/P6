@@ -12,7 +12,7 @@ if __name__ == "__main__":
     y = -30
 
     for player in team1:
-        player.send_action("(move 0 {})".format(y))  # This is a string formatted to include y in the {}
+        player.send_action("(move -20 {})".format(y))  # This is a string formatted to include y in the {}
         y = y + 5
 
     while True:
