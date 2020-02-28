@@ -19,4 +19,4 @@ if __name__ == "__main__":
         for player in team1:
             player.send_action("(dash 100)")
 
-        team1[4].parse_info(team1[4].rec_msg())
+        #team1[4].parse_info(team1[4].rec_msg())

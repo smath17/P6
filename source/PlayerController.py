@@ -38,6 +38,7 @@ class Player:
         # print(msg)
 
     # str arg used for testing
+    # TODO: can only be used after kick_off
     def parse_info(self, rec_msg):
         # In order to only get the required numbers, we spilt the string by spaces and load it into a list
         info_list = rec_msg.rsplit(" ")
