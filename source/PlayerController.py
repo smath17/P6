@@ -19,7 +19,7 @@ class Player:
         if not goalie:
             self.initString = "(init " + teamname + ")"
         else:
-            self.initString = "(init " + teamname + "(goalie))"
+            self.initString = "(init " + teamname + " (goalie))"
 
         self.send_action(self.initString)
 
