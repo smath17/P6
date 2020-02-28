@@ -21,7 +21,7 @@ class MyTestCase(unittest.TestCase):
                       " (target 0 0) (count 0)) (focus (target none) (count 0)) (tackle (expires 0) (count 0)))"
         self.player.parse_info(test_info)
 
-        assert self.player.get_stamina() == 4000, "Stamina is wrong"
+        assert self.player.stamina == 4000, "Stamina is wrong"
         assert self.player.speed == 0, "Speed is wrong"
 
 

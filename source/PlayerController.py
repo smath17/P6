@@ -3,6 +3,7 @@ import socket
 
 class Player:
 
+    # goalie of optional, default is false
     def __init__(self, teamname, goalie=False):
         self.stamina = 0
         self.speed = 0
@@ -10,6 +11,7 @@ class Player:
         self.tackled = 0
 
         # local hosted server on port 6000 by default
+        # TODO. IP of the day
         self.serverAddressPort = ("172.31.253.149", 6000)
 
         # Create client via UDP socket

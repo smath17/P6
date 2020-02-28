@@ -4,10 +4,9 @@ if __name__ == "__main__":
 
     teamname1 = "Bobzors"
     # Create a list of players
-    #team1 = [Player(teamname1)]
-    #for x in range(10):
-    #    team1.append(Player(teamname1))
-    team1 = [Player(teamname1) for x in range(11)]
+    team1 = [Player(teamname1, True)]
+    for x in range(10):
+        team1.append(Player(teamname1))
 
     # Initially move all players from team1 onto the field
     y = -30
