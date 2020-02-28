@@ -10,7 +10,7 @@ class Player:
         self.tackled = 0
 
         # local hosted server on port 6000 by default
-        self.serverAddressPort = ("127.0.0.1", 6000)
+        self.serverAddressPort = ("172.31.253.149", 6000)
 
         # Create client via UDP socket
         self.UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
