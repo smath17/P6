@@ -8,6 +8,7 @@ player_count = 11
 current_player = 0
 
 
+# Methods that switch between previous or next player
 def previous_player(args):
     global current_player
     current_player = current_player - 1
@@ -44,6 +45,7 @@ if __name__ == "__main__":
     keyboard.on_press_key('q', previous_player)
     keyboard.on_press_key('e', next_player)
 
+
     while True:
         try:  # used try so that if user pressed other than the given key error will not be shown
             if keyboard.is_pressed('w') or keyboard.is_pressed("up"):
@@ -73,15 +75,47 @@ if __name__ == "__main__":
             if keyboard.is_pressed('right'):
                 team1[current_player].send_action("(turn 20)")
                 continue
+            if keyboard.is_pressed('1'):
+                current_player = 0
+                continue
+            if keyboard.is_pressed('2'):
+                current_player = 1
+                continue
+            if keyboard.is_pressed('3'):
+                current_player = 2
+                continue
+            if keyboard.is_pressed('4'):
+                current_player = 3
+                continue
+            if keyboard.is_pressed('5'):
+                current_player = 4
+                continue
+            if keyboard.is_pressed('6'):
+                current_player = 5
+                continue
+            if keyboard.is_pressed('7'):
+                current_player = 6
+                continue
+            if keyboard.is_pressed('8'):
+                current_player = 7
+                continue
+            if keyboard.is_pressed('9'):
+                current_player = 8
+                continue
+            if keyboard.is_pressed('0'):
+                current_player = 9
+                continue
+            if keyboard.is_pressed('+'):
+                current_player = 10
+                continue
         except:
             continue
 
-#      for player in team1:
-#           player.send_action("(dash 100)")
+        #      for player in team1:
+        #           player.send_action("(dash 100)")
 
         msgFromServer = team1[current_player].rec_msg()
 
         msg = "Message from Server {}".format(msgFromServer)
 
         print(msg)
-
