@@ -108,6 +108,10 @@ if __name__ == "__main__":
             if keyboard.is_pressed('+'):
                 current_player = 10
                 continue
+            if keyboard.is_pressed('t'):
+                team1[current_player].send_action("(say Hello Bobbers)")
+                continue
+
         except:
             continue
 
