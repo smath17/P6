@@ -3,7 +3,7 @@ import socket
 
 class Player:
 
-    def __init__(self, teamname, goalie = False):
+    def __init__(self, teamname, goalie=False):
         self.stamina = 0
         self.speed = 0
         self.head_angle = 0
@@ -51,7 +51,3 @@ class Player:
         print("Stamina: {}".format(self.stamina))
         print("Effort: {}".format(info_list[7]))
         print("direction of speed: {}".format(info_list[10]))
-
-    def get_stamina(self):
-        return self.stamina
-
