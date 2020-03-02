@@ -111,6 +111,12 @@ if __name__ == "__main__":
             if keyboard.is_pressed('t'):
                 team1[current_player].send_action("(say Hello Bobbers)")
                 continue
+            if keyboard.is_pressed(','):
+                team1[current_player].send_action("turn_neck -90")
+                continue
+            if keyboard.is_pressed('.'):
+                team1[current_player].send_action("turn_neck 90")
+                continue
 
         except:
             continue
