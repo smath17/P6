@@ -12,7 +12,7 @@ class Player:
 
         # local hosted server on port 6000 by default
         # TODO. IP of the day
-        self.serverAddressPort = ("172.31.253.149", 6000)
+        self.serverAddressPort = ("172.31.253.241", 6000)
 
         # Create client via UDP socket
         self.UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
