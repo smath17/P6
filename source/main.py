@@ -120,6 +120,6 @@ if __name__ == "__main__":
 
         msgFromServer = team1[current_player].rec_msg()
 
-        msg = "Message from Server {}".format(msgFromServer)
+        msg = "Message from Server: {}".format(msgFromServer)
 
         print(msg)

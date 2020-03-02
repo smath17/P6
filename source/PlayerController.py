@@ -7,7 +7,7 @@ class Player:
         self.buffersize = 1024
 
         # local hosted server on port 6000 by default
-        self.serverAddressPort = ("127.0.0.1", 6000)
+        self.serverAddressPort = ("172.31.253.241", 6000)
 
         # Create client via UDP socket
         self.UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
@@ -21,4 +21,5 @@ class Player:
         self.UDPClientSocket.sendto(str.encode(action), self.serverAddressPort)
 
     def rec_msg(self):
-        self.UDPClientSocket.recvfrom(self.buffersize)
+        msg = self.UDPClientSocket.recvfrom(self.buffersize)
+        return msg[0].decode()
