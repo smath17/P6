@@ -21,4 +21,5 @@ class Player:
         self.UDPClientSocket.sendto(str.encode(action), self.serverAddressPort)
 
     def rec_msg(self):
-        self.UDPClientSocket.recvfrom(self.buffersize)
+        msg = self.UDPClientSocket.recvfrom(self.buffersize)
+        return msg[0].decode()
