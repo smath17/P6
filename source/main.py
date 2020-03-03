@@ -109,7 +109,7 @@ if __name__ == "__main__":
                 current_player = 10
                 continue
             if keyboard.is_pressed('t'):
-                team1[current_player].send_action("(say Hello Bobbers)")
+                team1[current_player].send_action("(say \"Hi Bob\")")
                 continue
             if keyboard.is_pressed(','):
                 team1[current_player].send_action("turn_neck -90")
