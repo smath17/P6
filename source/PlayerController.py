@@ -42,14 +42,33 @@ class Player:
     # str arg used for testing
     # TODO: can only be used after kick_off
     def parse_info(self, rec_msg):
-        # In order to only get the required numbers, we spilt the string by spaces and load it into a list
-        info_list = rec_msg.rsplit(" ")
-        # the 6th element is current stamina
-        self.stamina = int(info_list[6])
-        self.speed = int(info_list[9])
+        # Get the first 5 chars, used to recognize the type of msg
+        msg_type = rec_msg[:5]
 
-        # TODO: If real, then load into player, if not remove
-        # figure out if effort and directionOfSpeed is real
-        print("Stamina: {}".format(self.stamina))
-        print("Effort: {}".format(info_list[7]))
-        print("direction of speed: {}".format(info_list[10]))
+        if msg_type == "(sens":
+            # In order to only get the required numbers, we spilt the string by spaces and load it into a list
+            info_list = rec_msg.rsplit(" ")
+            # the 6th element is current stamina
+            self.stamina = int(info_list[6])
+            self.speed = int(info_list[9])
+
+            # TODO: If real, then load into player, if not remove
+            # figure out if effort and directionOfSpeed is real
+            print("Stamina: {}".format(self.stamina))
+            print("Effort: {}".format(info_list[7]))
+            print("direction of speed: {}".format(info_list[10]))
+
+        elif msg_type == "(hear":
+            # referee change mode OR player say
+            pass
+
+        elif msg_type == "(init":
+            # player initialized
+            print("Player connected")
+
+        elif msg_type == "(see ":
+            # Split at (( to get every object and its info separated
+            info_list = rec_msg.rsplit("((")
+            # l = left, r = right, c = center
+            # ((name) distance direction)
+            pass
