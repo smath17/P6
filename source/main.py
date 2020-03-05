@@ -45,7 +45,6 @@ if __name__ == "__main__":
     keyboard.on_press_key('q', previous_player)
     keyboard.on_press_key('e', next_player)
 
-
     while True:
         try:  # used try so that if user pressed other than the given key error will not be shown
             if keyboard.is_pressed('w') or keyboard.is_pressed("up"):
@@ -67,7 +66,7 @@ if __name__ == "__main__":
                 team1[current_player].send_action("(catch 0)")
                 continue
             if keyboard.is_pressed('shift'):
-                team1[current_player].send_action("(tackle 0)")
+                team1[current_player].send_action("(tackle 100)")
                 continue
             if keyboard.is_pressed('left'):
                 team1[current_player].send_action("(turn -20)")
@@ -125,6 +124,24 @@ if __name__ == "__main__":
         #           player.send_action("(dash 100)")
 
         msgFromServer = team1[current_player].rec_msg()
+
+        # Two if's used for Auto-Move towards and Auto-Kick ball
+        if "(ball)" in msgFromServer:
+            str_ball = (msgFromServer[msgFromServer.index("ball") + 6:])
+            str_ball = str_ball.rsplit(" ")[0]
+            if float(str_ball) < 1:
+                team1[current_player].send_action("(kick 100 0)")
+
+        if "(ball)" in msgFromServer:
+            str_ball = (msgFromServer[msgFromServer.index("ball") + 6:])
+            str_ball = str_ball.replace(")", "")
+            str_ball = str_ball.rsplit(" ")[1]
+            if -0.5 < int(str_ball) < 0.5:
+                team1[current_player].send_action("(dash 60)")
+            elif int(str_ball) < -0.5:
+                team1[current_player].send_action("(dash 60 -90)")
+            elif int(str_ball) > 0.5:
+                team1[current_player].send_action("(dash 60 90)")
 
         msg = "Message from Server: {}".format(msgFromServer)
 
