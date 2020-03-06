@@ -1,10 +1,28 @@
 # P6
 RoboCup-Soccer-2D
 
-👨‍🌾 "It's not much, but it's honest work"
 
-# Initialize Teams:
-Start an rc client for each player
-Run "(init *teamname*)" to initalize a player for that team
+# Connection to rc-server
+Connect to ssl-vpn1.aau.dk via Cisco
 
-made you look, fuk
+Might have to change firewall settings
+
+Windows Defender Firewall --> Advanced Settings -->Inbound Rules
+
+New Rule:
+- Custom
+- All Programs
+- Protocol type: UDP
+- Remote IP: These IP addresses: host computer's IP
+- Allow the connection
+- Domain/Private/Public
+- Name: robocup
+
+# System arguments
+Offline coach/Trainer: -trainer
+
+Online coach: -coach
+
+Keyboard controls: -k
+
+Simple auto-score: -simplescore
