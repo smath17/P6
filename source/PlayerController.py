@@ -2,6 +2,7 @@ import socket
 from ServerParser import Parser
 
 
+
 class Player:
 
     # goalie of optional, default is false
