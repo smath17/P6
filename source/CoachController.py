@@ -2,7 +2,7 @@ import socket
 
 
 class Coach:
-    def __init__(self, teamname, offline = False):
+    def __init__(self, teamname, offline=False):
 
         if offline:
             # Server needs to run with -server::coach=on, to disable the referee
