@@ -1,19 +1,24 @@
-import atexit
 import socket
+from ServerParser import Parser
 
 
 class Player:
 
     # goalie of optional, default is false
     def __init__(self, teamname, goalie=False):
+        # Player attributes
         self.stamina = 0
         self.speed = 0
         self.effort = 0
         self.head_angle = 0
         self.tackled = 0
         self.game_status = ""
+        self.observables = []
 
-        # local hosted server on port 6000 by default
+        # Instantiate parser to update info
+        self.parser = Parser()
+
+        # Server on port 6000 by default
         # TODO. IP of the day
         self.init_port = 6000
         self.serverAddressPort = ("172.31.253.241", self.init_port)
@@ -45,8 +50,10 @@ class Player:
         msg_from_server = self.UDPClientSocket.recvfrom(6000)
 
         # the received msg is (bytes, encoding) we just want the bytes, hence [0]
-        # print(msg_from_server[0].decode())
         return msg_from_server[0].decode()
+
+    def update_info(self):
+        self.observables = self.parser.parse_info(self.rec_msg(), self)
 
     def disconnect(self):
         self.send_action("(bye)")

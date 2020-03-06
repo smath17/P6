@@ -1,9 +1,8 @@
 class Parser:
     def __init__(self):
-        self.yeet = 0
+        pass
 
     # rec_msg arg used for testing
-    # TODO: can only be used after kick_off
     def parse_info(self, rec_msg, player):
         # Remove all ) as they clash when extracting last number of object
         rec_msg = rec_msg.replace(')', '')
@@ -32,8 +31,8 @@ class Parser:
         elif msg_type == "(see ":
             # Split at (( to get every object and its info separated
             info_list = rec_msg.rsplit("((")
-            observables = [info_list[1::]]
-            
+            # Return list of observable objects, discard first element
+            return [info_list[1::]]
+
             # l = left, r = right, c = center
             # ((name) distance direction)
-            pass
