@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using UnityEngine;
 
 public class RcMessage
 {
@@ -212,5 +211,24 @@ public class MessageObject
         }
 
         return sb.ToString();
+    }
+
+    public string SimplePrint()
+    {
+        StringBuilder sb = new StringBuilder();
+        foreach (StringOrObject stringOrObject in values)
+        {
+            sb.Append(" ");
+            
+            if (stringOrObject.MObject != null)
+                sb.Append(stringOrObject.MObject.SimplePrint());
+
+            if (stringOrObject.MString != null)
+                sb.Append(stringOrObject.MString);
+        }
+
+        string result = sb.ToString();
+        
+        return (result.Length > 1) ? result.Substring(1) : result;
     }
 }

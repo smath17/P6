@@ -120,6 +120,8 @@ public class RcPlayer : MonoBehaviour
             return;
         }
         
+        RoboCup.singleton.ResetVisualPositions(playerNumber);
+        
         List<MessageObject> seenObjects = new List<MessageObject>();
         for (int i = 2; i < messageObject.values.Count; i++)
         {
@@ -129,17 +131,15 @@ public class RcPlayer : MonoBehaviour
 
         foreach (MessageObject seenObject in seenObjects)
         {
-            string objectName = seenObject.values[0].MObject.values[0].MString;
+            //string objectName = seenObject.values[0].MObject.values[0].MString;
+            string objectName = seenObject.values[0].MObject.SimplePrint();
+            float distance = float.Parse(seenObject.values[1].MString);
+
+            float angle = 0;
+            if (seenObject.values.Count > 2)
+                angle = float.Parse(seenObject.values[2].MString);
             
-            if (objectName.Equals("b"))
-            {
-                Debug.LogWarning($"object Name: {objectName}");
-                float distance = float.Parse(seenObject.values[1].MString);
-                
-                float angle = float.Parse(seenObject.values[2].MString);
-                
-                RoboCup.singleton.SetVisualPosition(distance, angle);
-            }
+            RoboCup.singleton.SetVisualPosition(playerNumber, objectName, distance, angle);
         }
     }
 }

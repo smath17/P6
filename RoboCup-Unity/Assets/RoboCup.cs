@@ -2,16 +2,89 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Unity.Mathematics;
+using UnityEngine.Assertions.Comparers;
 
 public class RoboCup : MonoBehaviour
 {
     public static RoboCup singleton;
 
+    string[] whiteFlags = new[]
+    {
+        "f t 0",
+        "f c t",
+        "f b 0",
+        "f c b",
+        "f b t",
+        "f c"
+    };
+    
+    string[] redFlags = new[]
+    {
+        "f r t",
+        "f t r 10",
+        "f t r 20",
+        "f t r 30",
+        "f t r 40",
+        "f t r 50",
+        "f r t 30",
+        "f r t 20",
+        "f r t 10",
+        "f r t 0",
+        "f r b",
+        "f r b 10",
+        "f r b 20",
+        "f r b 30",
+        "f p r t",
+        "f p r c",
+        "f p r b",
+        "f g r t",
+        "g r",
+        "f g r b",
+        "f b r 10",
+        "f b r 20",
+        "f b r 30",
+        "f b r 40",
+        "f b r 50",
+        "f r 0"
+    };
+    
+    string[] blueFlags = new[]
+    {
+        "f l t",
+        "f t l 50",
+        "f t l 40",
+        "f t l 30",
+        "f t l 20",
+        "f t l 10",
+        "f l t 30",
+        "f l t 20",
+        "f l t 10",
+        "f l t 0",
+        "f l b 10",
+        "f l b 20",
+        "f l b 30",
+        "f p l t",
+        "f p l c",
+        "f p l b",
+        "f g l t",
+        "g l",
+        "f g l b",
+        "f l b",
+        "f b l 50",
+        "f b l 40",
+        "f b l 30",
+        "f b l 20",
+        "f b l 10"
+    };
+
     const int teamSize = 11;
+
+    float visualScale = Screen.height / 150f;
     
     [Header("Settings")]
     public string ip = "127.0.0.1";
@@ -21,6 +94,9 @@ public class RoboCup : MonoBehaviour
 
     int currentPlayer = 0;
 
+    string enemyTeamName = "\"EnemyTeam\"";
+    bool enemyTeamNameFound;
+    
     List<RcPlayer> players = new List<RcPlayer>();
 
     [Header("References")]
@@ -34,10 +110,14 @@ public class RoboCup : MonoBehaviour
 
     [Header("Prefabs")]
     public GameObject playerPrefab;
+    public GameObject playerEnemyPrefab;
     public GameObject visualPlayerPrefab;
-
-
-    List<RectTransform> visualPlayers = new List<RectTransform>();
+    public GameObject visualBallPrefab;
+    public GameObject visualFlagPrefab;
+    public GameObject visualFlagRedPrefab;
+    public GameObject visualFlagBluePrefab;
+    
+    Dictionary<string, RectTransform> visualObjects = new Dictionary<string, RectTransform>();
     
     void Awake()
     {
@@ -45,18 +125,28 @@ public class RoboCup : MonoBehaviour
             singleton = this;
         else
             Destroy(gameObject);
+        
+        CreateVisualObject("b", visualBallPrefab);
 
-        for (int i = 0; i < 64; i++)
+        foreach (string flagName in whiteFlags)
         {
-            GameObject obj = Instantiate(visualPlayerPrefab);
+            CreateVisualObject(flagName, visualFlagPrefab);
+        }
+        
+        foreach (string flagName in redFlags)
+        {
+            CreateVisualObject(flagName, visualFlagRedPrefab);
+        }
+        
+        foreach (string flagName in blueFlags)
+        {
+            CreateVisualObject(flagName, visualFlagBluePrefab);
+        }
 
-            RectTransform rt = obj.GetComponent<RectTransform>();
-            rt.SetParent(field);
-            rt.anchoredPosition = Vector2.zero;
-            
-            //obj.GetComponent<Image>().color = random color
-            
-            visualPlayers.Add(rt);
+        for (int i = 0; i < 11; i++)
+        {
+            RectTransform rt = CreateVisualObject($"p \"{teamName}\" {i}", visualPlayerPrefab);
+            rt.Find("PlayerNumber").GetComponent<TextMeshProUGUI>().text = ""+i;
         }
     }
 
@@ -125,7 +215,6 @@ public class RoboCup : MonoBehaviour
             players[currentPlayer].Send($"(dash {dashAmount} 180)");
     }
     
-
     IEnumerator CreatePlayers()
     {
         if (singleplayer)
@@ -190,12 +279,66 @@ public class RoboCup : MonoBehaviour
         }
     }
 
-    public void SetVisualPosition(float distance, float angle)
+    RectTransform CreateVisualObject(string objectName, GameObject prefab)
     {
+        GameObject obj = Instantiate(prefab);
+
+        RectTransform rt = obj.GetComponent<RectTransform>();
+        rt.SetParent(field);
+        rt.anchoredPosition = Vector2.zero;
+        
+        visualObjects.Add(objectName, rt);
+        return rt;
+    }
+
+    public void ResetVisualPositions(int subjectPlayer)
+    {
+        if (subjectPlayer != currentPlayer)
+            return;
+        
+        foreach (KeyValuePair<string,RectTransform> obj in visualObjects)
+        {
+            obj.Value.gameObject.SetActive(false);
+        }
+    }
+
+    public void SetVisualPosition(int subjectPlayer, string objectName, float distance, float angle)
+    {
+        if (subjectPlayer != currentPlayer)
+            return;
+        
         float radians = Mathf.Deg2Rad * -(angle - 90f);
         
-        Vector2 newPos = 10f * distance * new Vector2(math.cos(radians), math.sin(radians));
+        Vector2 newPos = visualScale * distance * new Vector2(math.cos(radians), math.sin(radians));
         //Debug.Log(newPos);
-        visualPlayers[0].anchoredPosition = newPos;
+
+        if (objectName.StartsWith("p "))
+        {
+            if (!objectName.StartsWith("p \"" + teamName + "\""))
+            {
+                if (!visualObjects.ContainsKey(objectName))
+                {
+                    Regex regex = new Regex("p \"[0-z]*\" ([0-9]{1,2})( goalie)?");
+                    if (regex.Match(objectName).Success)
+                    {
+                        int enemyNumber = int.Parse(regex.Match(objectName).Result("$1"));
+                        bool goalie = regex.Match(objectName).Result($"2").Length > 0;
+
+                        RectTransform rt = CreateVisualObject(objectName, playerEnemyPrefab);
+                        rt.Find("PlayerNumber").GetComponent<TextMeshProUGUI>().text = ""+ enemyNumber + ((goalie) ? " G" : "");
+                    }
+                }
+            }
+        }
+
+        if (visualObjects.ContainsKey(objectName))
+        {
+            visualObjects[objectName].gameObject.SetActive(true);
+            visualObjects[objectName].anchoredPosition = newPos;
+        }
+        else
+        {
+            Debug.LogWarning(objectName);
+        }
     }
 }
