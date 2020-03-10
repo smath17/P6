@@ -122,6 +122,7 @@ public class RoboCup : MonoBehaviour
     GameObject visGeneric;
     GameObject visPlayer;
     GameObject visPlayerEnemy;
+    GameObject visPlayerUnknown;
     GameObject visBall;
     GameObject visBallClose;
     GameObject visFlag;
@@ -129,6 +130,9 @@ public class RoboCup : MonoBehaviour
     GameObject visFlagBlue;
     
     Dictionary<string, VisualObject> visualObjects = new Dictionary<string, VisualObject>();
+
+    List<VisualObject> unknownPlayers = new List<VisualObject>();
+    int unknownPlayerIndex;
     
     void Awake()
     {
@@ -137,16 +141,17 @@ public class RoboCup : MonoBehaviour
         else
             Destroy(gameObject);
 
-        playerPrefab   = Resources.Load<GameObject>("prefabs/RC Player");
+        playerPrefab     = Resources.Load<GameObject>("prefabs/RC Player");
         
-        visGeneric     = Resources.Load<GameObject>("prefabs/visual/generic");
-        visPlayer      = Resources.Load<GameObject>("prefabs/visual/player");
-        visPlayerEnemy = Resources.Load<GameObject>("prefabs/visual/playerEnemy");
-        visBall        = Resources.Load<GameObject>("prefabs/visual/ball");
-        visBallClose   = Resources.Load<GameObject>("prefabs/visual/ballClose");
-        visFlag        = Resources.Load<GameObject>("prefabs/visual/flag");
-        visFlagRed     = Resources.Load<GameObject>("prefabs/visual/flagRed");
-        visFlagBlue    = Resources.Load<GameObject>("prefabs/visual/flagBlue");
+        visGeneric       = Resources.Load<GameObject>("prefabs/visual/generic");
+        visPlayer        = Resources.Load<GameObject>("prefabs/visual/player");
+        visPlayerEnemy   = Resources.Load<GameObject>("prefabs/visual/playerEnemy");
+        visPlayerUnknown = Resources.Load<GameObject>("prefabs/visual/playerUnknown");
+        visBall          = Resources.Load<GameObject>("prefabs/visual/ball");
+        visBallClose     = Resources.Load<GameObject>("prefabs/visual/ballClose");
+        visFlag          = Resources.Load<GameObject>("prefabs/visual/flag");
+        visFlagRed       = Resources.Load<GameObject>("prefabs/visual/flagRed");
+        visFlagBlue      = Resources.Load<GameObject>("prefabs/visual/flagBlue");
         
         CreateVisualObject("b", visBall);
         CreateVisualObject("B", visBallClose);
@@ -172,10 +177,17 @@ public class RoboCup : MonoBehaviour
             CreateVisualObject(flagName, visFlagBlue);
         }
 
-        for (int i = 0; i < 11; i++)
+        for (int i = 0; i < teamSize+1; i++)
         {
-            RectTransform rt = CreateVisualObject($"p \"{teamName}\" {i}", visPlayer);
-            rt.Find("PlayerNumber").GetComponent<TextMeshProUGUI>().text = ""+i;
+            bool goalie = i == teamSize;
+            string goalieText = goalie ? " goalie" : "";
+            RectTransform rt = CreateVisualObject($"p \"{teamName}\" {i}{goalieText}", visPlayer);
+            rt.Find("PlayerNumber").GetComponent<TextMeshProUGUI>().text = ""+ i + (goalie ? " G" : "");
+        }
+
+        for (int i = 0; i < teamSize * 2; i++)
+        {
+            CreateUnknownPlayer();
         }
     }
 
@@ -333,6 +345,20 @@ public class RoboCup : MonoBehaviour
         visualObjects.Add(objectName, vObj);
         return rt;
     }
+    
+    RectTransform CreateUnknownPlayer()
+    {
+        GameObject obj = Instantiate(visPlayerUnknown);
+
+        RectTransform rt = obj.GetComponent<RectTransform>();
+        rt.SetParent(field);
+        rt.anchoredPosition = Vector2.zero;
+        
+        VisualObject vObj = new VisualObject(rt);
+        
+        unknownPlayers.Add(vObj);
+        return rt;
+    }
 
     public void ResetVisualPositions(int subjectPlayer)
     {
@@ -345,6 +371,12 @@ public class RoboCup : MonoBehaviour
             vObj.visibleThisStep = false;
             vObj.lastPos = vObj.newPos;
         }
+
+        unknownPlayerIndex = 0;
+        foreach (VisualObject unknownPlayer in unknownPlayers)
+        {
+            unknownPlayer.rt.gameObject.SetActive(false);
+        }
     }
 
     public void SetVisualPosition(int subjectPlayer, string objectName, float distance, float angle)
@@ -356,20 +388,23 @@ public class RoboCup : MonoBehaviour
         
         Vector2 newPos = visualScale * distance * new Vector2(math.cos(radians), math.sin(radians));
 
-        if (objectName.StartsWith("p "))
+        if (objectName[0] == 'p')
         {
-            if (!objectName.StartsWith("p \"" + teamName + "\""))
+            if (objectName.Length > 1)
             {
-                if (!visualObjects.ContainsKey(objectName))
+                if (!objectName.StartsWith("p \"" + teamName + "\""))
                 {
-                    Regex regex = new Regex("p \"[0-z]*\" ([0-9]{1,2})( goalie)?");
-                    if (regex.Match(objectName).Success)
+                    if (!visualObjects.ContainsKey(objectName))
                     {
-                        int enemyNumber = int.Parse(regex.Match(objectName).Result("$1"));
-                        bool goalie = regex.Match(objectName).Result($"2").Length > 0;
+                        Regex regex = new Regex("p \"[0-z]*\" ([0-9]{1,2})( goalie)?");
+                        if (regex.Match(objectName).Success)
+                        {
+                            int enemyNumber = int.Parse(regex.Match(objectName).Result("$1"));
+                            bool goalie = regex.Match(objectName).Result("$2").Length > 0;
 
-                        RectTransform rt = CreateVisualObject(objectName, visPlayerEnemy);
-                        rt.Find("PlayerNumber").GetComponent<TextMeshProUGUI>().text = ""+ enemyNumber + ((goalie) ? " G" : "");
+                            RectTransform rt = CreateVisualObject(objectName, visPlayerEnemy);
+                            rt.Find("PlayerNumber").GetComponent<TextMeshProUGUI>().text = ""+ enemyNumber + (goalie ? " G" : "");
+                        }
                     }
                 }
             }
@@ -379,6 +414,13 @@ public class RoboCup : MonoBehaviour
         {
             visualObjects[objectName].visibleThisStep = true;
             visualObjects[objectName].newPos = newPos;
+        }
+        else if (objectName.Equals("p"))
+        {
+            unknownPlayers[unknownPlayerIndex].rt.gameObject.SetActive(true);
+            unknownPlayers[unknownPlayerIndex].rt.anchoredPosition = newPos;
+
+            unknownPlayerIndex++;
         }
         else
         {

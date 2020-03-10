@@ -959,22 +959,6 @@ MonoBehaviour:
   hearText: {fileID: 1313899144}
   field: {fileID: 1459701071}
   selfPlayer: {fileID: 754126075606903121}
-  playerPrefab: {fileID: 3133365638193193647, guid: 20099df8ed022c241b2d1924c3355e69,
-    type: 3}
-  playerEnemyPrefab: {fileID: 1629518170462907273, guid: 5927cb4fee63d0b45a3e705659f5b57c,
-    type: 3}
-  visualTextPrefab: {fileID: 5619274914169789163, guid: 3afda9bc9a4b15d49a432b56b6012fd1,
-    type: 3}
-  visualPlayerPrefab: {fileID: 5619274914169789163, guid: 5d97db1ae6482964dbba98aac5f54bc2,
-    type: 3}
-  visualBallPrefab: {fileID: 5619274914169789163, guid: ae7b607a2bc81924ebca1d354ff4d573,
-    type: 3}
-  visualFlagPrefab: {fileID: 5619274914169789163, guid: 1e672cb60802e074ea7726f680ccb57a,
-    type: 3}
-  visualFlagRedPrefab: {fileID: 5660159663288798830, guid: 558ab7e67e3416f4f935af935920cb17,
-    type: 3}
-  visualFlagBluePrefab: {fileID: 6636309654950311156, guid: 0d818da1b3fe8564c9446f68651feaae,
-    type: 3}
 --- !u!4 &1112771723
 Transform:
   m_ObjectHideFlags: 0
