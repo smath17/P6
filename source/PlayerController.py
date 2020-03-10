@@ -21,7 +21,7 @@ class Player:
         # Server on port 6000 by default
         # TODO. IP of the day
         self.init_port = 6000
-        self.serverAddressPort = ("172.31.253.241", self.init_port)
+        self.serverAddressPort = ("172.31.253.196", self.init_port)
 
         # Create client via UDP socket
         self.UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
@@ -39,7 +39,7 @@ class Player:
         self.send_action(action)
         # Receive server init output and grab dedicated port
         new_port = self.UDPClientSocket.recvfrom(6000)[1]
-        self.serverAddressPort = ("172.31.253.241", new_port[1])
+        self.serverAddressPort = ("172.31.253.196", new_port[1])
 
     def send_action(self, action):
         # action is null terminated because server is written in c++
