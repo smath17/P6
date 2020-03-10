@@ -107,6 +107,7 @@ public class RoboCup : MonoBehaviour
     public TextMeshProUGUI seeText;
     public TextMeshProUGUI hearText;
     public RectTransform field;
+    public Image selfPlayer;
 
     [Header("Prefabs")]
     public GameObject playerPrefab;
@@ -272,6 +273,18 @@ public class RoboCup : MonoBehaviour
                 break;
             case RcMessage.RcMessageType.Hear:
                 hearText.text = txt;
+                break;
+            case RcMessage.RcMessageType.PlayerParam:
+                //ignore
+                break;
+            case RcMessage.RcMessageType.ServerParam:
+                //ignore
+                break;
+            case RcMessage.RcMessageType.Init:
+                if (txt.Contains("r"))
+                    selfPlayer.color = Color.red;
+                else if (txt.Contains("l"))
+                    selfPlayer.color = Color.blue;
                 break;
             default:
                 serverMessageText.text = txt;
