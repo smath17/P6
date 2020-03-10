@@ -31,6 +31,16 @@ class Parser:
         elif msg_type == "(see ":
             # Split at (( to get every object and its info separated
             info_list = rec_msg.rsplit("((")
+
+            for str_obs in info_list:
+                if str_obs[-1:] == " ":
+                    str_obs = str_obs[:-1]
+
+            # Remove trailing spaces
+            for index, str_obs in enumerate(info_list):
+                if str_obs[-1:] == " ":
+                    info_list[index] = str_obs[:-1]
+
             # Return list of observable objects, discard first element
             return [info_list[1::]]
 
