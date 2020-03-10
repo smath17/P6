@@ -132,14 +132,23 @@ public class RcPlayer : MonoBehaviour
         foreach (MessageObject seenObject in seenObjects)
         {
             //string objectName = seenObject.values[0].MObject.values[0].MString;
-            string objectName = seenObject.values[0].MObject.SimplePrint();
-            float distance = float.Parse(seenObject.values[1].MString);
 
-            float angle = 0;
-            if (seenObject.values.Count > 2)
-                angle = float.Parse(seenObject.values[2].MString);
+            if (seenObject.values.Count > 0)
+            {
+                string objectName = seenObject.values[0].MObject.SimplePrint();
+
+                float distance = 100;
+                if (seenObject.values.Count > 1)
+                    distance = float.Parse(seenObject.values[1].MString);
+
+                float angle = 0;
+                if (seenObject.values.Count > 2)
+                    angle = float.Parse(seenObject.values[2].MString);
             
-            RoboCup.singleton.SetVisualPosition(playerNumber, objectName, distance, angle);
+                RoboCup.singleton.SetVisualPosition(playerNumber, objectName, distance, angle);
+            }
         }
+        
+        RoboCup.singleton.UpdateVisualPositions(playerNumber);
     }
 }

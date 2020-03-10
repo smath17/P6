@@ -117,7 +117,7 @@ public class RoboCup : MonoBehaviour
     public GameObject visualFlagRedPrefab;
     public GameObject visualFlagBluePrefab;
     
-    Dictionary<string, RectTransform> visualObjects = new Dictionary<string, RectTransform>();
+    Dictionary<string, VisualObject> visualObjects = new Dictionary<string, VisualObject>();
     
     void Awake()
     {
@@ -287,7 +287,9 @@ public class RoboCup : MonoBehaviour
         rt.SetParent(field);
         rt.anchoredPosition = Vector2.zero;
         
-        visualObjects.Add(objectName, rt);
+        VisualObject vObj = new VisualObject(rt);
+        
+        visualObjects.Add(objectName, vObj);
         return rt;
     }
 
@@ -296,9 +298,11 @@ public class RoboCup : MonoBehaviour
         if (subjectPlayer != currentPlayer)
             return;
         
-        foreach (KeyValuePair<string,RectTransform> obj in visualObjects)
+        foreach (VisualObject vObj in visualObjects.Values)
         {
-            obj.Value.gameObject.SetActive(false);
+            vObj.visibleLastStep = vObj.visibleThisStep;
+            vObj.visibleThisStep = false;
+            vObj.lastPos = vObj.newPos;
         }
     }
 
@@ -333,12 +337,65 @@ public class RoboCup : MonoBehaviour
 
         if (visualObjects.ContainsKey(objectName))
         {
-            visualObjects[objectName].gameObject.SetActive(true);
-            visualObjects[objectName].anchoredPosition = newPos;
+            visualObjects[objectName].visibleThisStep = true;
+            visualObjects[objectName].newPos = newPos;
         }
         else
         {
             Debug.LogWarning(objectName);
         }
+    }
+    
+    public void UpdateVisualPositions(int subjectPlayer)
+    {
+        if (subjectPlayer != currentPlayer)
+            return;
+        
+        foreach (VisualObject vObj in visualObjects.Values)
+        {
+            vObj.rt.gameObject.SetActive(vObj.visibleThisStep);
+
+            if (vObj.visibleThisStep)
+            {
+                if (vObj.visibleLastStep)
+                    StartCoroutine(SmoothMove(vObj.rt, vObj.newPos));
+                else
+                    vObj.rt.anchoredPosition = vObj.newPos;
+            }
+        }
+    }
+
+    IEnumerator SmoothMove(RectTransform rect, Vector2 newPos)
+    {
+        Vector2 origPos = rect.anchoredPosition;
+
+        float t = 0;
+        float duration = 0.1f;
+        float mult = 1 / duration;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            rect.anchoredPosition = Vector2.Lerp(origPos, newPos, t * mult);
+            yield return null;
+        }
+    }
+}
+
+class VisualObject
+{
+    public RectTransform rt;
+    public bool visibleLastStep;
+    public bool visibleThisStep;
+    public Vector2 lastPos;
+    public Vector2 newPos;
+
+    public VisualObject(RectTransform rt)
+    {
+        this.rt = rt;
+        visibleLastStep = false;
+        visibleThisStep = false;
+        lastPos = Vector2.zero;
+        newPos = Vector2.zero;
     }
 }
