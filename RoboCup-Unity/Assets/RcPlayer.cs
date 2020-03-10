@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -139,7 +140,7 @@ public class RcPlayer : MonoBehaviour
 
                 float distance = 100;
                 if (seenObject.values.Count > 1)
-                    distance = float.Parse(seenObject.values[1].MString);
+                    distance = float.Parse(seenObject.values[1].MString,NumberStyles.Float,CultureInfo.InvariantCulture);
 
                 float angle = 0;
                 if (seenObject.values.Count > 2)
