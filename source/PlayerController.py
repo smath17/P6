@@ -41,12 +41,10 @@ class Player:
         # Receive server init output and grab dedicated port
         new_port = self.UDPClientSocket.recvfrom(6000)[1]
         self.serverAddressPort = (self.ip_address, new_port[1])
-        print(new_port)
 
     def send_action(self, action):
         # action is null terminated because server is written in c++
         self.UDPClientSocket.sendto(str.encode(action + '\0'), self.serverAddressPort)
-        print(self.rec_msg())
 
     def rec_msg(self):
         # Receive message from server, decode from bytes
