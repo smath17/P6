@@ -84,7 +84,7 @@ public class RoboCup : MonoBehaviour
 
     const int teamSize = 11;
 
-    float visualScale = Screen.height / 150f;
+    float visualScale = 6f;
     
     [Header("Settings")]
     public string ip = "127.0.0.1";
