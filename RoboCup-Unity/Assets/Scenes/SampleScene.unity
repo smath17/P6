@@ -963,6 +963,8 @@ MonoBehaviour:
     type: 3}
   playerEnemyPrefab: {fileID: 1629518170462907273, guid: 5927cb4fee63d0b45a3e705659f5b57c,
     type: 3}
+  visualTextPrefab: {fileID: 5619274914169789163, guid: 3afda9bc9a4b15d49a432b56b6012fd1,
+    type: 3}
   visualPlayerPrefab: {fileID: 5619274914169789163, guid: 5d97db1ae6482964dbba98aac5f54bc2,
     type: 3}
   visualBallPrefab: {fileID: 5619274914169789163, guid: ae7b607a2bc81924ebca1d354ff4d573,

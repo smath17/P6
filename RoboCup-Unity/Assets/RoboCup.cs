@@ -13,6 +13,12 @@ public class RoboCup : MonoBehaviour
 {
     public static RoboCup singleton;
 
+    string[] other = new[]
+    {
+        "F",
+        "P"
+    };
+
     string[] whiteFlags = new[]
     {
         "f t 0",
@@ -111,13 +117,16 @@ public class RoboCup : MonoBehaviour
     public Image selfPlayer;
 
     [Header("Prefabs")]
-    public GameObject playerPrefab;
-    public GameObject playerEnemyPrefab;
-    public GameObject visualPlayerPrefab;
-    public GameObject visualBallPrefab;
-    public GameObject visualFlagPrefab;
-    public GameObject visualFlagRedPrefab;
-    public GameObject visualFlagBluePrefab;
+    GameObject playerPrefab;
+    
+    GameObject visGeneric;
+    GameObject visPlayer;
+    GameObject visPlayerEnemy;
+    GameObject visBall;
+    GameObject visBallClose;
+    GameObject visFlag;
+    GameObject visFlagRed;
+    GameObject visFlagBlue;
     
     Dictionary<string, VisualObject> visualObjects = new Dictionary<string, VisualObject>();
     
@@ -127,27 +136,45 @@ public class RoboCup : MonoBehaviour
             singleton = this;
         else
             Destroy(gameObject);
-        
-        CreateVisualObject("b", visualBallPrefab);
 
+        playerPrefab   = Resources.Load<GameObject>("prefabs/RC Player");
+        
+        visGeneric     = Resources.Load<GameObject>("prefabs/visual/generic");
+        visPlayer      = Resources.Load<GameObject>("prefabs/visual/player");
+        visPlayerEnemy = Resources.Load<GameObject>("prefabs/visual/playerEnemy");
+        visBall        = Resources.Load<GameObject>("prefabs/visual/ball");
+        visBallClose   = Resources.Load<GameObject>("prefabs/visual/ballClose");
+        visFlag        = Resources.Load<GameObject>("prefabs/visual/flag");
+        visFlagRed     = Resources.Load<GameObject>("prefabs/visual/flagRed");
+        visFlagBlue    = Resources.Load<GameObject>("prefabs/visual/flagBlue");
+        
+        CreateVisualObject("b", visBall);
+        CreateVisualObject("B", visBallClose);
+
+        foreach (string o in other)
+        {
+            RectTransform rt = CreateVisualObject(o, visGeneric);
+            rt.Find("Text").GetComponent<TextMeshProUGUI>().text = o;
+        }
+        
         foreach (string flagName in whiteFlags)
         {
-            CreateVisualObject(flagName, visualFlagPrefab);
+            CreateVisualObject(flagName, visFlag);
         }
         
         foreach (string flagName in redFlags)
         {
-            CreateVisualObject(flagName, visualFlagRedPrefab);
+            CreateVisualObject(flagName, visFlagRed);
         }
         
         foreach (string flagName in blueFlags)
         {
-            CreateVisualObject(flagName, visualFlagBluePrefab);
+            CreateVisualObject(flagName, visFlagBlue);
         }
 
         for (int i = 0; i < 11; i++)
         {
-            RectTransform rt = CreateVisualObject($"p \"{teamName}\" {i}", visualPlayerPrefab);
+            RectTransform rt = CreateVisualObject($"p \"{teamName}\" {i}", visPlayer);
             rt.Find("PlayerNumber").GetComponent<TextMeshProUGUI>().text = ""+i;
         }
     }
@@ -328,7 +355,6 @@ public class RoboCup : MonoBehaviour
         float radians = Mathf.Deg2Rad * -(angle - 90f);
         
         Vector2 newPos = visualScale * distance * new Vector2(math.cos(radians), math.sin(radians));
-        //Debug.Log(newPos);
 
         if (objectName.StartsWith("p "))
         {
@@ -342,7 +368,7 @@ public class RoboCup : MonoBehaviour
                         int enemyNumber = int.Parse(regex.Match(objectName).Result("$1"));
                         bool goalie = regex.Match(objectName).Result($"2").Length > 0;
 
-                        RectTransform rt = CreateVisualObject(objectName, playerEnemyPrefab);
+                        RectTransform rt = CreateVisualObject(objectName, visPlayerEnemy);
                         rt.Find("PlayerNumber").GetComponent<TextMeshProUGUI>().text = ""+ enemyNumber + ((goalie) ? " G" : "");
                     }
                 }
@@ -356,7 +382,7 @@ public class RoboCup : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning(objectName);
+            Debug.LogWarning($"object not in dict: {objectName}");
         }
     }
     

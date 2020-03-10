@@ -116,7 +116,7 @@ public class RcPlayer : MonoBehaviour
     {
         if (messageObject.values.Count < 3)
         {
-            Debug.LogWarning("not enough values");
+            Debug.LogWarning($"not enough values: {messageObject.SimplePrint()}");
             return;
         }
         
@@ -131,19 +131,17 @@ public class RcPlayer : MonoBehaviour
 
         foreach (MessageObject seenObject in seenObjects)
         {
-            //string objectName = seenObject.values[0].MObject.values[0].MString;
-
             if (seenObject.values.Count > 0)
             {
                 string objectName = seenObject.values[0].MObject.SimplePrint();
 
                 float distance = 100;
                 if (seenObject.values.Count > 1)
-                    distance = float.Parse(seenObject.values[1].MString,NumberStyles.Float,CultureInfo.InvariantCulture);
+                    float.TryParse(seenObject.values[1].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out distance);
 
                 float angle = 0;
                 if (seenObject.values.Count > 2)
-                    angle = float.Parse(seenObject.values[2].MString);
+                    float.TryParse(seenObject.values[2].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out angle);
             
                 RoboCup.singleton.SetVisualPosition(playerNumber, objectName, distance, angle);
             }
