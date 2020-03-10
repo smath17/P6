@@ -114,36 +114,33 @@ public class RcPlayer : MonoBehaviour
 
     void See(MessageObject messageObject)
     {
-        if (messageObject.values.Count < 3)
-        {
-            Debug.LogWarning($"not enough values: {messageObject.SimplePrint()}");
-            return;
-        }
-        
         RoboCup.singleton.ResetVisualPositions(playerNumber);
         
-        List<MessageObject> seenObjects = new List<MessageObject>();
-        for (int i = 2; i < messageObject.values.Count; i++)
+        if (messageObject.values.Count > 2)
         {
-            if (messageObject.values[i].MObject != null)
-                seenObjects.Add(messageObject.values[i].MObject);
-        }
-
-        foreach (MessageObject seenObject in seenObjects)
-        {
-            if (seenObject.values.Count > 0)
+            List<MessageObject> seenObjects = new List<MessageObject>();
+            for (int i = 2; i < messageObject.values.Count; i++)
             {
-                string objectName = seenObject.values[0].MObject.SimplePrint();
+                if (messageObject.values[i].MObject != null)
+                    seenObjects.Add(messageObject.values[i].MObject);
+            }
 
-                float distance = 100;
-                if (seenObject.values.Count > 1)
-                    float.TryParse(seenObject.values[1].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out distance);
+            foreach (MessageObject seenObject in seenObjects)
+            {
+                if (seenObject.values.Count > 0)
+                {
+                    string objectName = seenObject.values[0].MObject.SimplePrint();
 
-                float angle = 0;
-                if (seenObject.values.Count > 2)
-                    float.TryParse(seenObject.values[2].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out angle);
+                    float distance = 100;
+                    if (seenObject.values.Count > 1)
+                        float.TryParse(seenObject.values[1].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out distance);
+
+                    float angle = 0;
+                    if (seenObject.values.Count > 2)
+                        float.TryParse(seenObject.values[2].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out angle);
             
-                RoboCup.singleton.SetVisualPosition(playerNumber, objectName, distance, angle);
+                    RoboCup.singleton.SetVisualPosition(playerNumber, objectName, distance, angle);
+                }
             }
         }
         
