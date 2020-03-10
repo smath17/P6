@@ -44,9 +44,8 @@ public class RcPlayer : MonoBehaviour
 
     public void Send(string text)
     {
-        //Debug.Log($"sending: {text}");
         Byte[] sendBytes = Encoding.ASCII.GetBytes(text + '\0');
-        Debug.Log($"player {playerNumber} sending (port {endPoint.Port}): {text}");
+        //Debug.Log($"player {playerNumber} sending (port {endPoint.Port}): {text}");
         socket.SendTo(sendBytes, endPoint);
     }
     

@@ -958,6 +958,7 @@ MonoBehaviour:
   seeText: {fileID: 679501509}
   hearText: {fileID: 1313899144}
   field: {fileID: 1459701071}
+  selfPlayer: {fileID: 754126075606903121}
   playerPrefab: {fileID: 3133365638193193647, guid: 20099df8ed022c241b2d1924c3355e69,
     type: 3}
   playerEnemyPrefab: {fileID: 1629518170462907273, guid: 5927cb4fee63d0b45a3e705659f5b57c,

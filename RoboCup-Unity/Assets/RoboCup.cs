@@ -79,7 +79,8 @@ public class RoboCup : MonoBehaviour
         "f b l 40",
         "f b l 30",
         "f b l 20",
-        "f b l 10"
+        "f b l 10",
+        "f l 0"
     };
 
     const int teamSize = 11;
