@@ -12,7 +12,7 @@ class Player:
         self.effort = 0
         self.head_angle = 0
         self.tackled = 0
-        self.game_status = ""
+        self.game_status = "before_kick_off"  # Initial mode
         self.observables = []
 
         # Instantiate parser to update info
@@ -45,7 +45,6 @@ class Player:
     def send_action(self, action):
         # action is null terminated because server is written in c++
         self.UDPClientSocket.sendto(str.encode(action + '\0'), self.serverAddressPort)
-        print(self.rec_msg())
 
     def rec_msg(self):
         # Receive message from server, decode from bytes
@@ -60,3 +59,6 @@ class Player:
 
     def disconnect(self):
         self.send_action("(bye)")
+
+    def stop_connection(self):
+        self.UDPClientSocket.close()

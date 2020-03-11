@@ -12,7 +12,7 @@ class Coach:
             self.coach_port = 6002
 
         # TODO. IP of the day
-        self.serverAddressPort = ("172.31.253.241", self.coach_port)
+        self.serverAddressPort = ("172.31.253.196", self.coach_port)
 
         # Create client via UDP socket
         self.UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
@@ -23,3 +23,16 @@ class Coach:
     def send_action(self, action):
         # action is null terminated because server is written in c++
         self.UDPClientSocket.sendto(str.encode(action + '\0'), self.serverAddressPort)
+
+    def rec_msg(self):
+        # Receive message from server, decode from bytes
+        msg_from_server = self.UDPClientSocket.recvfrom(6000)
+
+        # the received msg is (bytes, encoding) we just want the bytes, hence [0]
+        return msg_from_server[0].decode()
+
+    def disconnect(self):
+        self.send_action("(bye)")
+
+    def stop_connection(self):
+        self.UDPClientSocket.close()
