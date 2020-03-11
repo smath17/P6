@@ -79,37 +79,37 @@ class KeyboardControl:
                     team[self.current_player].send_action("(turn 20)")
                     continue
                 if keyboard.is_pressed('1'):
-                    current_player = 0
+                    self.current_player = 0
                     continue
                 if keyboard.is_pressed('2'):
-                    current_player = 1
+                    self.current_player = 1
                     continue
                 if keyboard.is_pressed('3'):
-                    current_player = 2
+                    self.current_player = 2
                     continue
                 if keyboard.is_pressed('4'):
-                    current_player = 3
+                    self.current_player = 3
                     continue
                 if keyboard.is_pressed('5'):
-                    current_player = 4
+                    self.current_player = 4
                     continue
                 if keyboard.is_pressed('6'):
-                    current_player = 5
+                    self.current_player = 5
                     continue
                 if keyboard.is_pressed('7'):
-                    current_player = 6
+                    self.current_player = 6
                     continue
                 if keyboard.is_pressed('8'):
-                    current_player = 7
+                    self.current_player = 7
                     continue
                 if keyboard.is_pressed('9'):
-                    current_player = 8
+                    self.current_player = 8
                     continue
                 if keyboard.is_pressed('0'):
-                    current_player = 9
+                    self.current_player = 9
                     continue
                 if keyboard.is_pressed('+'):
-                    current_player = 10
+                    self.current_player = 10
                     continue
                 if keyboard.is_pressed('t'):
                     team[self.current_player].send_action("(say \"Hi Bob\")")

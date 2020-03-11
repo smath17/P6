@@ -12,7 +12,7 @@ class Coach:
             self.coach_port = 6002
 
         # TODO. IP of the day
-        self.serverAddressPort = ("172.31.253.241", self.coach_port)
+        self.serverAddressPort = ("172.31.253.196", self.coach_port)
 
         # Create client via UDP socket
         self.UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)

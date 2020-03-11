@@ -5,7 +5,7 @@ import sys
 
 if __name__ == "__main__":
 
-    teamname1 = "Simon"
+    teamname1 = "Bobbers"
 
     # Create a list of players
     team1 = [Player(teamname1, True)]
