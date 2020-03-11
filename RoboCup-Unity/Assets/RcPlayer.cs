@@ -135,11 +135,23 @@ public class RcPlayer : MonoBehaviour
                     if (seenObject.values.Count > 1)
                         float.TryParse(seenObject.values[1].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out distance);
 
-                    float angle = 0;
+                    float direction = 0;
                     if (seenObject.values.Count > 2)
-                        float.TryParse(seenObject.values[2].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out angle);
-            
-                    RoboCup.singleton.SetVisualPosition(playerNumber, objectName, distance, angle);
+                        float.TryParse(seenObject.values[2].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out direction);
+
+                    float distChange = 0;
+                    if (seenObject.values.Count > 3)
+                        float.TryParse(seenObject.values[3].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out distChange);
+                    
+                    float dirChange = 0;
+                    if (seenObject.values.Count > 4)
+                        float.TryParse(seenObject.values[4].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out dirChange);
+                    
+                    float bodyFacingDir = 0;
+                    if (seenObject.values.Count > 5)
+                        float.TryParse(seenObject.values[5].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out bodyFacingDir);
+                    
+                    RoboCup.singleton.SetVisualPosition(playerNumber, objectName, distance, direction, bodyFacingDir);
                 }
             }
         }

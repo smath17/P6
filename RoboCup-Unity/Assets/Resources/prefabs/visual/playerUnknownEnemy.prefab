@@ -15,22 +15,22 @@ PrefabInstance:
     - target: {fileID: 3199693854229900491, guid: 5d97db1ae6482964dbba98aac5f54bc2,
         type: 3}
       propertyPath: m_Color.a
-      value: 0.49803922
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3199693854229900491, guid: 5d97db1ae6482964dbba98aac5f54bc2,
         type: 3}
       propertyPath: m_Color.r
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3199693854229900491, guid: 5d97db1ae6482964dbba98aac5f54bc2,
         type: 3}
       propertyPath: m_Color.g
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3199693854229900491, guid: 5d97db1ae6482964dbba98aac5f54bc2,
         type: 3}
       propertyPath: m_Color.b
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5504474634368902762, guid: 5d97db1ae6482964dbba98aac5f54bc2,
         type: 3}
@@ -140,7 +140,7 @@ PrefabInstance:
     - target: {fileID: 5619274914169789163, guid: 5d97db1ae6482964dbba98aac5f54bc2,
         type: 3}
       propertyPath: m_Name
-      value: playerUnknown
+      value: playerUnknownEnemy
       objectReference: {fileID: 0}
     - target: {fileID: 6179206143881609352, guid: 5d97db1ae6482964dbba98aac5f54bc2,
         type: 3}
