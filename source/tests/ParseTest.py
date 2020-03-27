@@ -46,6 +46,14 @@ class MyTestCase(unittest.TestCase):
 
         assert self.player.game_status == "kick_off_l"
 
+    def test_parse_init_info(self):
+        self.test_init_msg = "(init l 2 before_kick_off)"
+        self.parser.init_info(self.player, self.test_init_msg)
+
+        assert self.player.game_status == "before_kick_off", "Game status was = {}".format(self.player.game_status)
+        assert self.player.unum == 2, "Unum was = {}".format(self.player.unum)
+        assert self.player.side == 'l', "Side was = {}".format(self.player.side)
+
 
 if __name__ == '__main__':
     unittest.main()

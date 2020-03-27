@@ -46,3 +46,11 @@ class Parser:
 
             # l = left, r = right, c = center
             # ((name) distance direction)
+
+    # parse player number and side
+    def init_info(self, player, msg):
+        # msg = (init l 2 before_kick_off)
+        msg = msg.rsplit(' ')
+        player.side = msg[1]
+        player.unum = int(msg[2])
+        player.game_status = (msg[3])[:-1]
