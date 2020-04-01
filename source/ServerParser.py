@@ -53,4 +53,4 @@ class Parser:
         msg = msg.rsplit(' ')
         player.side = msg[1]
         player.unum = int(msg[2])
-        player.game_status = (msg[3])[:-1]
+        player.game_status = (msg[3])[:-2]

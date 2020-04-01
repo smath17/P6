@@ -13,7 +13,7 @@ class MyTestCase(unittest.TestCase):
         for x in range(25):
             self.player.update_info()
         assert self.player.stamina == 8000
-        assert self.player.game_status == "before_kick_off"
+        assert self.player.game_status == "before_kick_off", "was: {}".format(self.player.game_status)
 
         self.player.disconnect()
         self.player.stop_connection()
@@ -28,9 +28,17 @@ class MyTestCase(unittest.TestCase):
 
     # Create online coach
     def test_coach_connect(self):
+        testmsg = '(ok look'
         player = Player("Test")
         self.coach = Coach("Test")
-        assert self.coach.rec_msg()[:5] == "(init", "Coach received: {}".format(self.coach.rec_msg())
+
+        self.coach.send_action("(look)")
+
+        # Catch up the init messages
+        for x in range(20):
+            self.coach.rec_msg()
+        recmsg = self.coach.rec_msg()[0:8]
+        assert recmsg == testmsg, "Coach received: {}, but expected: {}".format(recmsg, testmsg)
 
         self.coach.disconnect()
         self.coach.stop_connection()

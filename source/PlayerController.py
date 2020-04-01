@@ -49,7 +49,7 @@ class Player:
         # new port = (ip, port)
         new_port = init_msg[1]
         self.serverAddressPort = (self.ip, new_port[1])
-        self.parser.init_info(self, init_msg)
+        self.parser.init_info(self, init_msg[0].decode())
 
     def send_action(self, action):
         # action is null terminated because server is written in c++
