@@ -4,7 +4,7 @@ import socket
 class Coach:
     def __init__(self, teamname, offline=False):
         self.teamname = teamname
-        self.ip = '172.30.53.100'
+        self.ip = open("ip_address.txt", "r").read()
 
         if offline:
             # Server needs to run with -server::coach=on, to disable the referee
@@ -13,9 +13,7 @@ class Coach:
         else:
             self.coach_port = 6002
 
-        ip_file = open("ip_address.txt", "r")
-
-        self.serverAddressPort = (ip_file.read(), self.coach_port)
+        self.serverAddressPort = (self.ip, self.coach_port)
 
         # Create client via UDP socket
         self.UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
