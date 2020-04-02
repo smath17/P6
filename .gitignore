@@ -1,6 +1,7 @@
 
 # python virtual environment
 /source/venv
+/venv
 
 # Pycache
 *.pyc
