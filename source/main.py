@@ -22,6 +22,12 @@ def createTeam():
 
 if __name__ == "__main__":
 
+    try:
+        ip_file = open("ip_address.txt")
+    except IOError:
+        print("Missing ip_address.txt")
+        exit(1)
+
     teamname1 = "Simon"
 
     # Check for args, argv[0] is the script

@@ -22,11 +22,10 @@ class Player:
         self.parser = Parser()
 
         # Set server IP
-        self.ip = '172.30.53.100'
+        self.ip = ip_file = open("ip_address.txt", "r").read()
 
         if connect:
             # Server on port 6000 by default
-            # TODO: IP of the day
             self.init_port = 6000
             self.serverAddressPort = (self.ip, self.init_port)
 
