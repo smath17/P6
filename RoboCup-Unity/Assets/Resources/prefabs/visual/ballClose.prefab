@@ -180,12 +180,12 @@ PrefabInstance:
     - target: {fileID: 5504474634368902762, guid: ae7b607a2bc81924ebca1d354ff4d573,
         type: 3}
       propertyPath: m_SizeDelta.x
-      value: 30
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 5504474634368902762, guid: ae7b607a2bc81924ebca1d354ff4d573,
         type: 3}
       propertyPath: m_SizeDelta.y
-      value: 30
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 5504474634368902762, guid: ae7b607a2bc81924ebca1d354ff4d573,
         type: 3}
@@ -220,7 +220,7 @@ PrefabInstance:
     - target: {fileID: 5619274914169789163, guid: ae7b607a2bc81924ebca1d354ff4d573,
         type: 3}
       propertyPath: m_Name
-      value: VisualBallClose
+      value: ballClose
       objectReference: {fileID: 0}
     - target: {fileID: 6950720158955366499, guid: ae7b607a2bc81924ebca1d354ff4d573,
         type: 3}

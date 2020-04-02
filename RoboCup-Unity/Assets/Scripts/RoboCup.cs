@@ -1,18 +1,40 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
-using Unity.Mathematics;
-using UnityEngine.Assertions.Comparers;
 
 public class RoboCup : MonoBehaviour
 {
+    const int teamSize = 11;
+    
     public static RoboCup singleton;
+    IVisualizer visualizer;
 
+    [Header("Settings")]
+    public string ip = "127.0.0.1";
+    public int port = 6000;
+    public string teamName = "DefaultTeam";
+    public bool singleplayer;
+    
+    [Header("References")]
+    public OverlayInfo overlayInfo;
+    public GameObject visualizerObject;
+
+    // Tickrate
+    float currentTick = 0f;
+    float tickTime = 0.1f;
+
+    // Enemy team
+    string enemyTeamName = "EnemyTeam";
+    bool enemyTeamNameFound;
+    
+    // Player objects
+    GameObject playerPrefab;
+    List<RcPlayer> players = new List<RcPlayer>();
+    
+    Dictionary<string, RcObject> rcObjects = new Dictionary<string, RcObject>();
+
+    #region FlagNames
     string[] other = new[]
     {
         "F",
@@ -88,58 +110,10 @@ public class RoboCup : MonoBehaviour
         "f b l 10",
         "f l 0"
     };
-
-    const int teamSize = 11;
-
-    float visualScale = 6f;
-    
-    [Header("Settings")]
-    public string ip = "127.0.0.1";
-    public int port = 6000;
-    public string teamName = "DefaultTeam";
-    public bool singleplayer = false;
+    #endregion
 
     int currentPlayer = 0;
-
-    string enemyTeamName = "\"EnemyTeam\"";
-    bool enemyTeamNameFound;
-    
-    List<RcPlayer> players = new List<RcPlayer>();
-
-    [Header("References")]
-    public TextMeshProUGUI currentPlayerText;
-    public TextMeshProUGUI serverMessageText;
-    public TextMeshProUGUI playerTypeText;
-    public TextMeshProUGUI senseText;
-    public TextMeshProUGUI seeText;
-    public TextMeshProUGUI hearText;
-    public RectTransform field;
-    public Image selfPlayer;
-
-    [Header("Prefabs")]
-    GameObject playerPrefab;
-    
-    GameObject visGeneric;
-    GameObject visPlayer;
-    GameObject visPlayerEnemy;
-    GameObject visPlayerUnknown;
-    GameObject visPlayerUnknownTeam;
-    GameObject visPlayerUnknownEnemy;
-    GameObject visBall;
-    GameObject visBallClose;
-    GameObject visFlag;
-    GameObject visFlagRed;
-    GameObject visFlagBlue;
-    
-    Dictionary<string, VisualObject> visualObjects = new Dictionary<string, VisualObject>();
-
-    List<VisualObject> unknownPlayers = new List<VisualObject>();
-    List<VisualObject> unknownTeamPlayers = new List<VisualObject>();
-    List<VisualObject> unknownEnemyPlayers = new List<VisualObject>();
-    
-    int unknownPlayerIndex;
-    int unknownTeamPlayerIndex;
-    int unknownEnemyPlayerIndex;
+    bool sendDashInput;
     
     void Awake()
     {
@@ -147,133 +121,61 @@ public class RoboCup : MonoBehaviour
             singleton = this;
         else
             Destroy(gameObject);
+        
+        playerPrefab = Resources.Load<GameObject>("prefabs/RC Player");
+        visualizer = visualizerObject.GetComponent<IVisualizer>();
+        
+        CreateRcObjects();
+    }
 
-        playerPrefab          = Resources.Load<GameObject>("prefabs/RC Player");
-        
-        visGeneric            = Resources.Load<GameObject>("prefabs/visual/generic");
-        visPlayer             = Resources.Load<GameObject>("prefabs/visual/player");
-        visPlayerEnemy        = Resources.Load<GameObject>("prefabs/visual/playerEnemy");
-        visPlayerUnknown      = Resources.Load<GameObject>("prefabs/visual/playerUnknown");
-        visPlayerUnknownTeam  = Resources.Load<GameObject>("prefabs/visual/playerUnknownTeam");
-        visPlayerUnknownEnemy = Resources.Load<GameObject>("prefabs/visual/playerUnknownEnemy");
-        visBall               = Resources.Load<GameObject>("prefabs/visual/ball");
-        visBallClose          = Resources.Load<GameObject>("prefabs/visual/ballClose");
-        visFlag               = Resources.Load<GameObject>("prefabs/visual/flag");
-        visFlagRed            = Resources.Load<GameObject>("prefabs/visual/flagRed");
-        visFlagBlue           = Resources.Load<GameObject>("prefabs/visual/flagBlue");
-        
-        CreateVisualObject("b", visBall);
-        CreateVisualObject("B", visBallClose);
+    void CreateRcObjects()
+    {
+        CreateRcObject("b", RcObject.RcObjectType.Ball);
+        CreateRcObject("B", RcObject.RcObjectType.BallClose);
 
         foreach (string o in other)
         {
-            RectTransform rt = CreateVisualObject(o, visGeneric);
-            rt.Find("Text").GetComponent<TextMeshProUGUI>().text = o;
+            CreateRcObject(o, RcObject.RcObjectType.Flag);
         }
         
         foreach (string flagName in whiteFlags)
         {
-            CreateVisualObject(flagName, visFlag);
+            CreateRcObject(flagName, RcObject.RcObjectType.Flag);
         }
         
         foreach (string flagName in redFlags)
         {
-            CreateVisualObject(flagName, visFlagRed);
+            CreateRcObject(flagName, RcObject.RcObjectType.Flag);
         }
         
         foreach (string flagName in blueFlags)
         {
-            CreateVisualObject(flagName, visFlagBlue);
+            CreateRcObject(flagName, RcObject.RcObjectType.Flag);
         }
 
         for (int i = 0; i < teamSize+1; i++)
         {
             bool goalie = i == teamSize;
-            string goalieText = goalie ? " goalie" : "";
-            RectTransform rt = CreateVisualObject($"p \"{teamName}\" {i}{goalieText}", visPlayer);
-            rt.Find("PlayerNumber").GetComponent<TextMeshProUGUI>().text = ""+ i;
-            rt.Find("Goalie").gameObject.SetActive(goalie);
+            CreatePlayerRcObject(false, i, goalie);
         }
+    }
 
-        for (int i = 0; i < teamSize * 2; i++)
-        {
-            CreateUnknownPlayer();
-        }
-        
-        for (int i = 0; i < teamSize; i++)
-        {
-            CreateUnknownPlayer(true, true);
-        }
-        
-        for (int i = 0; i < teamSize; i++)
-        {
-            CreateUnknownPlayer(true, false);
-        }
+    void CreateRcObject(string objectName, RcObject.RcObjectType objectType)
+    {
+        rcObjects.Add(objectName, new RcObject(objectName, objectType));
+    }
+
+    void CreatePlayerRcObject(bool enemyTeam, int playerNumber, bool goalie)
+    {
+        RcObject.RcObjectType objectType = enemyTeam ? RcObject.RcObjectType.EnemyPlayer : RcObject.RcObjectType.TeamPlayer;
+        string tName = enemyTeam ? enemyTeamName : teamName;
+        RcObject rcPlayerObj = new RcObject(objectType, tName, playerNumber, goalie); 
+        rcObjects.Add(rcPlayerObj.name, rcPlayerObj);
     }
 
     void Start()
     {
         StartCoroutine(CreatePlayers());
-    }
-
-    void Update()
-    {
-        // Player switching
-        if (Input.GetKeyDown(KeyCode.Q))
-            currentPlayer--;
-        else if (Input.GetKeyDown(KeyCode.E))
-            currentPlayer++;
-        
-        if (currentPlayer > teamSize-1)
-            currentPlayer = 0;
-        if (currentPlayer < 0)
-            currentPlayer = teamSize-1;
-
-        for (int i = 1; i < 10; i++)
-        {
-            if (Input.GetKeyDown(KeyCode.Alpha0 + i))
-                currentPlayer = i-1;
-        }
-
-        if (Input.GetKeyDown(KeyCode.Alpha0))
-            currentPlayer = 9;
-
-        if (Input.GetKeyDown(KeyCode.G))
-            currentPlayer = 10;
-
-        currentPlayerText.text = $"Current Player: {currentPlayer+1} {(currentPlayer == 10 ? "(goalie)" : "")}";
-
-        int dashAmount = (Input.GetKey(KeyCode.LeftShift)) ? 100 : 50;
-        int turnAmount = (Input.GetKey(KeyCode.LeftShift)) ? 30 : 15;
-        int kickAmount = (Input.GetKey(KeyCode.LeftShift)) ? 100 : 50;
-        
-        // Player control
-        if (Input.GetKeyDown(KeyCode.Space))
-            players[currentPlayer].Send($"(kick {kickAmount} 0)");
-
-        else if (Input.GetKeyDown(KeyCode.LeftControl))
-            players[currentPlayer].Send("(catch 0)");
-
-        else if (Input.GetKeyDown(KeyCode.T))
-            players[currentPlayer].Send("(tackle 0)");
-        
-        else if (Input.GetKey(KeyCode.LeftArrow))
-            players[currentPlayer].Send($"(turn -{turnAmount})");
-
-        else if (Input.GetKey(KeyCode.RightArrow))
-            players[currentPlayer].Send($"(turn {turnAmount})");
-        
-        else if (Input.GetKey(KeyCode.A))
-            players[currentPlayer].Send($"(dash {dashAmount} -90)");
-
-        else if (Input.GetKey(KeyCode.D))
-            players[currentPlayer].Send($"(dash {dashAmount} 90)");
-
-        else if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
-            players[currentPlayer].Send($"(dash {dashAmount})");
-
-        else if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
-            players[currentPlayer].Send($"(dash {dashAmount} 180)");
     }
     
     IEnumerator CreatePlayers()
@@ -318,304 +220,232 @@ public class RoboCup : MonoBehaviour
         return rcPlayer;
     }
 
-    public void DisplayText(string txt, RcMessage.RcMessageType type)
+    void Update()
     {
-        switch (type)
+        PlayerSwitching();
+
+        if (Time.time > currentTick + tickTime)
         {
-            case RcMessage.RcMessageType.PlayerType:
-                playerTypeText.text = txt;
-                break;
-            case RcMessage.RcMessageType.Sense:
-                senseText.text = txt;
-                break;
-            case RcMessage.RcMessageType.See:
-                seeText.text = txt;
-                break;
-            case RcMessage.RcMessageType.Hear:
-                hearText.text = txt;
-                break;
-            case RcMessage.RcMessageType.PlayerParam:
-                //ignore
-                break;
-            case RcMessage.RcMessageType.ServerParam:
-                //ignore
-                break;
-            case RcMessage.RcMessageType.Init:
-                if (txt.Contains("r"))
-                    selfPlayer.color = Color.red;
-                else if (txt.Contains("l"))
-                    selfPlayer.color = Color.blue;
-                break;
-            default:
-                serverMessageText.text = txt;
-                break;
+            currentTick = Time.time;
+            
+            PlayerControl();
         }
     }
 
-    RectTransform CreateVisualObject(string objectName, GameObject prefab)
+    void PlayerSwitching()
     {
-        GameObject obj = Instantiate(prefab);
+        if (Input.GetKeyDown(KeyCode.Q))
+            currentPlayer--;
+        else if (Input.GetKeyDown(KeyCode.E))
+            currentPlayer++;
+        
+        if (currentPlayer > teamSize-1)
+            currentPlayer = 0;
+        if (currentPlayer < 0)
+            currentPlayer = teamSize-1;
 
-        RectTransform rt = obj.GetComponent<RectTransform>();
-        rt.SetParent(field);
-        rt.anchoredPosition = Vector2.zero;
+        for (int i = 1; i < 10; i++)
+        {
+            if (Input.GetKeyDown(KeyCode.Alpha0 + i) || Input.GetKeyDown(KeyCode.Keypad0 + i))
+                currentPlayer = i-1;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha0) || Input.GetKeyDown(KeyCode.Keypad0))
+            currentPlayer = 9;
+
+        if (Input.GetKeyDown(KeyCode.G))
+            currentPlayer = 10;
+
+        overlayInfo.UpdateCurrentPlayerText(currentPlayer);
+    }
+
+    void PlayerControl()
+    {
+        sendDashInput = !sendDashInput;
         
-        VisualObject vObj = new VisualObject(rt);
+        int dashAmount = (Input.GetKey(KeyCode.LeftShift)) ? 100 : 50;
+        int turnAmount = (Input.GetKey(KeyCode.LeftShift)) ? 30 : 15;
+        int kickAmount = (Input.GetKey(KeyCode.LeftShift)) ? 100 : 50;
+
+        if (sendDashInput)
+        {
+            if (Input.GetKey(KeyCode.A))
+                players[currentPlayer].Send($"(dash {dashAmount} -90)");
+
+            else if (Input.GetKey(KeyCode.D))
+                players[currentPlayer].Send($"(dash {dashAmount} 90)");
+
+            else if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
+                players[currentPlayer].Send($"(dash {dashAmount})");
+
+            else if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
+                players[currentPlayer].Send($"(dash {dashAmount} 180)");
+        }
         
-        visualObjects.Add(objectName, vObj);
-        return rt;
+        if (Input.GetKeyDown(KeyCode.Space))
+            players[currentPlayer].Send($"(kick {kickAmount} 0)");
+
+        else if (Input.GetKeyDown(KeyCode.LeftControl))
+            players[currentPlayer].Send("(catch 0)");
+
+        else if (Input.GetKeyDown(KeyCode.T))
+            players[currentPlayer].Send("(tackle 0)");
+    
+        else if (Input.GetKey(KeyCode.LeftArrow))
+            players[currentPlayer].Send($"(turn -{turnAmount})");
+
+        else if (Input.GetKey(KeyCode.RightArrow))
+            players[currentPlayer].Send($"(turn {turnAmount})");
     }
     
-    RectTransform CreateUnknownPlayer(bool knownTeam = false, bool myTeam = false)
+    public void ReceiveMessage(string txt, RcMessage.RcMessageType type)
     {
-        GameObject obj;
-        
-        if (knownTeam)
+        if (type == RcMessage.RcMessageType.Init)
         {
-            if (myTeam)
-                obj = Instantiate(visPlayerUnknownTeam);
-            else
-                obj = Instantiate(visPlayerUnknownEnemy);
+            visualizer.Init(teamName, teamSize, txt.Contains("r"), rcObjects);
         }
-        else
-            obj = Instantiate(visPlayerUnknown);
-
-        RectTransform rt = obj.GetComponent<RectTransform>();
-        rt.SetParent(field);
-        rt.anchoredPosition = Vector2.zero;
         
-        VisualObject vObj = new VisualObject(rt);
-
-        if (knownTeam)
-        {
-            if (myTeam)
-                unknownTeamPlayers.Add(vObj);
-            else
-                unknownEnemyPlayers.Add(vObj);
-        }
-        else
-            unknownPlayers.Add(vObj);
-        return rt;
+        overlayInfo.DisplayText(txt, type);
     }
 
-    public void ResetVisualPositions(int subjectPlayer)
+    public void ResetVisualPositions(int playerNumber)
     {
-        if (subjectPlayer != currentPlayer)
-            return;
-        
-        foreach (VisualObject vObj in visualObjects.Values)
-        {
-            vObj.visibleLastStep = vObj.visibleThisStep;
-            vObj.visibleThisStep = false;
-            vObj.lastPos = vObj.newPos;
-            vObj.lastDir = vObj.newDir;
-        }
-
-        unknownPlayerIndex = 0;
-        unknownTeamPlayerIndex = 0;
-        unknownEnemyPlayerIndex = 0;
-        
-        foreach (VisualObject unknownPlayer in unknownPlayers)
-        {
-            unknownPlayer.rt.gameObject.SetActive(false);
-        }
-        
-        foreach (VisualObject unknownTeamPlayer in unknownTeamPlayers)
-        {
-            unknownTeamPlayer.rt.gameObject.SetActive(false);
-        }
-        
-        foreach (VisualObject unknownEnemyPlayer in unknownEnemyPlayers)
-        {
-            unknownEnemyPlayer.rt.gameObject.SetActive(false);
-        }
+        if (playerNumber == currentPlayer)
+            visualizer.ResetVisualPositions(playerNumber);
     }
 
-    public void SetVisualPosition(int subjectPlayer, string objectName, float distance, float direction, float bodyFacingDir)
+    public void SetVisualPosition(int playerNumber, string objectName, float distance, float direction, float bodyFacingDir)
     {
-        if (subjectPlayer != currentPlayer)
-            return;
-        
-        float radDirection = Mathf.Deg2Rad * -(direction - 90f);
-        float bodyDirection = -(bodyFacingDir);
-        
-        Vector2 newPos = visualScale * distance * new Vector2(math.cos(radDirection), math.sin(radDirection));
-
-        bool uniqueObject = true;
-
-        // object is a player
-        if (objectName[0] == 'p')
+        if (playerNumber == currentPlayer)
         {
-            // more info than just "p"
-            if (objectName.Length > 1)
+            float radDirection = Mathf.Deg2Rad * -(direction - 90f);
+            float relativeBodyFacingDir = -(bodyFacingDir);
+            
+            Vector2 relativePos = distance * new Vector2(Mathf.Cos(radDirection), Mathf.Sin(radDirection));
+
+            bool uniqueObject = true;
+
+            // object is a player
+            if (objectName[0] == 'p')
             {
-                // not an already known specific player
-                if (!visualObjects.ContainsKey(objectName))
+                // more info than just "p"
+                if (objectName.Length > 1)
                 {
-                    Regex regex = new Regex("p \"([/-_a-zA-Z0-9]+)\"(?: ([0-9]{1,2})( goalie)?)?");
-                    
-                    if (regex.Match(objectName).Success)
+                    // not an already known specific player
+                    if (!rcObjects.ContainsKey(objectName))
                     {
-                        string tName = regex.Match(objectName).Result("$1");
- 
-                        // if there is a player number, assume enemy player and add to dict
-                        if (regex.Match(objectName).Result("$2").Length > 0)
+                        Regex regex = new Regex("p \"([/-_a-zA-Z0-9]+)\"(?: ([0-9]{1,2})( goalie)?)?");
+                        
+                        if (regex.Match(objectName).Success)
                         {
-                            int enemyNumber = int.Parse(regex.Match(objectName).Result("$2"));
-                            bool goalie = regex.Match(objectName).Result("$3").Length > 0;
-
-                            RectTransform rt = CreateVisualObject(objectName, visPlayerEnemy);
-                            rt.Find("PlayerNumber").GetComponent<TextMeshProUGUI>().text = ""+ enemyNumber;
-                            rt.Find("Goalie").gameObject.SetActive(goalie);
+                            string tName = regex.Match(objectName).Result("$1");
+                            enemyTeamName = tName;
+     
+                            // if there is a player number, assume enemy player and add to dict
+                            if (regex.Match(objectName).Result("$2").Length > 0)
+                            {
+                                int enemyNumber = int.Parse(regex.Match(objectName).Result("$2"));
+                                bool goalie = regex.Match(objectName).Result("$3").Length > 0;
+                                
+                                CreatePlayerRcObject(true, enemyNumber, goalie);
+                                visualizer.AddEnemyTeamMember(enemyTeamName, enemyNumber, goalie);
+                            }
+                            else // if there is no player number call setposition method depending on team
+                            {
+                                uniqueObject = false;
+                                
+                                if (tName.Equals(teamName))
+                                    visualizer.SetUnknownPlayerPosition(relativePos, relativeBodyFacingDir, true);
+                                else
+                                    visualizer.SetUnknownPlayerPosition(relativePos, relativeBodyFacingDir, true, true);
+                            }
                         }
-                        else // if there is no player number call setposition method depending on team
+                        else
                         {
-                            uniqueObject = false;
-                            
-                            if (tName.Equals(teamName))
-                                SetUnknownPlayerPosition(newPos, bodyDirection, true, true);
-                            else
-                                SetUnknownPlayerPosition(newPos, bodyDirection, true, false);
+                            Debug.LogError($"regex did not match: {objectName}");
                         }
-                    }
-                    else
-                    {
-                        Debug.LogError($"regex did not match: {objectName}");
                     }
                 }
-            }
-            else // unknown player
-            {
-                uniqueObject = false;
-                SetUnknownPlayerPosition(newPos, bodyDirection);
-            }
-        }
-
-        if (uniqueObject)
-        {
-            if (visualObjects.ContainsKey(objectName))
-            {
-                visualObjects[objectName].visibleThisStep = true;
-                visualObjects[objectName].newPos = newPos;
-                visualObjects[objectName].newDir = bodyDirection;
-            }
-            else
-            {
-                Debug.LogWarning($"unique object not in dict: {objectName}");
-            }
-        }
-    }
-
-    void SetUnknownPlayerPosition(Vector2 newPos, float bodyFacingDir, bool knownTeam = false, bool myTeam = false)
-    {
-        if (knownTeam)
-        {
-            if (myTeam)
-            {
-                unknownTeamPlayers[unknownTeamPlayerIndex].rt.gameObject.SetActive(true);
-                unknownTeamPlayers[unknownTeamPlayerIndex].rt.anchoredPosition = newPos;
-                unknownTeamPlayers[unknownTeamPlayerIndex].rt.localRotation = Quaternion.Euler(0,0,bodyFacingDir);
-
-                unknownTeamPlayerIndex++;
-            }
-            else
-            {
-                unknownEnemyPlayers[unknownEnemyPlayerIndex].rt.gameObject.SetActive(true);
-                unknownEnemyPlayers[unknownEnemyPlayerIndex].rt.anchoredPosition = newPos;
-                unknownEnemyPlayers[unknownEnemyPlayerIndex].rt.localRotation = Quaternion.Euler(0,0,bodyFacingDir);
-
-                unknownEnemyPlayerIndex++;
-            }
-        }
-        else
-        {
-            unknownPlayers[unknownPlayerIndex].rt.gameObject.SetActive(true);
-            unknownPlayers[unknownPlayerIndex].rt.anchoredPosition = newPos;
-            unknownPlayers[unknownPlayerIndex].rt.localRotation = Quaternion.Euler(0,0,bodyFacingDir);
-
-            unknownPlayerIndex++;
-        }
-    }
-    
-    public void UpdateVisualPositions(int subjectPlayer)
-    {
-        if (subjectPlayer != currentPlayer)
-            return;
-        
-        foreach (VisualObject vObj in visualObjects.Values)
-        {
-            vObj.rt.gameObject.SetActive(vObj.visibleThisStep);
-
-            if (vObj.visibleThisStep)
-            {
-                Transform dirTransform = vObj.rt.Find("Direction");
-                
-                if (vObj.visibleLastStep)
+                else // unknown player
                 {
-                    StartCoroutine(SmoothMove(vObj.rt, vObj.newPos));
-                    if (dirTransform != null)
-                        dirTransform.localRotation = Quaternion.Euler(0,0,vObj.newDir);
-                        //StartCoroutine(SmoothRotate(dirTransform, vObj.newDir));
+                    uniqueObject = false;
+                    visualizer.SetUnknownPlayerPosition(relativePos, relativeBodyFacingDir);
+                }
+            }
+
+            if (uniqueObject)
+            {
+                if (rcObjects.ContainsKey(objectName))
+                {
+                    rcObjects[objectName].distance = distance;
+                    rcObjects[objectName].direction = direction;
+                    rcObjects[objectName].bodyFacingDir = bodyFacingDir;
+            
+                    //rcObjects[objectName].visibleThisStep = true;
+                    rcObjects[objectName].relativePos = relativePos;
+                    rcObjects[objectName].relativeBodyFacingDir = relativeBodyFacingDir;
+                    
+                    visualizer.SetVisualPosition(objectName, relativePos, relativeBodyFacingDir);
                 }
                 else
                 {
-                    vObj.rt.anchoredPosition = vObj.newPos;
-                    if (dirTransform != null)
-                        dirTransform.localRotation = Quaternion.Euler(0,0,vObj.newDir);
+                    Debug.LogWarning($"unique object not in dict: {objectName}");
                 }
             }
         }
     }
 
-    IEnumerator SmoothMove(RectTransform rect, Vector2 newPos)
+    public void UpdateVisualPositions(int playerNumber)
     {
-        Vector2 origPos = rect.anchoredPosition;
-
-        float t = 0;
-        float duration = 0.1f;
-        float mult = 1 / duration;
-
-        while (t < duration)
-        {
-            t += Time.deltaTime;
-            rect.anchoredPosition = Vector2.Lerp(origPos, newPos, t * mult);
-            yield return null;
-        }
-    }
-    
-    IEnumerator SmoothRotate(Transform dirTransform, float bodyFacingDir)
-    {
-        float origDir = dirTransform.localRotation.eulerAngles.z;
-
-        float t = 0;
-        float duration = 0.1f;
-        float mult = 1 / duration;
-
-        while (t < duration)
-        {
-            t += Time.deltaTime;
-            dirTransform.localRotation = Quaternion.Euler(0, 0, Mathf.Lerp(origDir, bodyFacingDir, t * mult));
-            yield return null;
-        }
+        if (playerNumber == currentPlayer)
+            visualizer.UpdateVisualPositions(playerNumber);
     }
 }
 
-class VisualObject
+public class RcObject
 {
-    public RectTransform rt;
-    public bool visibleLastStep;
-    public bool visibleThisStep;
-    public Vector2 lastPos;
-    public Vector2 newPos;
-    public float lastDir;
-    public float newDir;
-
-    public VisualObject(RectTransform rt)
+    public enum RcObjectType
     {
-        this.rt = rt;
-        visibleLastStep = false;
-        visibleThisStep = false;
-        lastPos = Vector2.zero;
-        newPos = Vector2.zero;
+        Unknown,
+        UnknownPlayer,
+        UnknownTeamPlayer,
+        UnknownEnemyPlayer,
+        TeamPlayer,
+        EnemyPlayer,
+        Ball,
+        BallClose,
+        Flag,
+        FlagClose
+    }
+
+    public string name;
+    public RcObjectType objectType;
+
+    public string teamName;
+    public int playerNumber;
+    public bool goalie;
+    
+    public float distance;
+    public float direction;
+    public float bodyFacingDir;
+
+    public Vector2 relativePos;
+    public float relativeBodyFacingDir;
+
+    public RcObject(string name, RcObjectType objectType)
+    {
+        this.name = name;
+        this.objectType = objectType;
+    }
+    public RcObject(RcObjectType objectType, string teamName, int playerNumber, bool goalie)
+    {
+        this.objectType = objectType;
+        
+        this.teamName = teamName;
+        this.playerNumber = playerNumber;
+        this.goalie = goalie;
+        
+        string goalieText = goalie ? " goalie" : "";
+        name = $"p \"{teamName}\" {playerNumber}{goalieText}";
     }
 }
