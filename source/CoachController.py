@@ -13,8 +13,9 @@ class Coach:
         else:
             self.coach_port = 6002
 
-        # TODO. IP of the day
-        self.serverAddressPort = (self.ip, self.coach_port)
+        ip_file = open("ip_address.txt", "r")
+
+        self.serverAddressPort = (ip_file.read(), self.coach_port)
 
         # Create client via UDP socket
         self.UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)

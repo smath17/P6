@@ -5,14 +5,18 @@ import sys
 
 if __name__ == "__main__":
 
+    try:
+        ip_file = open("ip_address.txt")
+    except IOError:
+        print("Missing ip_address.txt")
+        exit(1)
+
     teamname1 = "Simon"
 
     # Create a list of players
     team1 = [Player(teamname1, True)]
     for x in range(10):
         team1.append(Player(teamname1))
-
-
 
     # Initially move all players from team1 onto the field
     y = -30

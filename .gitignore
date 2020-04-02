@@ -1,3 +1,5 @@
+# sensitive information
+/source/ip_address.txt
 
 # python virtual environment
 /source/venv
