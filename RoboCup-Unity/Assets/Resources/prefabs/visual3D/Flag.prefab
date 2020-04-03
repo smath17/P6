@@ -45,6 +45,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31c952afa1d6f4f42839f6cdf50d2fad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  flagName: 
+  flagPos: {x: 0, y: 0}
+  relativePos: {x: 0, y: 0}
 --- !u!1 &1817072757629990709
 GameObject:
   m_ObjectHideFlags: 0
@@ -56,7 +59,6 @@ GameObject:
   - component: {fileID: 1652728371650264298}
   - component: {fileID: 3147691775207172129}
   - component: {fileID: 6952960637594716949}
-  - component: {fileID: 5777866950246040612}
   m_Layer: 0
   m_Name: Quad
   m_TagString: Untagged
@@ -125,20 +127,6 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!64 &5777866950246040612
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1817072757629990709}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &5249700117088010604
 GameObject:
   m_ObjectHideFlags: 0
@@ -150,7 +138,6 @@ GameObject:
   - component: {fileID: 1310269675310468496}
   - component: {fileID: 4750269962350813420}
   - component: {fileID: 4035037800151755426}
-  - component: {fileID: 1032504012607952459}
   m_Layer: 0
   m_Name: Cylinder
   m_TagString: Untagged
@@ -219,17 +206,3 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!136 &1032504012607952459
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5249700117088010604}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  m_Radius: 0.5000001
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}

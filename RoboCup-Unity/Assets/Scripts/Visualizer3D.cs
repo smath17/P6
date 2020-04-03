@@ -3,7 +3,10 @@ using UnityEngine;
 
 public class Visualizer3D : MonoBehaviour, IVisualizer
 {
-    public GameObject objectPrefab;
+    public GameObject playerPrefab;
+    public GameObject ballPrefab;
+    public GameObject flagPrefab;
+    public GameObject unknownPrefab;
     
     [Header("References")]
     public Transform objectParent;
@@ -16,23 +19,6 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
     
     Dictionary<string, ReferenceFlag> referenceFlags = new Dictionary<string, ReferenceFlag>();
 
-    Vector2 playerPosition;
-    
-    bool pos1Found = false;
-    bool pos2Found = false;
-    bool pos3Found = false;
-
-    Vector2 pos1 = Vector2.zero;
-    Vector2 pos2 = Vector2.zero;
-    Vector2 pos3 = Vector2.zero;
-
-    float dist1 = 0f;
-    float dist2 = 0f;
-    float dist3 = 0f;
-        
-    Vector2 relPos1 = Vector2.zero;
-    Vector2 relPos2 = Vector2.zero;
-    
     public void Init(string teamName, int teamSize, bool rightTeam, Dictionary<string, RcObject> rcObjects)
     {
         this.teamName = teamName;
@@ -41,7 +27,34 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
 
         foreach (KeyValuePair<string,RcObject> rcObject in rcObjects)
         {
-            CreateVisualObject(rcObject.Value.name, objectPrefab);
+            GameObject prefab = unknownPrefab;
+            
+            switch (rcObject.Value.objectType)
+            {
+                case RcObject.RcObjectType.Unknown:
+                    prefab = unknownPrefab;
+                    break;
+                case RcObject.RcObjectType.UnknownPlayer:
+                case RcObject.RcObjectType.UnknownTeamPlayer:
+                case RcObject.RcObjectType.UnknownEnemyPlayer:
+                case RcObject.RcObjectType.TeamPlayer:
+                case RcObject.RcObjectType.EnemyPlayer:
+                    prefab = playerPrefab;
+                    break;
+                case RcObject.RcObjectType.Ball:
+                case RcObject.RcObjectType.BallClose:
+                    prefab = ballPrefab;
+                    break;
+                case RcObject.RcObjectType.Flag:
+                case RcObject.RcObjectType.FlagClose:
+                    prefab = flagPrefab;
+                    break;
+                default:
+                    prefab = unknownPrefab;
+                    break;
+            }
+            
+            CreateVisualObject(rcObject.Value.name, prefab);
         }
 
         foreach (ReferenceFlag referenceFlag in FindObjectsOfType<ReferenceFlag>())
@@ -72,7 +85,7 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
         string goalieText = goalie ? " goalie" : "";
         string eName = $"p \"{enemyTeamName}\" {enemyNumber}{goalieText}";
         
-        CreateVisualObject(eName, objectPrefab);
+        CreateVisualObject(eName, playerPrefab);
     }
 
     public void ResetVisualPositions(int playerNumber)
@@ -117,9 +130,7 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
 
     void TrilateratePlayerPosition()
     {
-        pos1Found = false;
-        pos2Found = false;
-        pos3Found = false;
+        List<ReferenceFlag> flagsForCalculation = new List<ReferenceFlag>();
         
         foreach (KeyValuePair<string,VisualRcObject> rcObject in visualObjects)
         {
@@ -127,44 +138,23 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
             {
                 if (referenceFlags.ContainsKey(rcObject.Key) && referenceFlags[rcObject.Key].gameObject.activeInHierarchy)
                 {
-                    playerPosition = -rcObject.Value.relativePos + referenceFlags[rcObject.Key].flagPos;
-
-                    if (!pos1Found)
-                    {
-                        pos1Found = true;
-                        pos1 = referenceFlags[rcObject.Key].flagPos;
-                        dist1 = rcObject.Value.relativePos.magnitude;
-                        relPos1 = rcObject.Value.relativePos;
-                    }
-                    else if (!pos2Found)
-                    {
-                        pos2Found = true;
-                        pos2 = referenceFlags[rcObject.Key].flagPos;
-                        dist2 = rcObject.Value.relativePos.magnitude;
-                        relPos2 = rcObject.Value.relativePos;
-                    }
-                    else if (!pos3Found)
-                    {
-                        pos3Found = true;
-                        pos3 = referenceFlags[rcObject.Key].flagPos;
-                        dist3 = rcObject.Value.relativePos.magnitude;
-                        break;
-                    }
+                    referenceFlags[rcObject.Key].relativePos = rcObject.Value.relativePos;
+                    flagsForCalculation.Add(referenceFlags[rcObject.Key]);
                 }
             }
         }
 
-        if (pos1Found && pos2Found)
+        if (flagsForCalculation.Count > 1)
         {
-            float trueAngle = Vector2.SignedAngle(Vector2.up, pos1 - pos2);
-            float relativeAngle = Vector2.SignedAngle(Vector2.up, relPos1 - relPos2);
+            float trueAngle = Vector2.SignedAngle(Vector2.up, flagsForCalculation[0].flagPos - flagsForCalculation[1].flagPos);
+            float relativeAngle = Vector2.SignedAngle(Vector2.up, flagsForCalculation[0].relativePos - flagsForCalculation[1].relativePos);
             
             float angle = relativeAngle - trueAngle;
             objectParent.localRotation = Quaternion.Euler(0, angle, 0);
 
-            if (pos3Found)
+            if (flagsForCalculation.Count > 2)
             {
-                objectParent.localPosition = Trilaterate(pos1, dist1, pos2, dist2, pos3, dist3);
+                objectParent.localPosition = Trilaterate(flagsForCalculation);
             }
             else
                 objectParent.localPosition = Vector3.zero;
@@ -173,35 +163,22 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
             objectParent.localPosition = Vector3.zero;
     }
     
-    Vector3 Trilaterate(Vector2 p1, float d1, Vector2 p2, float d2, Vector2 p3, float d3)
+    Vector3 Trilaterate(List<ReferenceFlag> flags)
     {
-        float i1 = p1.x;
-        float i2 = p2.x;
-        float i3 = p3.x;
+        // mean square error
+        float mse = 0f;
+        Vector2 calculatedPosition = Vector2.zero;
 
-        float j1 = p1.y;
-        float j2 = p2.y;
-        float j3 = p3.y;
-
-        float x,y;
-        
-        x = (((2*j3-2*j2)*((d1*d1-d2*d2)+(i2*i2-i1*i1)+(j2*j2-j1*j1)) - (2*j2-2*j1)*((d2*d2-d3*d3)+(i3*i3-i2*i2)+(j3*j3-j2*j2)))/
-                 ((2*i2-2*i3)*(2*j2-2*j1)-(2*i1-2*i2)*(2*j3-2*j2)));
-        y = ((d1*d1-d2*d2)+(i2*i2-i1*i1)+(j2*j2-j1*j1)+x*(2*i1-2*i2))/(2*j2-2*j1);
-
-        return new Vector3(x, 0,y);
-    }
-
-    void OnDrawGizmos()
-    {
-        if (pos2Found)
+        foreach (ReferenceFlag flag in flags)
         {
-            Vector3 p1 = new Vector3(pos1.x, 0, pos1.y);
-            Vector3 p2 = new Vector3(pos2.x, 0, pos2.y);
-            Gizmos.color = Color.magenta;
-            Gizmos.DrawSphere(p1, 1f);
-            Gizmos.DrawLine(p1, p2);
+            float calculatedDistance = Vector2.Distance(calculatedPosition, flag.flagPos);
+            float measuredDistance = Vector2.Distance(Vector2.zero, flag.relativePos);
+            mse += Mathf.Pow(calculatedDistance - measuredDistance, 2f);
         }
+
+        
+        
+        return new Vector3(0, 0,0);
     }
 }
 
