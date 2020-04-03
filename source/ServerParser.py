@@ -1,3 +1,5 @@
+from string import digits
+
 class Parser:
     def __init__(self):
         pass
@@ -22,7 +24,14 @@ class Parser:
             # referee change mode OR player say
             info_list = rec_msg.rsplit(" ")
             if info_list[2] == "referee":
+
+                # Remove digits TODO: if it doesn't work try s.translate({ord(k): None for k in digits})
+                s = 'abc123def456ghi789zero0'
+                remove_digits = str.maketrans('', '', digits)
+                res = s.translate(remove_digits)
+
                 player.game_status = info_list[3]
+                player.formation_change()
 
         elif msg_type == "(init":
             # player initialized
@@ -54,3 +63,4 @@ class Parser:
         player.side = msg[1]
         player.unum = int(msg[2])
         player.game_status = (msg[3])[:-2]
+        print(player.game_status)

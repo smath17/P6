@@ -1,3 +1,4 @@
+import os
 import unittest
 
 from CoachController import Coach
@@ -5,6 +6,13 @@ from PlayerController import Player
 
 
 class MyTestCase(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Change working dir to source
+        path = os.getcwd()
+        new_path = path[:-6]
+        os.chdir(new_path)
 
     # Create player, connect to server and receive update
     def test_player_connect(self):
@@ -32,12 +40,10 @@ class MyTestCase(unittest.TestCase):
         player = Player("Test")
         self.coach = Coach("Test")
 
-        self.coach.send_action("(look)")
-
         # Catch up the init messages
-        for x in range(20):
-            self.coach.rec_msg()
-        recmsg = self.coach.rec_msg()[0:8]
+        #for x in range(20):
+            #self.coach.rec_msg()
+        recmsg = self.coach.send_action("(look)")[0:8]
         assert recmsg == testmsg, "Coach received: {}, but expected: {}".format(recmsg, testmsg)
 
         self.coach.disconnect()

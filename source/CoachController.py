@@ -4,7 +4,9 @@ import socket
 class Coach:
     def __init__(self, teamname, offline=False):
         self.teamname = teamname
-        self.ip = open("ip_address.txt", "r").read()
+        # With is a safety wrapper
+        with open("ip_address.txt", "r") as file:
+            self.ip = file.read()
 
         if offline:
             # Server needs to run with -server::coach=on, to disable the referee
@@ -38,15 +40,15 @@ class Coach:
     def rec_dummy_msg(self):
         self.send_action('(look)')
         for x in range(20):
-            self.rec_msg()
+            self.__rec_msg()
 
     def send_action(self, action):
         # action is null terminated because server is written in c++
         self.UDPClientSocket.sendto(str.encode(action + '\0'), self.serverAddressPort)
         # return message will have to be received
-        return self.rec_msg()
+        return self.__rec_msg()
 
-    def rec_msg(self):
+    def __rec_msg(self):
         # Receive message from server, decode from bytes
         msg_from_server = self.UDPClientSocket.recvfrom(6000)
         print(msg_from_server[0].decode())
@@ -55,7 +57,8 @@ class Coach:
         return msg_from_server[0].decode()
 
     def disconnect(self):
-        self.send_action("(bye)")
+        action = "(bye)"
+        self.UDPClientSocket.sendto(str.encode(action + '\0'), self.serverAddressPort)
 
     def stop_connection(self):
         self.UDPClientSocket.close()

@@ -1,3 +1,4 @@
+import os
 import unittest
 
 from ServerParser import Parser
@@ -5,6 +6,13 @@ from PlayerController import Player
 
 
 class MyTestCase(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Change working dir to source
+        path = os.getcwd()
+        new_path = path[:-6]
+        os.chdir(new_path)
 
     def setUp(self):
         self.parser = Parser()
@@ -47,7 +55,7 @@ class MyTestCase(unittest.TestCase):
         assert self.player.game_status == "kick_off_l"
 
     def test_parse_init_info(self):
-        self.test_init_msg = "(init l 2 before_kick_off)"
+        self.test_init_msg = "(init l 2 before_kick_off) "
         self.parser.init_info(self.player, self.test_init_msg)
 
         assert self.player.game_status == "before_kick_off", "Game status was = {}".format(self.player.game_status)

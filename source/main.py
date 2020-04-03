@@ -11,22 +11,10 @@ def createTeam():
     for x in range(10):
         team1.append(Player(teamname1))
 
-    # Initially move all players from team1 onto the field
-    y = -30
-
-    for player in team1:
-        player.send_action("(move -20 {})".format(y))  # This is a string formatted to include y in the {}
-        y = y + 5
     return team1
 
 
 if __name__ == "__main__":
-
-    try:
-        ip_file = open("ip_address.txt")
-    except IOError:
-        print("Missing ip_address.txt")
-        exit(1)
 
     teamname1 = "Simon"
 
