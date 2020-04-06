@@ -2319,6 +2319,7 @@ MonoBehaviour:
     type: 3}
   unknownPrefab: {fileID: 8713521160849380590, guid: b9f50904cbd84374fbb60bc32dfbc218,
     type: 3}
+  interpolate: 1
   objectParent: {fileID: 632633896}
 --- !u!1001 &584064150
 PrefabInstance:

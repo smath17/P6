@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Visualizer3D : MonoBehaviour, IVisualizer
@@ -7,6 +8,8 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
     public GameObject ballPrefab;
     public GameObject flagPrefab;
     public GameObject unknownPrefab;
+
+    public bool interpolate;
     
     [Header("References")]
     public Transform objectParent;
@@ -18,6 +21,16 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
     Dictionary<string, VisualRcObject> visualObjects = new Dictionary<string, VisualRcObject>();
     
     Dictionary<string, ReferenceFlag> referenceFlags = new Dictionary<string, ReferenceFlag>();
+
+    Vector2 prevPlayerPosition = Vector2.zero;
+    Vector2 curPlayerPosition = Vector2.zero;
+    float prevPlayerAngle = 0f;
+    float curPlayerAngle = 0f;
+    
+    bool positionWasKnown;
+    bool positionIsKnown;
+    bool angleWasKnown;
+    bool angleIsKnown;
 
     public void Init(string teamName, int teamSize, bool rightTeam, Dictionary<string, RcObject> rcObjects)
     {
@@ -92,7 +105,11 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
     {
         foreach (KeyValuePair<string,VisualRcObject> rcObject in visualObjects)
         {
-            rcObject.Value.visible = false;
+            rcObject.Value.prevRelativePos = rcObject.Value.curRelativePos;
+            rcObject.Value.prevRelativeBodyFacingDir = rcObject.Value.curRelativeBodyFacingDir;
+
+            rcObject.Value.prevVisibility = rcObject.Value.curVisibility;
+            rcObject.Value.curVisibility = false;
         }
     }
 
@@ -100,8 +117,8 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
     {
         if (visualObjects.ContainsKey(objectName))
         {
-            visualObjects[objectName].visible = true;
-            visualObjects[objectName].relativePos = relativePos;
+            visualObjects[objectName].curVisibility = true;
+            visualObjects[objectName].curRelativePos = relativePos;
         }
     }
 
@@ -114,10 +131,22 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
     {
         foreach (KeyValuePair<string,VisualRcObject> rcObject in visualObjects)
         {
-            if (rcObject.Value.visible && !rcObject.Key.StartsWith("f"))
+            if (rcObject.Value.curVisibility && !rcObject.Key.StartsWith("f"))
             {
                 rcObject.Value.t.gameObject.SetActive(true);
-                rcObject.Value.t.localPosition = new Vector3(rcObject.Value.relativePos.x, 0f, rcObject.Value.relativePos.y);
+
+                if (interpolate && rcObject.Value.prevVisibility)
+                {
+                    StartCoroutine(
+                        InterpolateObject(rcObject.Value.t,
+                            rcObject.Value.prevRelativePos, rcObject.Value.curRelativePos,
+                            rcObject.Value.prevRelativeBodyFacingDir, rcObject.Value.curRelativeBodyFacingDir)
+                    );
+                }
+                else
+                {
+                    rcObject.Value.t.localPosition = new Vector3(rcObject.Value.curRelativePos.x, 0f, rcObject.Value.curRelativePos.y);
+                }
             }
             else
             {
@@ -126,19 +155,62 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
         }
         
         TrilateratePlayerPosition();
+
+        if (interpolate && positionWasKnown && positionIsKnown && angleWasKnown && angleIsKnown)
+        {
+            StartCoroutine(
+                InterpolateObject(objectParent,
+                    prevPlayerPosition, curPlayerPosition,
+                    prevPlayerAngle, curPlayerAngle)
+                );
+        }
+        else
+        {
+            objectParent.localPosition = new Vector3(curPlayerPosition.x, 0f, curPlayerPosition.y);
+            objectParent.localRotation = Quaternion.Euler(0, curPlayerAngle, 0);
+        }
+    }
+    
+    IEnumerator InterpolateObject(Transform obj, Vector2 prevPos, Vector2 curPos, float prevAngle, float curAngle)
+    {
+        float t = 0;
+        float duration = 0.1f;
+        float mult = 1 / duration;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            
+            Vector2 pos = Vector2.Lerp(prevPos, curPos, t * mult);
+            float angle = Mathf.LerpAngle(prevAngle, curAngle, t * mult);
+            
+            obj.localPosition = new Vector3(pos.x, 0f, pos.y);
+            obj.localRotation = Quaternion.Euler(0, angle, 0);
+            
+            yield return null;
+        }
     }
 
     void TrilateratePlayerPosition()
     {
+        prevPlayerPosition = curPlayerPosition;
+        prevPlayerAngle = curPlayerAngle;
+        
+        positionWasKnown = positionIsKnown;
+        angleWasKnown = angleIsKnown;
+        
+        positionIsKnown = false;
+        angleIsKnown = false;
+        
         List<ReferenceFlag> flagsForCalculation = new List<ReferenceFlag>();
         
         foreach (KeyValuePair<string,VisualRcObject> rcObject in visualObjects)
         {
-            if (rcObject.Value.visible)
+            if (rcObject.Value.curVisibility)
             {
                 if (referenceFlags.ContainsKey(rcObject.Key) && referenceFlags[rcObject.Key].gameObject.activeInHierarchy)
                 {
-                    referenceFlags[rcObject.Key].relativePos = rcObject.Value.relativePos;
+                    referenceFlags[rcObject.Key].relativePos = rcObject.Value.curRelativePos;
                     flagsForCalculation.Add(referenceFlags[rcObject.Key]);
                 }
             }
@@ -148,22 +220,22 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
         {
             float trueAngle = Vector2.SignedAngle(Vector2.up, flagsForCalculation[0].flagPos - flagsForCalculation[1].flagPos);
             float relativeAngle = Vector2.SignedAngle(Vector2.up, flagsForCalculation[0].relativePos - flagsForCalculation[1].relativePos);
-            
-            float angle = relativeAngle - trueAngle;
-            objectParent.localRotation = Quaternion.Euler(0, angle, 0);
+
+            curPlayerAngle = relativeAngle - trueAngle;
+            angleIsKnown = true;
 
             if (flagsForCalculation.Count > 2)
             {
-                objectParent.localPosition = Trilaterate(flagsForCalculation);
+                curPlayerPosition = Trilaterate(flagsForCalculation);
             }
-            else
-                objectParent.localPosition = Vector3.zero;
+            //else
+            //    playerPosition = Vector2.zero;
         }
-        else
-            objectParent.localPosition = Vector3.zero;
+        //else
+        //    playerPosition = Vector2.zero;
     }
     
-    Vector3 Trilaterate(List<ReferenceFlag> flags)
+    Vector2 Trilaterate(List<ReferenceFlag> flags)
     {
         Vector2 bestPosition = Vector2.zero;
         float lowestError = Mathf.Infinity;
@@ -179,11 +251,12 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
                 {
                     lowestError = mse;
                     bestPosition = testPosition;
+                    positionIsKnown = true;
                 }
             }
         }
         
-        return new Vector3(bestPosition.x, 0,bestPosition.y);
+        return bestPosition;
     }
 
     float MeanSquaredError(Vector2 position, List<ReferenceFlag> flags)
@@ -204,15 +277,24 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
 class VisualRcObject
 {
     public Transform t;
-    public bool visible;
-    public Vector2 relativePos;
-    public float relativeBodyFacingDir;
+
+    public bool prevVisibility;
+    public bool curVisibility;
+
+    public Vector2 prevRelativePos;
+    public Vector2 curRelativePos;
+
+    public float prevRelativeBodyFacingDir;
+    public float curRelativeBodyFacingDir;
 
     public VisualRcObject(Transform t)
     {
         this.t = t;
-        visible = false;
-        relativePos = Vector2.zero;
-        relativeBodyFacingDir = 0f;
+        prevVisibility = false;
+        curVisibility = false;
+        prevRelativePos = Vector2.zero;
+        curRelativePos = Vector2.zero;
+        prevRelativeBodyFacingDir = 0f;
+        curRelativeBodyFacingDir = 0f;
     }
 }
