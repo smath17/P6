@@ -264,7 +264,7 @@ public class RoboCup : MonoBehaviour
         sendDashInput = !sendDashInput;
         
         int dashAmount = (Input.GetKey(KeyCode.LeftShift)) ? 100 : 50;
-        int turnAmount = (Input.GetKey(KeyCode.LeftShift)) ? 30 : 15;
+        int turnAmount = (Input.GetKey(KeyCode.LeftShift)) ? 30 : 10;
         int kickAmount = (Input.GetKey(KeyCode.LeftShift)) ? 100 : 50;
 
         if (sendDashInput)
@@ -325,6 +325,9 @@ public class RoboCup : MonoBehaviour
 
             bool uniqueObject = true;
 
+            if (objectName.Length < 1)
+                return;
+            
             // object is a player
             if (objectName[0] == 'p')
             {

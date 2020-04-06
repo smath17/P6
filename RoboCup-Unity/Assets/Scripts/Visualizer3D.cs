@@ -1,13 +1,18 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class Visualizer3D : MonoBehaviour, IVisualizer
 {
-    public GameObject playerPrefab;
-    public GameObject ballPrefab;
-    public GameObject flagPrefab;
     public GameObject unknownPrefab;
+
+    public GameObject flagPrefab;
+    public GameObject ballPrefab;
+
+    public GameObject teamPlayerPrefab;
+    public GameObject enemyPlayerPrefab;
+    public GameObject unknownPlayerPrefab;
 
     public bool interpolate;
     
@@ -21,7 +26,15 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
     Dictionary<string, VisualRcObject> visualObjects = new Dictionary<string, VisualRcObject>();
     
     Dictionary<string, ReferenceFlag> referenceFlags = new Dictionary<string, ReferenceFlag>();
+    
+    List<VisualRcObject> unknownPlayers = new List<VisualRcObject>();
+    List<VisualRcObject> unknownTeamPlayers = new List<VisualRcObject>();
+    List<VisualRcObject> unknownEnemyPlayers = new List<VisualRcObject>();
 
+    int unknownPlayerIndex;
+    int unknownTeamPlayerIndex;
+    int unknownEnemyPlayerIndex;
+    
     Vector2 prevPlayerPosition = Vector2.zero;
     Vector2 curPlayerPosition = Vector2.zero;
     float prevPlayerAngle = 0f;
@@ -48,11 +61,15 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
                     prefab = unknownPrefab;
                     break;
                 case RcObject.RcObjectType.UnknownPlayer:
-                case RcObject.RcObjectType.UnknownTeamPlayer:
-                case RcObject.RcObjectType.UnknownEnemyPlayer:
+                    prefab = unknownPlayerPrefab;
+                    break;
                 case RcObject.RcObjectType.TeamPlayer:
+                case RcObject.RcObjectType.UnknownTeamPlayer:
+                    prefab = teamPlayerPrefab;
+                    break;
                 case RcObject.RcObjectType.EnemyPlayer:
-                    prefab = playerPrefab;
+                case RcObject.RcObjectType.UnknownEnemyPlayer:
+                    prefab = enemyPlayerPrefab;
                     break;
                 case RcObject.RcObjectType.Ball:
                 case RcObject.RcObjectType.BallClose:
@@ -67,7 +84,13 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
                     break;
             }
             
-            CreateVisualObject(rcObject.Value.name, prefab);
+            Transform t = CreateVisualObject(rcObject.Value.name, prefab);
+
+            if (rcObject.Value.playerNumber != 0)
+            {
+                string goalieText = rcObject.Value.goalie ? " G" : "";
+                t.Find("text").GetComponent<TextMeshPro>().text = rcObject.Value.playerNumber + goalieText;
+            }
         }
 
         foreach (ReferenceFlag referenceFlag in FindObjectsOfType<ReferenceFlag>())
@@ -79,9 +102,24 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
             
             referenceFlags.Add(referenceFlag.name, referenceFlag);
         }
+        
+        for (int i = 0; i < teamSize * 2; i++)
+        {
+            CreateUnknownPlayer(false);
+        }
+        
+        for (int i = 0; i < teamSize; i++)
+        {
+            CreateUnknownPlayer(true);
+        }
+        
+        for (int i = 0; i < teamSize; i++)
+        {
+            CreateUnknownPlayer(true, true);
+        }
     }
     
-    void CreateVisualObject(string objectName, GameObject prefab)
+    Transform CreateVisualObject(string objectName, GameObject prefab)
     {
         GameObject obj = Instantiate(prefab);
 
@@ -91,6 +129,38 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
         VisualRcObject visualObject = new VisualRcObject(t); 
         
         visualObjects.Add(objectName, visualObject);
+
+        return t;
+    }
+    
+    void CreateUnknownPlayer(bool knownTeam = false, bool myTeam = false)
+    {
+        GameObject obj;
+        
+        if (knownTeam)
+        {
+            if (myTeam)
+                obj = Instantiate(teamPlayerPrefab);
+            else
+                obj = Instantiate(enemyPlayerPrefab);
+        }
+        else
+            obj = Instantiate(unknownPlayerPrefab);
+
+        Transform t = obj.transform;
+        t.SetParent(objectParent);
+
+        VisualRcObject visualObject = new VisualRcObject(t); 
+
+        if (knownTeam)
+        {
+            if (myTeam)
+                unknownTeamPlayers.Add(visualObject);
+            else
+                unknownEnemyPlayers.Add(visualObject);
+        }
+        else
+            unknownPlayers.Add(visualObject);
     }
 
     public void AddEnemyTeamMember(string enemyTeamName, int enemyNumber, bool goalie)
@@ -98,7 +168,10 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
         string goalieText = goalie ? " goalie" : "";
         string eName = $"p \"{enemyTeamName}\" {enemyNumber}{goalieText}";
         
-        CreateVisualObject(eName, playerPrefab);
+        Transform t = CreateVisualObject(eName, enemyPlayerPrefab);
+
+        string gText = goalie ? " G" : "";
+        t.Find("text").GetComponent<TextMeshPro>().text = enemyNumber + gText;
     }
 
     public void ResetVisualPositions(int playerNumber)
@@ -110,6 +183,24 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
 
             rcObject.Value.prevVisibility = rcObject.Value.curVisibility;
             rcObject.Value.curVisibility = false;
+        }
+
+        unknownPlayerIndex = 0;
+        foreach (VisualRcObject unknownPlayer in unknownPlayers)
+        {
+            unknownPlayer.t.gameObject.SetActive(false);
+        }
+        
+        unknownTeamPlayerIndex = 0;
+        foreach (VisualRcObject unknownTeamPlayer in unknownTeamPlayers)
+        {
+            unknownTeamPlayer.t.gameObject.SetActive(false);
+        }
+        
+        unknownEnemyPlayerIndex = 0;
+        foreach (VisualRcObject unknownEnemyPlayer in unknownEnemyPlayers)
+        {
+            unknownEnemyPlayer.t.gameObject.SetActive(false);
         }
     }
 
@@ -124,7 +215,30 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
 
     public void SetUnknownPlayerPosition(Vector2 relativePos, float relativeBodyFacingDir, bool knownTeam = false, bool enemyTeam = false)
     {
-        //TODO: do do
+        Transform t = null;
+        
+        if (knownTeam)
+        {
+            if (enemyTeam)
+            {
+                t = unknownEnemyPlayers[unknownEnemyPlayerIndex].t;
+                unknownEnemyPlayerIndex++;
+            }
+            else
+            {
+                t = unknownTeamPlayers[unknownTeamPlayerIndex].t;
+                unknownTeamPlayerIndex++;
+            }
+        }
+        else
+        {
+            t = unknownPlayers[unknownPlayerIndex].t;
+            unknownPlayerIndex++;
+        }
+        
+        t.gameObject.SetActive(true);
+        t.localPosition = new Vector3(relativePos.x, 0f, relativePos.y);
+        t.localRotation = Quaternion.Euler(0,0,relativeBodyFacingDir);
     }
 
     public void UpdateVisualPositions(int playerNumber)
