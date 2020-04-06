@@ -9,6 +9,7 @@ public class RoboCup : MonoBehaviour
     
     public static RoboCup singleton;
     IVisualizer visualizer;
+    bool visualizerInitialized;
 
     [Header("Settings")]
     public string ip = "127.0.0.1";
@@ -302,7 +303,11 @@ public class RoboCup : MonoBehaviour
     {
         if (type == RcMessage.RcMessageType.Init)
         {
-            visualizer.Init(teamName, teamSize, txt.Contains("r"), rcObjects);
+            if (!visualizerInitialized)
+            {
+                visualizer.Init(teamName, teamSize, txt.Contains("r"), rcObjects);
+                visualizerInitialized = true;
+            }
         }
         
         overlayInfo.DisplayText(txt, type);
