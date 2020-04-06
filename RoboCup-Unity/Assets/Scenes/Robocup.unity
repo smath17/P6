@@ -4175,7 +4175,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80c285052ce57354499b10eabccfe693, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ip: 127.0.01
+  ip: 172.29.62.71
   port: 6000
   teamName: Other
   singleplayer: 1
