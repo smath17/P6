@@ -1,4 +1,6 @@
 import socket
+import time
+
 from ServerParser import Parser
 import Formations
 
@@ -46,7 +48,8 @@ class Player:
             # Update unum then get formation
             self.update_info()
             self.std_pos = Formations.standard_formation(self.unum)
-            self.gchar_pos = Formations.g_formation(self.unum)
+            self.gchar_pos = Formations.g_letter_wrapper(self.unum, self.side)
+            self.gchar_pos2 = Formations.shift_letter(self.gchar_pos, self.side)
 
             # Set initial formation
             self.send_action('(move {} {})'.format(self.std_pos[0], self.std_pos[1]))
@@ -86,10 +89,14 @@ class Player:
         # if player may move, move
         accept_strings = {'before_kick_off', 'goal_r_', 'goal_l_'}
 
+        # if we score
         if self.game_status == 'goal_{}_'.format(self.side):
-            # BM time
+            # BM time (g - wait 0.5 - g - wait 0.5 - normal)
             self.send_action('(move {} {})'.format(self.gchar_pos[0], self.gchar_pos[1]))
-            # Will reset to normal after
+            time.sleep(0.5)
+            self.send_action('(move {} {})'.format(self.gchar_pos2[0], self.gchar_pos2[1]))
+            time.sleep(0.5)
+        # Always reset to normal
         if self.game_status in accept_strings:
             # Reset field
             self.send_action('(move {} {})'.format(self.std_pos[0], self.std_pos[1]))

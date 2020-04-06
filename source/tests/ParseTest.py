@@ -49,13 +49,21 @@ class MyTestCase(unittest.TestCase):
         assert self.rec_obs == self.correct_obs, "List of observables not correct, got:\n" + str(self.rec_obs)
 
     def test_parse_hear_referee(self):
-        self.test_hear_ref = "(hear 0 referee kick_off_l)"
+        self.test_hear_ref = "(hear 0 referee kick_off_l)\0"
         self.parser.parse_info(self.test_hear_ref, self.player)
 
         assert self.player.game_status == "kick_off_l"
 
+    def test_parse_hear_goal(self):
+        # West can never happen, but is used to avoid an otherwise required connection in formation_change
+        goal_msg = '(hear 0 referee goal_west_1)\0'
+
+        self.parser.parse_info(goal_msg, self.player)
+
+        assert self.player.game_status == "goal_west_", "was: {}.".format(self.player.game_status)
+
     def test_parse_init_info(self):
-        self.test_init_msg = "(init l 2 before_kick_off) "
+        self.test_init_msg = "(init l 2 before_kick_off)\0"
         self.parser.init_info(self.player, self.test_init_msg)
 
         assert self.player.game_status == "before_kick_off", "Game status was = {}".format(self.player.game_status)

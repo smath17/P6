@@ -15,7 +15,7 @@ class Parser:
             # In order to only get the required numbers, we spilt the string by spaces and load it into a list
             info_list = rec_msg.rsplit(" ")
             # the 6th element is current stamina
-            player.stamina = int(info_list[6])
+            player.stamina = float(info_list[6])
             player.speed = float(info_list[10])
             player.effort = float(info_list[7])
 
@@ -26,11 +26,10 @@ class Parser:
             if info_list[2] == "referee":
 
                 # Remove digits TODO: if it doesn't work try s.translate({ord(k): None for k in digits})
-                s = 'abc123def456ghi789zero0'
                 remove_digits = str.maketrans('', '', digits)
-                res = s.translate(remove_digits)
+                game_status = info_list[3].translate(remove_digits)
 
-                player.game_status = info_list[3]
+                player.game_status = game_status[:-1]  # Remove space
                 player.formation_change()
 
         elif msg_type == "(init":
@@ -62,5 +61,4 @@ class Parser:
         msg = msg.rsplit(' ')
         player.side = msg[1]
         player.unum = int(msg[2])
-        player.game_status = (msg[3])[:-2]
-        print(player.game_status)
+        player.game_status = (msg[3])[:-2]  # Removes ') '
