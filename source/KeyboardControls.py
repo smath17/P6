@@ -50,6 +50,7 @@ class KeyboardControl:
 
     def keymap(self, team):
         while True:
+            team[self.current_player].update_info()
             try:  # used try so that if user pressed other than the given key error will not be shown
                 if keyboard.is_pressed('w') or keyboard.is_pressed("up"):
                     team[self.current_player].send_action("(dash 100)")
@@ -63,6 +64,8 @@ class KeyboardControl:
                 if keyboard.is_pressed('s') or keyboard.is_pressed("down"):
                     team[self.current_player].send_action("(dash 100 180)")
                     continue
+                if keyboard.is_pressed('m'):
+                    team[self.current_player].send_action("(move -20 0)")
                 if keyboard.is_pressed('space'):
                     team[self.current_player].send_action("(kick 100 0)")
                     continue
