@@ -165,20 +165,39 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
     
     Vector3 Trilaterate(List<ReferenceFlag> flags)
     {
-        // mean square error
+        Vector2 bestPosition = Vector2.zero;
+        float lowestError = Mathf.Infinity;
+
+        // minimize error
+        for (float x = -55; x < 55; x++)
+        {
+            for (float y = -35; y < 35; y++)
+            {
+                Vector2 testPosition = new Vector2(x, y);
+                float mse = MeanSquaredError(testPosition, flags);
+                if (mse < lowestError)
+                {
+                    lowestError = mse;
+                    bestPosition = testPosition;
+                }
+            }
+        }
+        
+        return new Vector3(bestPosition.x, 0,bestPosition.y);
+    }
+
+    float MeanSquaredError(Vector2 position, List<ReferenceFlag> flags)
+    {
         float mse = 0f;
-        Vector2 calculatedPosition = Vector2.zero;
 
         foreach (ReferenceFlag flag in flags)
         {
-            float calculatedDistance = Vector2.Distance(calculatedPosition, flag.flagPos);
+            float calculatedDistance = Vector2.Distance(position, flag.flagPos);
             float measuredDistance = Vector2.Distance(Vector2.zero, flag.relativePos);
             mse += Mathf.Pow(calculatedDistance - measuredDistance, 2f);
         }
 
-        
-        
-        return new Vector3(0, 0,0);
+        return mse / flags.Count;
     }
 }
 
