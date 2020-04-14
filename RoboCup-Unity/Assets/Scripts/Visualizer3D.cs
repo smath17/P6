@@ -15,9 +15,11 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
     public GameObject unknownPlayerPrefab;
 
     public bool interpolate;
+    public bool showFlags;
     
     [Header("References")]
     public Transform objectParent;
+    public Transform unknownObjectParent;
 
     string teamName;
     int teamSize;
@@ -101,6 +103,8 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
             referenceFlag.flagPos = new Vector2(pos3d.x, pos3d.z);
             
             referenceFlags.Add(referenceFlag.name, referenceFlag);
+
+            referenceFlag.gameObject.SetActive(false);
         }
         
         for (int i = 0; i < teamSize * 2; i++)
@@ -148,7 +152,7 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
             obj = Instantiate(unknownPlayerPrefab);
 
         Transform t = obj.transform;
-        t.SetParent(objectParent);
+        t.SetParent(unknownObjectParent);
 
         VisualRcObject visualObject = new VisualRcObject(t); 
 
@@ -245,7 +249,7 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
     {
         foreach (KeyValuePair<string,VisualRcObject> rcObject in visualObjects)
         {
-            if (rcObject.Value.curVisibility && !rcObject.Key.StartsWith("f"))
+            if (rcObject.Value.curVisibility && (!rcObject.Key.StartsWith("f") || showFlags))
             {
                 rcObject.Value.t.gameObject.SetActive(true);
 
@@ -283,6 +287,9 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
             objectParent.localPosition = new Vector3(curPlayerPosition.x, 0f, curPlayerPosition.y);
             objectParent.localRotation = Quaternion.Euler(0, curPlayerAngle, 0);
         }
+        
+        unknownObjectParent.localPosition = new Vector3(curPlayerPosition.x, 0f, curPlayerPosition.y);
+        unknownObjectParent.localRotation = Quaternion.Euler(0, curPlayerAngle, 0);
     }
     
     IEnumerator InterpolateObject(Transform obj, Vector2 prevPos, Vector2 curPos, float prevAngle, float curAngle)
@@ -322,7 +329,10 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
         {
             if (rcObject.Value.curVisibility)
             {
-                if (referenceFlags.ContainsKey(rcObject.Key) && referenceFlags[rcObject.Key].gameObject.activeInHierarchy)
+                if (rcObject.Value.curRelativePos.magnitude < 5)
+                    continue;
+                
+                if (referenceFlags.ContainsKey(rcObject.Key))
                 {
                     referenceFlags[rcObject.Key].relativePos = rcObject.Value.curRelativePos;
                     flagsForCalculation.Add(referenceFlags[rcObject.Key]);
@@ -332,10 +342,22 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
 
         if (flagsForCalculation.Count > 1)
         {
-            float trueAngle = Vector2.SignedAngle(Vector2.up, flagsForCalculation[0].flagPos - flagsForCalculation[1].flagPos);
-            float relativeAngle = Vector2.SignedAngle(Vector2.up, flagsForCalculation[0].relativePos - flagsForCalculation[1].relativePos);
+            int maxAnglesToCompare = 10;
+            int anglesToCompare = Mathf.Min(flagsForCalculation.Count, maxAnglesToCompare);
+            
+            for (int i = 0; i < anglesToCompare - 2; i++)
+            {
+                float trueAngle = Vector2.SignedAngle(Vector2.up, flagsForCalculation[i].flagPos - flagsForCalculation[i+1].flagPos);
+                float relativeAngle = Vector2.SignedAngle(Vector2.up, flagsForCalculation[i].relativePos - flagsForCalculation[i+1].relativePos);
 
-            curPlayerAngle = relativeAngle - trueAngle;
+                float newAngle = relativeAngle - trueAngle;
+
+                if (i == 0)
+                    curPlayerAngle = newAngle;
+                else
+                    curPlayerAngle = Mathf.LerpAngle(curPlayerAngle, newAngle, 0.5f);
+            }
+            
             angleIsKnown = true;
 
             if (flagsForCalculation.Count > 2)
@@ -351,26 +373,61 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
     
     Vector2 Trilaterate(List<ReferenceFlag> flags)
     {
-        Vector2 bestPosition = Vector2.zero;
-        float lowestError = Mathf.Infinity;
+        float h = 20f;
+        
+        float x = 0f;
+        float y = 0f;
 
-        // minimize error
-        for (float x = -55; x < 55; x++)
+        positionIsKnown = true;
+        
+        for (int i = 0; i < 20; i++)
         {
-            for (float y = -35; y < 35; y++)
-            {
-                Vector2 testPosition = new Vector2(x, y);
-                float mse = MeanSquaredError(testPosition, flags);
-                if (mse < lowestError)
-                {
-                    lowestError = mse;
-                    bestPosition = testPosition;
-                    positionIsKnown = true;
-                }
-            }
+            Vector2 right = new Vector2(x + h, y);
+            Vector2 left = new Vector2(x - h, y);
+            Vector2 up = new Vector2(x, y + h);
+            Vector2 down = new Vector2(x, y - h);
+            
+            float mse = MeanSquaredError(new Vector2(x, y), flags);
+            float mseR = MeanSquaredError(right, flags);
+            float mseL = MeanSquaredError(left, flags);
+            float mseU = MeanSquaredError(up, flags);
+            float mseD = MeanSquaredError(down, flags);
+
+            if (mseR < mse)
+                x += h;
+            else if (mseL < mse)
+                x -= h;
+
+            if (mseU < mse)
+                y += h;
+            else if (mseD < mse)
+                y -= h;
+
+            h *= 0.75f;
         }
         
-        return bestPosition;
+        return new Vector2(x, y);
+        
+        //Vector2 bestPosition = Vector2.zero;
+        //float lowestError = Mathf.Infinity;
+        //
+        ////minimize error
+        //for (float x = -55; x < 55; x++)
+        //{
+        //    for (float y = -35; y < 35; y++)
+        //    {
+        //        Vector2 testPosition = new Vector2(x, y);
+        //        float mse = MeanSquaredError(testPosition, flags);
+        //        if (mse < lowestError)
+        //        {
+        //            lowestError = mse;
+        //            bestPosition = testPosition;
+        //            positionIsKnown = true;
+        //        }
+        //    }
+        //}
+        //
+        //return bestPosition;
     }
 
     float MeanSquaredError(Vector2 position, List<ReferenceFlag> flags)
