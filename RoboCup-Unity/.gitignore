@@ -62,7 +62,8 @@ sysinfo.txt
 crashlytics-build.properties
 
 # ml-agents stuff
-python-envs
+python-envs/*
+!python-envs/put-venv-folder-here.txt
 training/models
 training/summaries
 /Assets/ML-Agents/Timers
