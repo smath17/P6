@@ -63,6 +63,7 @@ crashlytics-build.properties
 
 # ml-agents stuff
 python-envs
-training
+training/models
+training/summaries
 /Assets/ML-Agents/Timers
 /Assets/ML-Agents/Timers.meta
