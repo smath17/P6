@@ -16,10 +16,12 @@ public class RoboCup : MonoBehaviour
     public int port = 6000;
     public string teamName = "DefaultTeam";
     public bool singleplayer;
+    public bool trainingMode;
     
     [Header("References")]
     public OverlayInfo overlayInfo;
     public GameObject visualizerObject;
+    public RoboCupAgent agent;
 
     // Tickrate
     float currentTick = 0f;
@@ -170,8 +172,9 @@ public class RoboCup : MonoBehaviour
     {
         RcObject.RcObjectType objectType = enemyTeam ? RcObject.RcObjectType.EnemyPlayer : RcObject.RcObjectType.TeamPlayer;
         string tName = enemyTeam ? enemyTeamName : teamName;
-        RcObject rcPlayerObj = new RcObject(objectType, tName, playerNumber, goalie); 
+        RcObject rcPlayerObj = new RcObject(objectType, tName, playerNumber, goalie);
         rcObjects.Add(rcPlayerObj.name, rcPlayerObj);
+        rcObjects[rcPlayerObj.name].isVisible = true;
     }
 
     void Start()
@@ -181,11 +184,18 @@ public class RoboCup : MonoBehaviour
     
     IEnumerator CreatePlayers()
     {
-        if (singleplayer)
+        if (singleplayer || trainingMode)
         {
             players.Add(CreatePlayer(0, false));
             yield return new WaitForSeconds(0.25f);
-            players[0].Send("(move -50 20)");
+            if (trainingMode)
+            {
+                agent.SetPlayer(players[0]);
+                agent.gameObject.SetActive(true);
+                //agent.OnEpisodeBegin();
+            }
+            else
+                players[0].Send("(move -20 0)");
         }
         else
         {
@@ -316,7 +326,12 @@ public class RoboCup : MonoBehaviour
     public void ResetVisualPositions(int playerNumber)
     {
         if (playerNumber == currentPlayer)
+        {
+            foreach (KeyValuePair<string,RcObject> rcObject in rcObjects)
+                rcObject.Value.isVisible = false;
+            
             visualizer.ResetVisualPositions(playerNumber);
+        }
     }
 
     public void SetVisualPosition(int playerNumber, string objectName, float distance, float direction, float bodyFacingDir)
@@ -385,6 +400,7 @@ public class RoboCup : MonoBehaviour
             {
                 if (rcObjects.ContainsKey(objectName))
                 {
+                    rcObjects[objectName].isVisible = true;
                     rcObjects[objectName].distance = distance;
                     rcObjects[objectName].direction = direction;
                     rcObjects[objectName].bodyFacingDir = bodyFacingDir;
@@ -397,7 +413,8 @@ public class RoboCup : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogWarning($"unique object not in dict: {objectName}");
+                    if (!objectName.Equals("l r") && !objectName.Equals("l l") && !objectName.Equals("l t") && !objectName.Equals("l b"))
+                        Debug.LogWarning($"unique object not in dict: {objectName}");
                 }
             }
         }
@@ -406,7 +423,19 @@ public class RoboCup : MonoBehaviour
     public void UpdateVisualPositions(int playerNumber)
     {
         if (playerNumber == currentPlayer)
+        {
             visualizer.UpdateVisualPositions(playerNumber);
+
+            if (trainingMode)
+            {
+                if (rcObjects["b"].isVisible)
+                    agent.SetBallInfo(true, rcObjects["b"].distance, rcObjects["b"].direction);
+                else
+                    agent.SetBallInfo(false);
+                
+                agent.RequestDecision();
+            }
+        }
     }
 }
 
@@ -432,7 +461,8 @@ public class RcObject
     public string teamName;
     public int playerNumber;
     public bool goalie;
-    
+
+    public bool isVisible;
     public float distance;
     public float direction;
     public float bodyFacingDir;

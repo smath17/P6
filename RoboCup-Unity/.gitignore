@@ -61,5 +61,8 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
-# Python venvs
+# ml-agents stuff
 python-envs
+training
+/Assets/ML-Agents/Timers
+/Assets/ML-Agents/Timers.meta
