@@ -46,7 +46,7 @@ public class RoboCupAgent : Agent
             //EndEpisode();
         }
 
-        int turnAmount = (int) (vectorAction[0] * 30f);
+        int turnAmount = (int) (vectorAction[0] * 180f);
         
         rcPlayer.Send($"(turn {turnAmount})");
     }
