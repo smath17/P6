@@ -52,17 +52,28 @@ public class RoboCupAgent : Agent
     
     public override void CollectObservations(VectorSensor sensor)
     {
-        sensor.AddObservation(ballVisible);
-        sensor.AddObservation(ballDistance);
-        sensor.AddObservation(ballDirection);
+        //sensor.AddObservation(ballVisible);
+        //sensor.AddObservation(ballDistance);
+        
+        if (ballVisible)
+            sensor.AddObservation(ballDirection / 45);
+        else
+            sensor.AddObservation(-1);
     }
     
     public override void OnActionReceived(float[] vectorAction)
     {
-        if (ballVisible && ballDirection < 5 && ballDirection > -5)
+        if (ballVisible)
         {
-            SetReward(1.0f);
-            EndEpisode();
+            if (ballDirection < 5 && ballDirection > -5)
+            {
+                SetReward(1.0f);
+                EndEpisode();
+            }
+        }
+        else
+        {
+            SetReward(-0.5f);
         }
 
         int turnAmount = (int) (vectorAction[0] * 180f);
@@ -73,6 +84,5 @@ public class RoboCupAgent : Agent
     public override void Heuristic(float[] actionsOut)
     {
         actionsOut[0] = Input.GetAxis("Horizontal");
-        actionsOut[1] = Input.GetAxis("Vertical");
     }
 }
