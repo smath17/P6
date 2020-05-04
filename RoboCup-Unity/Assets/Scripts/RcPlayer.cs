@@ -33,7 +33,7 @@ public class RcPlayer : MonoBehaviour
     {
         playerNumber = pNum;
         
-        endPoint = new IPEndPoint(IPAddress.Parse(RoboCup.singleton.ip), RoboCup.singleton.port);
+        endPoint = new IPEndPoint(IPAddress.Parse(RoboCup.singleton.ip), RoboCup.Port);
 
         socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         socket.Bind(new IPEndPoint(IPAddress.Any, 0));

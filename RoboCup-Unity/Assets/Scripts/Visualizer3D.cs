@@ -5,6 +5,11 @@ using UnityEngine;
 
 public class Visualizer3D : MonoBehaviour, IVisualizer
 {
+    [Header("Settings")]
+    public bool interpolate;
+    public bool showFlags;
+    
+    [Header("Prefabs")]
     public GameObject unknownPrefab;
 
     public GameObject flagPrefab;
@@ -13,9 +18,6 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
     public GameObject teamPlayerPrefab;
     public GameObject enemyPlayerPrefab;
     public GameObject unknownPlayerPrefab;
-
-    public bool interpolate;
-    public bool showFlags;
     
     [Header("References")]
     public Transform objectParent;

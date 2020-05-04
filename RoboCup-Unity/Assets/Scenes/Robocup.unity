@@ -2694,6 +2694,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9bdb47cfa2a9fd54c83b7c23e44a92c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  interpolate: 1
+  showFlags: 0
   unknownPrefab: {fileID: 8713521160849380590, guid: b9f50904cbd84374fbb60bc32dfbc218,
     type: 3}
   flagPrefab: {fileID: 709208973075867561, guid: 2e234290e52b57146a31bd6de601497c,
@@ -2706,8 +2708,6 @@ MonoBehaviour:
     type: 3}
   unknownPlayerPrefab: {fileID: 5053488677259754524, guid: 50d2af890c98a6d479cb85005c533eaa,
     type: 3}
-  interpolate: 1
-  showFlags: 0
   objectParent: {fileID: 632633896}
   unknownObjectParent: {fileID: 1181130772}
 --- !u!1001 &584064150
@@ -4753,12 +4753,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ip: 127.0.0.1
   port: 6000
-  teamName: Unity
-  singleplayer: 1
-  trainingMode: 0
+  onlyOnePlayer: 1
+  useCoach: 1
+  onlineCoach: 0
+  trainAgent: 1
+  agent: {fileID: 1373919170}
   overlayInfo: {fileID: 1193947861}
   visualizerObject: {fileID: 550579031}
-  agent: {fileID: 1373919170}
 --- !u!4 &1112771723
 Transform:
   m_ObjectHideFlags: 0

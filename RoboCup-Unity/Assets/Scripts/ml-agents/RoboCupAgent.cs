@@ -11,17 +11,36 @@ public class RoboCupAgent : Agent
     float ballDirection;
 
     RcPlayer rcPlayer;
+    RcCoach rcCoach;
 
     public void SetPlayer(RcPlayer player)
     {
         rcPlayer = player;
     }
     
+    public void SetCoach(RcCoach coach)
+    {
+        rcCoach = coach;
+    }
+    
     public override void OnEpisodeBegin()
     {
         //Debug.LogError("OnEpisodeBegin called");
         if (rcPlayer != null)
-            rcPlayer.Send("(move -20 0)");
+        {
+            int playerX = -20;
+            int playerY = 0;
+            
+            rcPlayer.Send($"(move {playerX} {playerY})");
+
+            if (rcCoach != null)
+            {
+                int ballX = Random.Range(-10, 10) + playerX;
+                int ballY = Random.Range(-10, 10) + playerY;
+
+                rcCoach.Send($"(move (ball) {ballX} {ballY})");
+            }
+        }
     }
 
     public void SetBallInfo(bool visible, float distance = 0, float direction = 0)
@@ -43,7 +62,7 @@ public class RoboCupAgent : Agent
         if (ballVisible && ballDirection < 5 && ballDirection > -5)
         {
             SetReward(1.0f);
-            //EndEpisode();
+            EndEpisode();
         }
 
         int turnAmount = (int) (vectorAction[0] * 180f);

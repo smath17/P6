@@ -5,23 +5,30 @@ using UnityEngine;
 
 public class RoboCup : MonoBehaviour
 {
-    const int teamSize = 11;
+    public const int FullTeamSize = 11;
+    public const int Port = 6000;
+    public const int OfflineCoachPort = 6001;
+    public const int OnlineCoachPort = 6002;
     
     public static RoboCup singleton;
     IVisualizer visualizer;
     bool visualizerInitialized;
 
-    [Header("Settings")]
+    [Header("Connection")]
     public string ip = "127.0.0.1";
-    public int port = 6000;
+    [Header("Team")]
     public string teamName = "DefaultTeam";
-    public bool singleplayer;
-    public bool trainingMode;
+    public bool onlyOnePlayer;
+    [Header("Coach")]
+    public bool useCoach;
+    public bool onlineCoach;
+    [Header("ML-Agents")]
+    public bool trainAgent;
+    public RoboCupAgent agent;
     
     [Header("References")]
     public OverlayInfo overlayInfo;
     public GameObject visualizerObject;
-    public RoboCupAgent agent;
 
     // Tickrate
     float currentTick = 0f;
@@ -33,7 +40,10 @@ public class RoboCup : MonoBehaviour
     
     // Player objects
     GameObject playerPrefab;
+    GameObject coachPrefab;
     List<RcPlayer> players = new List<RcPlayer>();
+    
+    RcCoach coach;
     
     Dictionary<string, RcObject> rcObjects = new Dictionary<string, RcObject>();
 
@@ -126,6 +136,7 @@ public class RoboCup : MonoBehaviour
             Destroy(gameObject);
         
         playerPrefab = Resources.Load<GameObject>("prefabs/RC Player");
+        coachPrefab = Resources.Load<GameObject>("prefabs/RC Coach");
         visualizer = visualizerObject.GetComponent<IVisualizer>();
         
         CreateRcObjects();
@@ -156,9 +167,9 @@ public class RoboCup : MonoBehaviour
             CreateRcObject(flagName, RcObject.RcObjectType.Flag);
         }
 
-        for (int i = 0; i < teamSize+1; i++)
+        for (int i = 0; i < FullTeamSize+1; i++)
         {
-            bool goalie = i == teamSize;
+            bool goalie = i == FullTeamSize;
             CreatePlayerRcObject(false, i, goalie);
         }
     }
@@ -179,18 +190,25 @@ public class RoboCup : MonoBehaviour
 
     void Start()
     {
+        if (useCoach)
+            coach = CreateCoach(onlineCoach);
+        
         StartCoroutine(CreatePlayers());
     }
     
     IEnumerator CreatePlayers()
     {
-        if (singleplayer || trainingMode)
+        if (onlyOnePlayer || trainAgent)
         {
             players.Add(CreatePlayer(0, false));
             yield return new WaitForSeconds(0.25f);
-            if (trainingMode)
+            if (trainAgent)
             {
                 agent.SetPlayer(players[0]);
+                
+                if (useCoach)
+                    agent.SetCoach(coach);
+                
                 agent.gameObject.SetActive(true);
                 //agent.OnEpisodeBegin();
             }
@@ -199,22 +217,22 @@ public class RoboCup : MonoBehaviour
         }
         else
         {
-            for (int i = 0; i < teamSize-1; i++)
+            for (int i = 0; i < FullTeamSize-1; i++)
             {
                 players.Add(CreatePlayer(i, false));
                 yield return new WaitForSeconds(0.2f);
             }
         
-            players.Add(CreatePlayer(teamSize-1, true));
+            players.Add(CreatePlayer(FullTeamSize-1, true));
             yield return new WaitForSeconds(0.25f);
 
-            for (int i = 0; i < teamSize-1; i++)
+            for (int i = 0; i < FullTeamSize-1; i++)
             {
                 players[i].Send($"(move -20 {i*5 - 30})");
                 yield return new WaitForSeconds(0.2f);
             }
         
-            players[teamSize-1].Send("(move -50 20)");
+            players[FullTeamSize-1].Send("(move -50 20)");
         }
     }
 
@@ -229,6 +247,21 @@ public class RoboCup : MonoBehaviour
         rcPlayer.Send($"(init {teamName} (version 16){goalieString})");
 
         return rcPlayer;
+    }
+    
+    RcCoach CreateCoach(bool online)
+    {
+        GameObject c = Instantiate(coachPrefab);
+        
+        RcCoach rcCoach = c.GetComponent<RcCoach>();
+        rcCoach.Init(online);
+        
+        if (online)
+            rcCoach.Send($"(init {teamName} (version 16))");
+        else
+            rcCoach.Send($"(init (version 16))");
+
+        return rcCoach;
     }
 
     void Update()
@@ -250,10 +283,10 @@ public class RoboCup : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.E))
             currentPlayer++;
         
-        if (currentPlayer > teamSize-1)
+        if (currentPlayer > FullTeamSize-1)
             currentPlayer = 0;
         if (currentPlayer < 0)
-            currentPlayer = teamSize-1;
+            currentPlayer = FullTeamSize-1;
 
         for (int i = 1; i < 10; i++)
         {
@@ -315,7 +348,7 @@ public class RoboCup : MonoBehaviour
         {
             if (!visualizerInitialized)
             {
-                visualizer.Init(teamName, teamSize, txt.Contains("r"), rcObjects);
+                visualizer.Init(teamName, FullTeamSize, txt.Contains("r"), rcObjects);
                 visualizerInitialized = true;
             }
         }
@@ -426,7 +459,7 @@ public class RoboCup : MonoBehaviour
         {
             visualizer.UpdateVisualPositions(playerNumber);
 
-            if (trainingMode)
+            if (trainAgent)
             {
                 if (rcObjects["b"].isVisible)
                     agent.SetBallInfo(true, rcObjects["b"].distance, rcObjects["b"].direction);
