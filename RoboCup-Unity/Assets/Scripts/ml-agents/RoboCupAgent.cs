@@ -1,8 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using MLAgents;
-using MLAgents.Sensors;
+using Unity.MLAgents;
+using Unity.MLAgents.Sensors;
 
 public class RoboCupAgent : Agent
 {
@@ -69,12 +69,10 @@ public class RoboCupAgent : Agent
         
         rcPlayer.Send($"(turn {turnAmount})");
     }
-    
-    public override float[] Heuristic()
+
+    public override void Heuristic(float[] actionsOut)
     {
-        var action = new float[2];
-        action[0] = Input.GetAxis("Horizontal");
-        action[1] = Input.GetAxis("Vertical");
-        return action;
+        actionsOut[0] = Input.GetAxis("Horizontal");
+        actionsOut[1] = Input.GetAxis("Vertical");
     }
 }
