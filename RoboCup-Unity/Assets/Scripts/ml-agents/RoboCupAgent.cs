@@ -61,31 +61,39 @@ public class RoboCupAgent : Agent
         player.Move(playerStartX, playerStartY);
         
         stepsLeftInCurrentEpisode = stepsPerEpisode;
-        
-        if (resetBallEachEpisode)
-            ResetBallPosition();
-    }
-    
-    void ResetBallPosition()
-    {
-        int ballX = 0;
-        int ballY = 0;
+
         switch (trainingScenario)
         {
             case RoboCup.TrainingScenario.LookAtBall:
-                ballX = Random.Range(-10, 10) + playerStartX;
-                ballY = Random.Range(-10, 10) + playerStartY;
+                BeginLookAtBall();
                 break;
             case RoboCup.TrainingScenario.RunTowardsBall:
-                ballX = Random.Range(5, 30);
-                coach.MovePlayer(playerStartX, playerStartY);
-                coach.Recover();
+                BeginRunTowardsBall();
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
+    }
+    
+    void BeginLookAtBall()
+    {
+        int ballX = Random.Range(-10, 10) + playerStartX;
+        int ballY = Random.Range(-10, 10) + playerStartY;
 
-        coach.MoveBall(ballX, ballY);
+        if (resetBallEachEpisode)
+            coach.MoveBall(ballX, ballY);
+    }
+
+    void BeginRunTowardsBall()
+    {
+        int ballX = ballX = Random.Range(5, 30);
+        int ballY = 0;
+        
+        coach.MovePlayer(playerStartX, playerStartY);
+        coach.Recover();
+        
+        if (resetBallEachEpisode)
+            coach.MoveBall(ballX, ballY);
     }
 
     public void SetBallInfo(bool visible, float distance = 0, float direction = 0)
