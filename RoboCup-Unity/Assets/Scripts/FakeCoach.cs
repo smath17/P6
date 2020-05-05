@@ -33,6 +33,11 @@ public class FakeCoach : MonoBehaviour, ICoach
         fakePlayer.Move(x, y);
     }
 
+    public void Recover()
+    {
+        //recover what? xD
+    }
+
     public void FixedUpdate()
     {
         fakePlayer.UpdatePlayer();
