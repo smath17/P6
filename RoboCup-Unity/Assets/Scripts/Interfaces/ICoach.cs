@@ -4,4 +4,5 @@ public interface ICoach
     void MoveBall(int x, int y);
     void MovePlayer(int x, int y);
     void Recover();
+    void KickOff();
 }

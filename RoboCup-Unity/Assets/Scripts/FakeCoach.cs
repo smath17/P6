@@ -38,6 +38,11 @@ public class FakeCoach : MonoBehaviour, ICoach
         //recover what? xD
     }
 
+    public void KickOff()
+    {
+        //yeet
+    }
+
     public void FixedUpdate()
     {
         fakePlayer.UpdatePlayer();

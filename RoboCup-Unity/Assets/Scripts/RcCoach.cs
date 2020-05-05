@@ -87,4 +87,9 @@ public class RcCoach : MonoBehaviour, ICoach
     {
         Send("(recover)");
     }
+
+    public void KickOff()
+    {
+        Send("(start)");
+    }
 }
