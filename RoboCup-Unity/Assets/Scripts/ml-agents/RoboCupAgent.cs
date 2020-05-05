@@ -53,6 +53,7 @@ public class RoboCupAgent : Agent
     void Awake()
     {
         coach.InitTraining(this, player);
+        coach.KickOff();
     }
     
     public override void OnEpisodeBegin()
@@ -67,8 +68,22 @@ public class RoboCupAgent : Agent
     
     void ResetBallPosition()
     {
-        int ballX = Random.Range(-10, 10) + playerStartX;
-        int ballY = Random.Range(-10, 10) + playerStartY;
+        int ballX = 0;
+        int ballY = 0;
+        switch (trainingScenario)
+        {
+            case RoboCup.TrainingScenario.LookAtBall:
+                ballX = Random.Range(-10, 10) + playerStartX;
+                ballY = Random.Range(-10, 10) + playerStartY;
+                break;
+            case RoboCup.TrainingScenario.RunTowardsBall:
+                ballX = Random.Range(5, 30);
+                coach.MovePlayer(playerStartX, playerStartY);
+                coach.Recover();
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
 
         coach.MoveBall(ballX, ballY);
     }
@@ -92,10 +107,23 @@ public class RoboCupAgent : Agent
     
     public override void CollectObservations(VectorSensor sensor)
     {
-        if (ballVisible)
-            sensor.AddObservation(ballDirection / 45);
-        else
-            sensor.AddObservation(-1);
+        switch (trainingScenario)
+        {
+            case RoboCup.TrainingScenario.LookAtBall:
+                if (ballVisible)
+                    sensor.AddObservation(ballDirection / 45);
+                else
+                    sensor.AddObservation(-1);
+                break;
+            case RoboCup.TrainingScenario.RunTowardsBall:
+                if (ballVisible)
+                    sensor.AddObservation(ballDistance);
+                else
+                    sensor.AddObservation(-1);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
     }
     
     public override void OnActionReceived(float[] vectorAction)
@@ -106,6 +134,7 @@ public class RoboCupAgent : Agent
                 ActionLookAtBall(vectorAction);
                 break;
             case RoboCup.TrainingScenario.RunTowardsBall:
+                ActionRunTowardsBall(vectorAction);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
@@ -133,7 +162,27 @@ public class RoboCupAgent : Agent
     
     public void ActionRunTowardsBall(float[] vectorAction)
     {
-        throw new NotImplementedException();
+        if (ballVisible)
+        {
+            if (ballDistance < 0.7 && ballDistance > 0.0)
+            {
+                SetReward(1.0f);
+            }
+        }
+        else
+        {
+            SetReward(-0.5f);
+        }
+                
+        int dashAmount;
+        if (vectorAction[0] < -0.5)
+            dashAmount = -100;
+        else if (vectorAction[0] > 0.5)
+            dashAmount = 100;
+        else
+            dashAmount = 0;
+
+        player.Dash(dashAmount, 0);
     }
 
     public override void Heuristic(float[] actionsOut)
