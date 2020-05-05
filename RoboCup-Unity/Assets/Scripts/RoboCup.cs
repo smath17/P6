@@ -481,7 +481,7 @@ public class RoboCup : MonoBehaviour
                 }
                 else
                 {
-                    if (!objectName.Equals("l r") && !objectName.Equals("l l") && !objectName.Equals("l t") && !objectName.Equals("l b"))
+                    if (!objectName.Equals("l r") && !objectName.Equals("l l") && !objectName.Equals("l t") && !objectName.Equals("l b") && !objectName.Equals("G"))
                         Debug.LogWarning($"unique object not in dict: {objectName}");
                 }
             }
