@@ -80,6 +80,6 @@ public class RcCoach : MonoBehaviour, ICoach
 
     public void MovePlayer(int x, int y)
     {
-        Send($"(move (p {teamName} 0) {x} {y})");
+        Send($"(move (player {teamName} 1) {x} {y})");
     }
 }
