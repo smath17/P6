@@ -5,6 +5,12 @@ using UnityEngine;
 
 public class RoboCup : MonoBehaviour
 {
+    public enum TrainingScenario
+    {
+        LookAtBall,
+        RunTowardsBall
+    }
+    
     public const int FullTeamSize = 11;
     public const int Port = 6000;
     public const int OfflineCoachPort = 6001;
@@ -16,16 +22,22 @@ public class RoboCup : MonoBehaviour
 
     [Header("Connection")]
     public string ip = "127.0.0.1";
+    
     [Header("Team")]
     public string teamName = "DefaultTeam";
     public bool onlyOnePlayer;
+    
     [Header("Coach")]
     public bool useCoach;
     public bool onlineCoach;
+    
     [Header("ML-Agents")]
     public bool trainAgent;
+    public TrainingScenario trainingScenario;
+    public bool offlineTraining;
     public RoboCupAgent agent;
-    
+    public GameObject offlineVisualPlayer;
+
     [Header("References")]
     public OverlayInfo overlayInfo;
     public GameObject visualizerObject;
@@ -135,11 +147,40 @@ public class RoboCup : MonoBehaviour
         else
             Destroy(gameObject);
         
-        playerPrefab = Resources.Load<GameObject>("prefabs/RC Player");
-        coachPrefab = Resources.Load<GameObject>("prefabs/RC Coach");
-        visualizer = visualizerObject.GetComponent<IVisualizer>();
-        
-        CreateRcObjects();
+        if (!offlineTraining)
+        {
+            playerPrefab = Resources.Load<GameObject>("prefabs/RC Player");
+            coachPrefab = Resources.Load<GameObject>("prefabs/RC Coach");
+            visualizer = visualizerObject.GetComponent<IVisualizer>();
+            CreateRcObjects();
+        }
+
+        if (trainAgent)
+        {
+            useCoach = true;
+            agent.SetOfflineTraining(offlineTraining);
+            agent.SetTrainingScenario(trainingScenario);
+        }
+    }
+    
+    void Start()
+    {
+        if (!offlineTraining)
+        {
+            if (useCoach)
+                coach = CreateCoach(onlineCoach);
+            StartCoroutine(CreatePlayers());
+        }
+
+        if (trainAgent && offlineTraining)
+        {
+            GameObject fakeCoach = Instantiate(Resources.Load<GameObject>("prefabs/Fake Coach"));
+            
+            agent.SetCoach(fakeCoach.GetComponent<FakeCoach>());
+            agent.SetPlayer(offlineVisualPlayer.AddComponent<FakePlayer>());
+            
+            agent.gameObject.SetActive(true);
+        }
     }
 
     void CreateRcObjects()
@@ -187,14 +228,6 @@ public class RoboCup : MonoBehaviour
         rcObjects.Add(rcPlayerObj.name, rcPlayerObj);
         rcObjects[rcPlayerObj.name].isVisible = true;
     }
-
-    void Start()
-    {
-        if (useCoach)
-            coach = CreateCoach(onlineCoach);
-        
-        StartCoroutine(CreatePlayers());
-    }
     
     IEnumerator CreatePlayers()
     {
@@ -210,7 +243,6 @@ public class RoboCup : MonoBehaviour
                     agent.SetCoach(coach);
                 
                 agent.gameObject.SetActive(true);
-                //agent.OnEpisodeBegin();
             }
             else
                 players[0].Send("(move -20 0)");
@@ -266,13 +298,16 @@ public class RoboCup : MonoBehaviour
 
     void Update()
     {
-        PlayerSwitching();
-
-        if (Time.time > currentTick + tickTime)
+        if (!offlineTraining)
         {
-            currentTick = Time.time;
+            PlayerSwitching();
+
+            if (Time.time > currentTick + tickTime)
+            {
+                currentTick = Time.time;
             
-            PlayerControl();
+                PlayerControl();
+            }
         }
     }
 
@@ -459,6 +494,7 @@ public class RoboCup : MonoBehaviour
         {
             visualizer.UpdateVisualPositions(playerNumber);
 
+            // Online training
             if (trainAgent)
             {
                 if (rcObjects["b"].isVisible)
@@ -467,6 +503,7 @@ public class RoboCup : MonoBehaviour
                     agent.SetBallInfo(false);
                 
                 agent.RequestDecision();
+                agent.Step();
             }
         }
     }

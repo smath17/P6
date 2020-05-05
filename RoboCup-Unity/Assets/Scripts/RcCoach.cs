@@ -7,7 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
 
-public class RcCoach : MonoBehaviour
+public class RcCoach : MonoBehaviour, ICoach
 {
     IPEndPoint endPoint;
     UdpClient client;
@@ -27,6 +27,11 @@ public class RcCoach : MonoBehaviour
         socket.Blocking = false;
         
         StartCoroutine(Poll());
+    }
+
+    public void InitTraining(RoboCupAgent agent, IPlayer player)
+    {
+        // not necessary for online training (yet?)
     }
 
     public void Send(string text)
@@ -64,5 +69,10 @@ public class RcCoach : MonoBehaviour
     {
         RcMessage rcMessage = new RcMessage(msg);
         Debug.Log($"Coach received: {rcMessage}");
+    }
+
+    public void MoveBall(int x, int y)
+    {
+        Send($"(move (ball) {x} {y})");
     }
 }

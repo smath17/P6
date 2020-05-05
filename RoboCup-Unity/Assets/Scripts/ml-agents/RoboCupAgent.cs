@@ -1,46 +1,76 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
+using Random = UnityEngine.Random;
 
 public class RoboCupAgent : Agent
 {
+    RoboCup.TrainingScenario trainingScenario;
+    bool offlineTraining;
+
+    IPlayer player;
+    ICoach coach;
+    
+    [Header("Settings")]
+    public bool resetBallEachEpisode = true;
+    
+    int playerStartX = -20;
+    int playerStartY = 0;
+
+    int stepsPerEpisode = 100;
+    int stepsLeftInCurrentEpisode;
+
+    float rewardLookAtBall = 1f;
+    float rewardBallNotVisible = -1f;
+    
     bool ballVisible;
     float ballDistance;
     float ballDirection;
-
-    RcPlayer rcPlayer;
-    RcCoach rcCoach;
-
-    public void SetPlayer(RcPlayer player)
+    
+    public void SetOfflineTraining(bool offline)
     {
-        rcPlayer = player;
+        offlineTraining = offline;
     }
     
-    public void SetCoach(RcCoach coach)
+    public void SetTrainingScenario(RoboCup.TrainingScenario scenario)
     {
-        rcCoach = coach;
+        trainingScenario = scenario;
+    }
+
+    public void SetPlayer(IPlayer player)
+    {
+        this.player = player;
+    }
+    
+    public void SetCoach(ICoach coach)
+    {
+        this.coach = coach;
+    }
+    
+    void Awake()
+    {
+        coach.InitTraining(this, player);
     }
     
     public override void OnEpisodeBegin()
     {
-        //Debug.LogError("OnEpisodeBegin called");
-        if (rcPlayer != null)
-        {
-            int playerX = -20;
-            int playerY = 0;
-            
-            rcPlayer.Send($"(move {playerX} {playerY})");
+        player.Move(playerStartX, playerStartY);
+        
+        stepsLeftInCurrentEpisode = stepsPerEpisode;
+        
+        if (resetBallEachEpisode)
+            ResetBallPosition();
+    }
+    
+    void ResetBallPosition()
+    {
+        int ballX = Random.Range(-10, 10) + playerStartX;
+        int ballY = Random.Range(-10, 10) + playerStartY;
 
-            if (rcCoach != null)
-            {
-                int ballX = Random.Range(-10, 10) + playerX;
-                int ballY = Random.Range(-10, 10) + playerY;
-
-                rcCoach.Send($"(move (ball) {ballX} {ballY})");
-            }
-        }
+        coach.MoveBall(ballX, ballY);
     }
 
     public void SetBallInfo(bool visible, float distance = 0, float direction = 0)
@@ -49,12 +79,19 @@ public class RoboCupAgent : Agent
         ballDistance = distance;
         ballDirection = direction;
     }
+
+    public void Step()
+    {
+        if (offlineTraining)
+            RequestDecision();
+        
+        stepsLeftInCurrentEpisode--;
+        if (stepsLeftInCurrentEpisode < 1)
+            EndEpisode();
+    }
     
     public override void CollectObservations(VectorSensor sensor)
     {
-        //sensor.AddObservation(ballVisible);
-        //sensor.AddObservation(ballDistance);
-        
         if (ballVisible)
             sensor.AddObservation(ballDirection / 45);
         else
@@ -63,22 +100,40 @@ public class RoboCupAgent : Agent
     
     public override void OnActionReceived(float[] vectorAction)
     {
+        switch (trainingScenario)
+        {
+            case RoboCup.TrainingScenario.LookAtBall:
+                ActionLookAtBall(vectorAction);
+                break;
+            case RoboCup.TrainingScenario.RunTowardsBall:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+    }
+
+    void ActionLookAtBall(float[] vectorAction)
+    {
         if (ballVisible)
         {
             if (ballDirection < 5 && ballDirection > -5)
             {
-                SetReward(1.0f);
-                EndEpisode();
+                SetReward(rewardLookAtBall);
             }
         }
         else
         {
-            SetReward(-0.5f);
+            SetReward(rewardBallNotVisible);
         }
 
         int turnAmount = (int) (vectorAction[0] * 180f);
-        
-        rcPlayer.Send($"(turn {turnAmount})");
+
+        player.Turn(turnAmount);
+    }
+    
+    public void ActionRunTowardsBall(float[] vectorAction)
+    {
+        throw new NotImplementedException();
     }
 
     public override void Heuristic(float[] actionsOut)

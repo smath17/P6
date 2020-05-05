@@ -7,7 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
 
-public class RcPlayer : MonoBehaviour
+public class RcPlayer : MonoBehaviour, IPlayer
 {   
     IPEndPoint endPoint;
     UdpClient client;
@@ -157,5 +157,25 @@ public class RcPlayer : MonoBehaviour
         }
         
         RoboCup.singleton.UpdateVisualPositions(playerNumber);
+    }
+
+    public void Move(int x, int y)
+    {
+        Send($"(move {x} {y})");
+    }
+
+    public void Dash(int amount, int direction)
+    {
+        Send($"(dash {amount} {direction})");
+    }
+
+    public void Turn(int amount)
+    {
+        Send($"(turn {amount})");
+    }
+
+    public void Kick(int power)
+    {
+        Send($"(kick {power} 0)");
     }
 }
