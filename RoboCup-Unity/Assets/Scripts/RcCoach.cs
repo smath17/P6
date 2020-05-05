@@ -18,6 +18,8 @@ public class RcCoach : MonoBehaviour, ICoach
     bool newPortIsSet = false;
     int newPort = 0;
 
+    string teamName;
+
     public void Init(bool online)
     {
         endPoint = new IPEndPoint(IPAddress.Parse(RoboCup.singleton.ip), online ? RoboCup.OnlineCoachPort : RoboCup.OfflineCoachPort);
@@ -31,7 +33,7 @@ public class RcCoach : MonoBehaviour, ICoach
 
     public void InitTraining(RoboCupAgent agent, IPlayer player)
     {
-        // not necessary for online training (yet?)
+        teamName = RoboCup.singleton.teamName;
     }
 
     public void Send(string text)
@@ -74,5 +76,10 @@ public class RcCoach : MonoBehaviour, ICoach
     public void MoveBall(int x, int y)
     {
         Send($"(move (ball) {x} {y})");
+    }
+
+    public void MovePlayer(int x, int y)
+    {
+        Send($"(move (player \"{teamName}\" 0) {x} {y})");
     }
 }

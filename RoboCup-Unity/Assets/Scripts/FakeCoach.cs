@@ -27,7 +27,12 @@ public class FakeCoach : MonoBehaviour, ICoach
     {
         ball.position = new Vector3(x, 0, y);
     }
-    
+
+    public void MovePlayer(int x, int y)
+    {
+        fakePlayer.Move(x, y);
+    }
+
     public void FixedUpdate()
     {
         fakePlayer.UpdatePlayer();
