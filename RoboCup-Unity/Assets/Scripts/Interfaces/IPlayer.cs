@@ -4,4 +4,5 @@ public interface IPlayer
     void Dash(int amount, int direction);
     void Turn(int amount);
     void Kick(int power);
+    void Catch();
 }

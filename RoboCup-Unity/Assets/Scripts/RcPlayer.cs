@@ -178,4 +178,9 @@ public class RcPlayer : MonoBehaviour, IPlayer
     {
         Send($"(kick {power} 0)");
     }
+
+    public void Catch()
+    {
+        Send("(catch 0)");
+    }
 }

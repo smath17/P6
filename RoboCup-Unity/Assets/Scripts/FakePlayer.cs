@@ -24,6 +24,11 @@ public class FakePlayer : MonoBehaviour, IPlayer
         throw new System.NotImplementedException();
     }
 
+    public void Catch()
+    {
+        throw new System.NotImplementedException();
+    }
+
     public void UpdatePlayer()
     {
         transform.Rotate(Vector3.up, nextRotation);

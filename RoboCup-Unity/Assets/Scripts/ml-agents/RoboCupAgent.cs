@@ -8,7 +8,7 @@ using Random = UnityEngine.Random;
 
 public class RoboCupAgent : Agent
 {
-    RoboCup.TrainingScenario trainingScenario;
+    AgentTrainer.TrainingScenario trainingScenario;
     bool offlineTraining;
 
     IPlayer player;
@@ -29,13 +29,15 @@ public class RoboCupAgent : Agent
     bool ballVisible;
     float ballDistance;
     float ballDirection;
+
+    bool initialized = false;
     
     public void SetOfflineTraining(bool offline)
     {
         offlineTraining = offline;
     }
     
-    public void SetTrainingScenario(RoboCup.TrainingScenario scenario)
+    public void SetTrainingScenario(AgentTrainer.TrainingScenario scenario)
     {
         trainingScenario = scenario;
     }
@@ -50,10 +52,12 @@ public class RoboCupAgent : Agent
         this.coach = coach;
     }
     
-    void Awake()
+    void Start()
     {
         coach.InitTraining(this, player);
         coach.KickOff();
+
+        initialized = true;
     }
     
     public override void OnEpisodeBegin()
@@ -64,10 +68,10 @@ public class RoboCupAgent : Agent
 
         switch (trainingScenario)
         {
-            case RoboCup.TrainingScenario.LookAtBall:
+            case AgentTrainer.TrainingScenario.LookAtBall:
                 BeginLookAtBall();
                 break;
-            case RoboCup.TrainingScenario.RunTowardsBall:
+            case AgentTrainer.TrainingScenario.RunTowardsBall:
                 BeginRunTowardsBall();
                 break;
             default:
@@ -89,22 +93,25 @@ public class RoboCupAgent : Agent
         int ballX = ballX = Random.Range(5, 30);
         int ballY = 0;
         
-        coach.MovePlayer(playerStartX, playerStartY);
+        coach.MovePlayer(RoboCup.singleton.teamName, 1, playerStartX, playerStartY);
         coach.Recover();
         
         if (resetBallEachEpisode)
             coach.MoveBall(ballX, ballY);
     }
 
-    public void SetBallInfo(bool visible, float distance = 0, float direction = 0)
+    public void SetBallInfo(bool visible, float direction = 0, float distance = 0)
     {
         ballVisible = visible;
-        ballDistance = distance;
         ballDirection = direction;
+        ballDistance = distance;
     }
 
     public void Step()
     {
+        if (!initialized)
+            return;
+        
         if (offlineTraining)
             RequestDecision();
         
@@ -117,13 +124,13 @@ public class RoboCupAgent : Agent
     {
         switch (trainingScenario)
         {
-            case RoboCup.TrainingScenario.LookAtBall:
+            case AgentTrainer.TrainingScenario.LookAtBall:
                 if (ballVisible)
                     sensor.AddObservation(ballDirection / 45);
                 else
                     sensor.AddObservation(-1);
                 break;
-            case RoboCup.TrainingScenario.RunTowardsBall:
+            case AgentTrainer.TrainingScenario.RunTowardsBall:
                 if (ballVisible)
                     sensor.AddObservation(ballDistance);
                 else
@@ -138,10 +145,10 @@ public class RoboCupAgent : Agent
     {
         switch (trainingScenario)
         {
-            case RoboCup.TrainingScenario.LookAtBall:
+            case AgentTrainer.TrainingScenario.LookAtBall:
                 ActionLookAtBall(vectorAction);
                 break;
-            case RoboCup.TrainingScenario.RunTowardsBall:
+            case AgentTrainer.TrainingScenario.RunTowardsBall:
                 ActionRunTowardsBall(vectorAction);
                 break;
             default:

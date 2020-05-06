@@ -28,7 +28,7 @@ public class FakeCoach : MonoBehaviour, ICoach
         ball.position = new Vector3(x, 0, y);
     }
 
-    public void MovePlayer(int x, int y)
+    public void MovePlayer(string teamName, int unum, int x, int y)
     {
         fakePlayer.Move(x, y);
     }
@@ -51,7 +51,7 @@ public class FakeCoach : MonoBehaviour, ICoach
         int ballDirection = (int)(Vector3.SignedAngle(player.forward, ball.position - player.position, Vector3.up));
         bool ballVisible = ballDirection < 45 && ballDirection > -45;
         
-        agent.SetBallInfo(ballVisible, ballDistance, ballDirection);
+        agent.SetBallInfo(ballVisible, ballDirection, ballDistance);
         agent.Step();
     }
 }
