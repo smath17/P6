@@ -32,6 +32,10 @@ public class FakeCoach : MonoBehaviour, ICoach
     {
         fakePlayer.Move(x, y);
     }
+    public void MovePlayer(string teamName, int unum, int x, int y, int direction)
+    {
+        fakePlayer.Move(x, y);
+    }
 
     public void Recover()
     {

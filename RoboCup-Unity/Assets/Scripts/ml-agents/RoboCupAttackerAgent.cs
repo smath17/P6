@@ -23,7 +23,7 @@ public class RoboCupAttackerAgent : Agent
     int goalDirection;
     int goalDistance;
 
-    int playerStartX = 20;
+    int playerStartX = 10;
     int playerStartY = 0;
 
     int dashSpeed = 100;
@@ -41,7 +41,7 @@ public class RoboCupAttackerAgent : Agent
     public override void OnEpisodeBegin()
     {
         coach.MoveBall(0, 0);
-        coach.MovePlayer(RoboCup.singleton.teamName, 1, playerStartX, playerStartY);
+        coach.MovePlayer(RoboCup.singleton.GetEnemyTeamName(), 1, playerStartX, playerStartY, 180);
         coach.Recover();
     }
     

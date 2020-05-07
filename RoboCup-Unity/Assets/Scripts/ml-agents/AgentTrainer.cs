@@ -26,7 +26,7 @@ public class AgentTrainer : MonoBehaviour
     List<PlayerSetupInfo> team1Setup = new List<PlayerSetupInfo>();
     List<PlayerSetupInfo> team2Setup = new List<PlayerSetupInfo>();
 
-    void Awake()
+    public void SetupTeams()
     {
         switch (trainingScenario)
         {
@@ -42,10 +42,10 @@ public class AgentTrainer : MonoBehaviour
             
             case TrainingScenario.AttackVsDefend:
                 RoboCup.singleton.SetTeamName("Defender");
-                team1Setup.Add(new PlayerSetupInfo(true, -30, 0));
+                team1Setup.Add(new PlayerSetupInfo(true, -50, 0));
                 
                 RoboCup.singleton.SetEnemyTeamName("Attacker");
-                team2Setup.Add(new PlayerSetupInfo(false, 10, 0));
+                team2Setup.Add(new PlayerSetupInfo(false, -50, 0));
                 break;
         }
     }
@@ -88,6 +88,8 @@ public class AgentTrainer : MonoBehaviour
                 attackerAgent.SetCoach(RoboCup.singleton.GetCoach());
                 attackerAgent.gameObject.SetActive(true);
                 
+                RoboCup.singleton.GetCoach().KickOff();
+                
                 break;
         }
     }
@@ -98,9 +100,11 @@ public class AgentTrainer : MonoBehaviour
         {
             case TrainingScenario.LookAtBall:
             case TrainingScenario.RunTowardsBall:
+
+                RcObject ball = RoboCup.singleton.GetPlayer(0, true).GetRcObject("b");
                 
-                if (RoboCup.singleton.GetRcObject("b").isVisible)
-                    defaultAgent.SetBallInfo(true, RoboCup.singleton.GetRcObject("b").direction, RoboCup.singleton.GetRcObject("b").distance);
+                if (ball.curVisibility)
+                    defaultAgent.SetBallInfo(true, ball.direction, ball.distance);
                 else
                     defaultAgent.SetBallInfo(false);
                 
@@ -110,15 +114,37 @@ public class AgentTrainer : MonoBehaviour
                 break;
             
             case TrainingScenario.AttackVsDefend:
-                //defenderAgent.SetSelfInfo();
-                //defenderAgent.SetBallInfo();
-                //defenderAgent.SetAttackerInfo();
+                RcPlayer defender = RoboCup.singleton.GetPlayer(0, true);
+                
+                defenderAgent.SetSelfInfo(defender.GetCalculatedPosition().x, defender.GetCalculatedPosition().y, defender.GetCalculatedAngle());
+                
+                RcObject defenderBall = defender.GetRcObject("b");
+                if (defenderBall != null)
+                    defenderAgent.SetBallInfo(defenderBall.curVisibility, (int)defenderBall.direction, (int)defenderBall.distance);
+                
+                RcObject defenderOpponent = defender.GetRcObject("p \"Attacker\" 1");
+                if (defenderOpponent != null)
+                    defenderAgent.SetAttackerInfo(defenderOpponent.curVisibility, (int)defenderOpponent.direction, (int)defenderOpponent.distance);
+                
                 defenderAgent.RequestDecision();
                 
-                //attackerAgent.SetSelfInfo();
-                //attackerAgent.SetBallInfo();
-                //attackerAgent.SetGoalInfo();
-                //attackerAgent.SetDefenderInfo();
+                
+                RcPlayer attacker = RoboCup.singleton.GetPlayer(0, false);
+                
+                attackerAgent.SetSelfInfo(attacker.GetCalculatedPosition().x, attacker.GetCalculatedPosition().y, attacker.GetCalculatedAngle());
+                
+                RcObject attackerBall = attacker.GetRcObject("b");
+                if (attackerBall != null)
+                    attackerAgent.SetBallInfo(attackerBall.curVisibility, (int)attackerBall.direction, (int)attackerBall.distance);
+                
+                RcObject attackerGoal = attacker.GetRcObject("g l");
+                if (attackerGoal != null)
+                    attackerAgent.SetGoalInfo(attackerGoal.curVisibility, (int)attackerGoal.direction, (int)attackerGoal.distance);
+                
+                RcObject attackerOpponent = attacker.GetRcObject("p \"Defender\" 1 goalie");
+                if (attackerOpponent != null)
+                    attackerAgent.SetDefenderInfo(attackerOpponent.curVisibility, (int)attackerOpponent.direction, (int)attackerOpponent.distance);
+                
                 attackerAgent.RequestDecision();
                 break;
         }

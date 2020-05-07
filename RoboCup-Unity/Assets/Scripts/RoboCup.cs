@@ -30,6 +30,7 @@ public class RoboCup : MonoBehaviour
     public AgentTrainer agentTrainer;
     public OverlayInfo overlayInfo;
     public GameObject visualizerObject;
+    public LocationCalculator locationCalculator;
 
     // Tickrate
     float currentTick = 0f;
@@ -47,19 +48,19 @@ public class RoboCup : MonoBehaviour
     
     RcCoach coach;
     
-    Dictionary<string, RcObject> rcObjects = new Dictionary<string, RcObject>();
+    //Dictionary<string, RcObject> rcObjects = new Dictionary<string, RcObject>();
     
     List<PlayerSetupInfo> team1Setup = new List<PlayerSetupInfo>();
     List<PlayerSetupInfo> team2Setup = new List<PlayerSetupInfo>();
 
     #region FlagNames
-    string[] other = new[]
+    public static string[] other = new[]
     {
         "F",
         "P"
     };
 
-    string[] whiteFlags = new[]
+    public static string[] whiteFlags = new[]
     {
         "f t 0",
         "f c t",
@@ -69,7 +70,7 @@ public class RoboCup : MonoBehaviour
         "f c"
     };
     
-    string[] redFlags = new[]
+    public static string[] redFlags = new[]
     {
         "f r t",
         "f t r 10",
@@ -99,7 +100,7 @@ public class RoboCup : MonoBehaviour
         "f r 0"
     };
     
-    string[] blueFlags = new[]
+    public static string[] blueFlags = new[]
     {
         "f l t",
         "f t l 50",
@@ -130,6 +131,7 @@ public class RoboCup : MonoBehaviour
     };
     #endregion
 
+    bool visualizeMainTeam = true;
     int currentPlayer = 0;
     bool sendDashInput;
     
@@ -143,7 +145,6 @@ public class RoboCup : MonoBehaviour
         playerPrefab = Resources.Load<GameObject>("prefabs/RC Player");
         coachPrefab = Resources.Load<GameObject>("prefabs/RC Coach");
         visualizer = visualizerObject.GetComponent<IVisualizer>();
-        CreateRcObjects();
     }
     
     void Start()
@@ -163,6 +164,7 @@ public class RoboCup : MonoBehaviour
                 break;
             
             case RoboCupMode.Training:
+                agentTrainer.SetupTeams();
                 team1Setup = agentTrainer.GetTeam1Setup();
                 team2Setup = agentTrainer.GetTeam2Setup();
                 break;
@@ -212,58 +214,12 @@ public class RoboCup : MonoBehaviour
         }
     }
 
-    void CreateRcObjects()
-    {
-        CreateRcObject("b", RcObject.RcObjectType.Ball);
-        CreateRcObject("B", RcObject.RcObjectType.BallClose);
-
-        foreach (string o in other)
-        {
-            CreateRcObject(o, RcObject.RcObjectType.Flag);
-        }
-        
-        foreach (string flagName in whiteFlags)
-        {
-            CreateRcObject(flagName, RcObject.RcObjectType.Flag);
-        }
-        
-        foreach (string flagName in redFlags)
-        {
-            CreateRcObject(flagName, RcObject.RcObjectType.Flag);
-        }
-        
-        foreach (string flagName in blueFlags)
-        {
-            CreateRcObject(flagName, RcObject.RcObjectType.Flag);
-        }
-
-        for (int i = 0; i < FullTeamSize+1; i++)
-        {
-            bool goalie = i == FullTeamSize;
-            CreatePlayerRcObject(false, i, goalie);
-        }
-    }
-
-    void CreateRcObject(string objectName, RcObject.RcObjectType objectType)
-    {
-        rcObjects.Add(objectName, new RcObject(objectName, objectType));
-    }
-
-    void CreatePlayerRcObject(bool enemyTeam, int playerNumber, bool goalie)
-    {
-        RcObject.RcObjectType objectType = enemyTeam ? RcObject.RcObjectType.EnemyPlayer : RcObject.RcObjectType.TeamPlayer;
-        string tName = enemyTeam ? enemyTeamName : teamName;
-        RcObject rcPlayerObj = new RcObject(objectType, tName, playerNumber, goalie);
-        rcObjects.Add(rcPlayerObj.name, rcPlayerObj);
-        rcObjects[rcPlayerObj.name].isVisible = true;
-    }
-
     RcPlayer CreatePlayer(int playerNumber, bool goalie, int x, int y, bool mainTeam = true)
     {
         GameObject p = Instantiate(playerPrefab);
         
         RcPlayer rcPlayer = p.GetComponent<RcPlayer>();
-        rcPlayer.Init(mainTeam ? teamName : enemyTeamName, playerNumber, goalie, x, y);
+        rcPlayer.Init(mainTeam, playerNumber, goalie, x, y);
 
         return rcPlayer;
     }
@@ -307,28 +263,55 @@ public class RoboCup : MonoBehaviour
     void PlayerSwitching()
     {
         if (Input.GetKeyDown(KeyCode.Q))
-            currentPlayer--;
+            PreviousPlayer();
         else if (Input.GetKeyDown(KeyCode.E))
-            currentPlayer++;
-        
-        if (currentPlayer > FullTeamSize-1)
-            currentPlayer = 0;
-        if (currentPlayer < 0)
-            currentPlayer = FullTeamSize-1;
+            NextPlayer();
 
         for (int i = 1; i < 10; i++)
-        {
             if (Input.GetKeyDown(KeyCode.Alpha0 + i) || Input.GetKeyDown(KeyCode.Keypad0 + i))
-                currentPlayer = i-1;
-        }
+                SwitchPlayer(i-1);
 
         if (Input.GetKeyDown(KeyCode.Alpha0) || Input.GetKeyDown(KeyCode.Keypad0))
-            currentPlayer = 9;
+            SwitchPlayer(9);
 
         if (Input.GetKeyDown(KeyCode.G))
-            currentPlayer = 10;
+            SwitchPlayer(10);
 
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            visualizeMainTeam = !visualizeMainTeam;
+            OnSwitchPlayer();
+        }
+    }
+
+    void PreviousPlayer()
+    {
+        currentPlayer--;
+        if (currentPlayer < 0)
+            currentPlayer = FullTeamSize-1;
+        
+        OnSwitchPlayer();
+    }
+
+    void NextPlayer()
+    {
+        currentPlayer++;
+        if (currentPlayer > FullTeamSize-1)
+            currentPlayer = 0;
+        
+        OnSwitchPlayer();
+    }
+
+    void SwitchPlayer(int newPlayer)
+    {
+        currentPlayer = newPlayer;
+        OnSwitchPlayer();
+    }
+
+    void OnSwitchPlayer()
+    {
         overlayInfo.UpdateCurrentPlayerText(currentPlayer);
+        visualizer.ResetVisualPositions();
     }
 
     void PlayerControl()
@@ -372,120 +355,32 @@ public class RoboCup : MonoBehaviour
     
     public void ReceiveMessage(string txt, RcMessage.RcMessageType type)
     {
-        if (type == RcMessage.RcMessageType.Init)
-        {
-            if (!visualizerInitialized)
-            {
-                visualizer.Init(teamName, FullTeamSize, txt.Contains("r"), rcObjects);
-                visualizerInitialized = true;
-            }
-        }
-        
         overlayInfo.DisplayText(txt, type);
     }
 
-    public void ResetVisualPositions(int playerNumber)
+    public void InitVisualizer(RcPlayer player)
     {
-        if (playerNumber == currentPlayer)
+        if (!visualizerInitialized)
         {
-            foreach (KeyValuePair<string,RcObject> rcObject in rcObjects)
-                rcObject.Value.isVisible = false;
-            
-            visualizer.ResetVisualPositions(playerNumber);
+            visualizer.SetPlayer(player);
+            visualizer.Init();
+            visualizerInitialized = true;
         }
     }
 
-    public void SetVisualPosition(int playerNumber, string objectName, float distance, float direction, float bodyFacingDir)
+    public void ResetVisualPositions(bool mainTeam, int playerNumber)
     {
-        if (playerNumber == currentPlayer)
+        if (visualizeMainTeam == mainTeam && playerNumber == currentPlayer)
         {
-            float radDirection = Mathf.Deg2Rad * -(direction - 90f);
-            float relativeBodyFacingDir = -(bodyFacingDir);
-            
-            Vector2 relativePos = distance * new Vector2(Mathf.Cos(radDirection), Mathf.Sin(radDirection));
-
-            bool uniqueObject = true;
-
-            if (objectName.Length < 1)
-                return;
-            
-            // object is a player
-            if (objectName[0] == 'p')
-            {
-                // more info than just "p"
-                if (objectName.Length > 1)
-                {
-                    // not an already known specific player
-                    if (!rcObjects.ContainsKey(objectName))
-                    {
-                        Regex regex = new Regex("p \"([/-_a-zA-Z0-9]+)\"(?: ([0-9]{1,2})( goalie)?)?");
-                        
-                        if (regex.Match(objectName).Success)
-                        {
-                            string tName = regex.Match(objectName).Result("$1");
-                            enemyTeamName = tName;
-     
-                            // if there is a player number, assume enemy player and add to dict
-                            if (regex.Match(objectName).Result("$2").Length > 0)
-                            {
-                                int enemyNumber = int.Parse(regex.Match(objectName).Result("$2"));
-                                bool goalie = regex.Match(objectName).Result("$3").Length > 0;
-                                
-                                CreatePlayerRcObject(true, enemyNumber, goalie);
-                                visualizer.AddEnemyTeamMember(enemyTeamName, enemyNumber, goalie);
-                            }
-                            else // if there is no player number call setposition method depending on team
-                            {
-                                uniqueObject = false;
-                                
-                                if (tName.Equals(teamName))
-                                    visualizer.SetUnknownPlayerPosition(relativePos, relativeBodyFacingDir, true);
-                                else
-                                    visualizer.SetUnknownPlayerPosition(relativePos, relativeBodyFacingDir, true, true);
-                            }
-                        }
-                        else
-                        {
-                            Debug.LogError($"regex did not match: {objectName}");
-                        }
-                    }
-                }
-                else // unknown player
-                {
-                    uniqueObject = false;
-                    visualizer.SetUnknownPlayerPosition(relativePos, relativeBodyFacingDir);
-                }
-            }
-
-            if (uniqueObject)
-            {
-                if (rcObjects.ContainsKey(objectName))
-                {
-                    rcObjects[objectName].isVisible = true;
-                    rcObjects[objectName].distance = distance;
-                    rcObjects[objectName].direction = direction;
-                    rcObjects[objectName].bodyFacingDir = bodyFacingDir;
-            
-                    //rcObjects[objectName].visibleThisStep = true;
-                    rcObjects[objectName].relativePos = relativePos;
-                    rcObjects[objectName].relativeBodyFacingDir = relativeBodyFacingDir;
-                    
-                    visualizer.SetVisualPosition(objectName, relativePos, relativeBodyFacingDir);
-                }
-                else
-                {
-                    if (!objectName.Equals("l r") && !objectName.Equals("l l") && !objectName.Equals("l t") && !objectName.Equals("l b") && !objectName.Equals("G"))
-                        Debug.LogWarning($"unique object not in dict: {objectName}");
-                }
-            }
+            visualizer.ResetVisualPositions();
         }
     }
 
-    public void UpdateVisualPositions(int playerNumber)
+    public void UpdateVisualPositions(bool mainTeam, int playerNumber)
     {
-        if (playerNumber == currentPlayer)
+        if (visualizeMainTeam == mainTeam && playerNumber == currentPlayer)
         {
-            visualizer.UpdateVisualPositions(playerNumber);
+            visualizer.UpdateVisualPositions();
 
             // Online training
             if (roboCupMode == RoboCupMode.Training)
@@ -493,6 +388,11 @@ public class RoboCup : MonoBehaviour
                 agentTrainer.Step();
             }
         }
+    }
+
+    public IVisualizer GetVisualizer()
+    {
+        return visualizer;
     }
 
     public RcPlayer GetPlayer(int number, bool mainTeam = true)
@@ -505,9 +405,14 @@ public class RoboCup : MonoBehaviour
         return coach;
     }
 
-    public RcObject GetRcObject(string objName)
+    public string GetTeamName()
     {
-        return rcObjects[objName];
+        return teamName;
+    }
+    
+    public string GetEnemyTeamName()
+    {
+        return enemyTeamName;
     }
 
     public void SetTeamName(string newName)
@@ -558,13 +463,17 @@ public class RcObject
     public int playerNumber;
     public bool goalie;
 
-    public bool isVisible;
+    public bool prevVisibility;
+    public bool curVisibility;
+    
     public float distance;
     public float direction;
-    public float bodyFacingDir;
+    
+    public Vector2 prevRelativePos;
+    public Vector2 curRelativePos;
 
-    public Vector2 relativePos;
-    public float relativeBodyFacingDir;
+    public float prevRelativeBodyFacingDir;
+    public float curRelativeBodyFacingDir;
 
     public RcObject(string name, RcObjectType objectType)
     {

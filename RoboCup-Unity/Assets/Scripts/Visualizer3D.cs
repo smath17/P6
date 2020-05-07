@@ -22,14 +22,8 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
     [Header("References")]
     public Transform objectParent;
     public Transform unknownObjectParent;
-
-    string teamName;
-    int teamSize;
-    bool rightTeam;
     
     Dictionary<string, VisualRcObject> visualObjects = new Dictionary<string, VisualRcObject>();
-    
-    Dictionary<string, ReferenceFlag> referenceFlags = new Dictionary<string, ReferenceFlag>();
     
     List<VisualRcObject> unknownPlayers = new List<VisualRcObject>();
     List<VisualRcObject> unknownTeamPlayers = new List<VisualRcObject>();
@@ -38,24 +32,12 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
     int unknownPlayerIndex;
     int unknownTeamPlayerIndex;
     int unknownEnemyPlayerIndex;
-    
-    Vector2 prevPlayerPosition = Vector2.zero;
-    Vector2 curPlayerPosition = Vector2.zero;
-    float prevPlayerAngle = 0f;
-    float curPlayerAngle = 0f;
-    
-    bool positionWasKnown;
-    bool positionIsKnown;
-    bool angleWasKnown;
-    bool angleIsKnown;
 
-    public void Init(string teamName, int teamSize, bool rightTeam, Dictionary<string, RcObject> rcObjects)
+    RcPlayer currentPlayer;
+
+    public void Init()
     {
-        this.teamName = teamName;
-        this.teamSize = teamSize;
-        this.rightTeam = rightTeam;
-
-        foreach (KeyValuePair<string,RcObject> rcObject in rcObjects)
+        foreach (KeyValuePair<string,RcObject> rcObject in currentPlayer.GetRcObjects())
         {
             GameObject prefab = unknownPrefab;
             
@@ -90,43 +72,39 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
             
             Transform t = CreateVisualObject(rcObject.Value.name, prefab);
 
-            if (rcObject.Value.playerNumber != 0)
+            if (t != null && rcObject.Value.playerNumber != 0)
             {
                 string goalieText = rcObject.Value.goalie ? " G" : "";
                 t.Find("text").GetComponent<TextMeshPro>().text = rcObject.Value.playerNumber + goalieText;
             }
         }
-
-        foreach (ReferenceFlag referenceFlag in FindObjectsOfType<ReferenceFlag>())
-        {
-            referenceFlag.flagName = referenceFlag.name;
-            
-            Vector3 pos3d = referenceFlag.transform.localPosition;
-            referenceFlag.flagPos = new Vector2(pos3d.x, pos3d.z);
-            
-            referenceFlags.Add(referenceFlag.name, referenceFlag);
-
-            referenceFlag.gameObject.SetActive(false);
-        }
         
-        for (int i = 0; i < teamSize * 2; i++)
+        for (int i = 0; i < RoboCup.FullTeamSize * 2; i++)
         {
             CreateUnknownPlayer(false);
         }
         
-        for (int i = 0; i < teamSize; i++)
+        for (int i = 0; i < RoboCup.FullTeamSize; i++)
         {
             CreateUnknownPlayer(true);
         }
         
-        for (int i = 0; i < teamSize; i++)
+        for (int i = 0; i < RoboCup.FullTeamSize; i++)
         {
             CreateUnknownPlayer(true, true);
         }
     }
-    
+
+    public void SetPlayer(RcPlayer player)
+    {
+        currentPlayer = player;
+    }
+
     Transform CreateVisualObject(string objectName, GameObject prefab)
     {
+        if (visualObjects.ContainsKey(objectName))
+            return null;
+        
         GameObject obj = Instantiate(prefab);
 
         Transform t = obj.transform;
@@ -176,11 +154,14 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
         
         Transform t = CreateVisualObject(eName, enemyPlayerPrefab);
 
-        string gText = goalie ? " G" : "";
-        t.Find("text").GetComponent<TextMeshPro>().text = enemyNumber + gText;
+        if (t != null)
+        {
+            string gText = goalie ? " G" : "";
+            t.Find("text").GetComponent<TextMeshPro>().text = enemyNumber + gText;
+        }
     }
 
-    public void ResetVisualPositions(int playerNumber)
+    public void ResetVisualPositions()
     {
         foreach (KeyValuePair<string,VisualRcObject> rcObject in visualObjects)
         {
@@ -227,17 +208,23 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
         {
             if (enemyTeam)
             {
+                if (unknownEnemyPlayerIndex > unknownEnemyPlayers.Count - 1)
+                    unknownEnemyPlayerIndex = 0;
                 t = unknownEnemyPlayers[unknownEnemyPlayerIndex].t;
                 unknownEnemyPlayerIndex++;
             }
             else
             {
+                if (unknownTeamPlayerIndex > unknownTeamPlayers.Count-1)
+                    unknownTeamPlayerIndex = 0;
                 t = unknownTeamPlayers[unknownTeamPlayerIndex].t;
                 unknownTeamPlayerIndex++;
             }
         }
         else
         {
+            if (unknownPlayerIndex > unknownPlayers.Count-1)
+                unknownPlayerIndex = 0;
             t = unknownPlayers[unknownPlayerIndex].t;
             unknownPlayerIndex++;
         }
@@ -247,8 +234,11 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
         t.localRotation = Quaternion.Euler(0,0,relativeBodyFacingDir);
     }
 
-    public void UpdateVisualPositions(int playerNumber)
+    public void UpdateVisualPositions()
     {
+        if (currentPlayer == null)
+            return;
+        
         foreach (KeyValuePair<string,VisualRcObject> rcObject in visualObjects)
         {
             if (rcObject.Value.curVisibility && (!rcObject.Key.StartsWith("f") || showFlags))
@@ -273,10 +263,14 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
                 rcObject.Value.t.gameObject.SetActive(false);
             }
         }
-        
-        TrilateratePlayerPosition();
 
-        if (interpolate && positionWasKnown && positionIsKnown && angleWasKnown && angleIsKnown)
+        float curPlayerAngle = currentPlayer.GetCalculatedAngle();
+        float prevPlayerAngle = currentPlayer.GetCalculatedAngle(true);
+        
+        Vector2 curPlayerPosition = currentPlayer.GetCalculatedPosition();
+        Vector2 prevPlayerPosition = currentPlayer.GetCalculatedPosition(true);
+        
+        if (interpolate && currentPlayer.ReadyToInterpolate())
         {
             StartCoroutine(
                 InterpolateObject(objectParent,
@@ -312,138 +306,6 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
             
             yield return null;
         }
-    }
-
-    void TrilateratePlayerPosition()
-    {
-        prevPlayerPosition = curPlayerPosition;
-        prevPlayerAngle = curPlayerAngle;
-        
-        positionWasKnown = positionIsKnown;
-        angleWasKnown = angleIsKnown;
-        
-        positionIsKnown = false;
-        angleIsKnown = false;
-        
-        List<ReferenceFlag> flagsForCalculation = new List<ReferenceFlag>();
-        
-        foreach (KeyValuePair<string,VisualRcObject> rcObject in visualObjects)
-        {
-            if (rcObject.Value.curVisibility)
-            {
-                if (rcObject.Value.curRelativePos.magnitude < 5)
-                    continue;
-                
-                if (referenceFlags.ContainsKey(rcObject.Key))
-                {
-                    referenceFlags[rcObject.Key].relativePos = rcObject.Value.curRelativePos;
-                    flagsForCalculation.Add(referenceFlags[rcObject.Key]);
-                }
-            }
-        }
-
-        if (flagsForCalculation.Count > 1)
-        {
-            int maxAnglesToCompare = 10;
-            int anglesToCompare = Mathf.Min(flagsForCalculation.Count, maxAnglesToCompare);
-            
-            for (int i = 0; i < anglesToCompare - 2; i++)
-            {
-                float trueAngle = Vector2.SignedAngle(Vector2.up, flagsForCalculation[i].flagPos - flagsForCalculation[i+1].flagPos);
-                float relativeAngle = Vector2.SignedAngle(Vector2.up, flagsForCalculation[i].relativePos - flagsForCalculation[i+1].relativePos);
-
-                float newAngle = relativeAngle - trueAngle;
-
-                if (i == 0)
-                    curPlayerAngle = newAngle;
-                else
-                    curPlayerAngle = Mathf.LerpAngle(curPlayerAngle, newAngle, 0.5f);
-            }
-            
-            angleIsKnown = true;
-
-            if (flagsForCalculation.Count > 2)
-            {
-                curPlayerPosition = Trilaterate(flagsForCalculation);
-            }
-            //else
-            //    playerPosition = Vector2.zero;
-        }
-        //else
-        //    playerPosition = Vector2.zero;
-    }
-    
-    Vector2 Trilaterate(List<ReferenceFlag> flags)
-    {
-        float h = 20f;
-        
-        float x = 0f;
-        float y = 0f;
-
-        positionIsKnown = true;
-        
-        for (int i = 0; i < 20; i++)
-        {
-            Vector2 right = new Vector2(x + h, y);
-            Vector2 left = new Vector2(x - h, y);
-            Vector2 up = new Vector2(x, y + h);
-            Vector2 down = new Vector2(x, y - h);
-            
-            float mse = MeanSquaredError(new Vector2(x, y), flags);
-            float mseR = MeanSquaredError(right, flags);
-            float mseL = MeanSquaredError(left, flags);
-            float mseU = MeanSquaredError(up, flags);
-            float mseD = MeanSquaredError(down, flags);
-
-            if (mseR < mse)
-                x += h;
-            else if (mseL < mse)
-                x -= h;
-
-            if (mseU < mse)
-                y += h;
-            else if (mseD < mse)
-                y -= h;
-
-            h *= 0.75f;
-        }
-        
-        return new Vector2(x, y);
-        
-        //Vector2 bestPosition = Vector2.zero;
-        //float lowestError = Mathf.Infinity;
-        //
-        ////minimize error
-        //for (float x = -55; x < 55; x++)
-        //{
-        //    for (float y = -35; y < 35; y++)
-        //    {
-        //        Vector2 testPosition = new Vector2(x, y);
-        //        float mse = MeanSquaredError(testPosition, flags);
-        //        if (mse < lowestError)
-        //        {
-        //            lowestError = mse;
-        //            bestPosition = testPosition;
-        //            positionIsKnown = true;
-        //        }
-        //    }
-        //}
-        //
-        //return bestPosition;
-    }
-
-    float MeanSquaredError(Vector2 position, List<ReferenceFlag> flags)
-    {
-        float mse = 0f;
-
-        foreach (ReferenceFlag flag in flags)
-        {
-            float calculatedDistance = Vector2.Distance(position, flag.flagPos);
-            float measuredDistance = Vector2.Distance(Vector2.zero, flag.relativePos);
-            mse += Mathf.Pow(calculatedDistance - measuredDistance, 2f);
-        }
-
-        return mse / flags.Count;
     }
 }
 

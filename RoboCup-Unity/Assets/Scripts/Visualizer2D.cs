@@ -6,7 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Visualizer2D : MonoBehaviour, IVisualizer
+public class Visualizer2D : MonoBehaviour
 {
     [Header("References")]
     public Image selfPlayer;
@@ -36,6 +36,8 @@ public class Visualizer2D : MonoBehaviour, IVisualizer
     float visualScale = 6f;
 
     string teamName;
+
+    RcPlayer currentPlayer;
 
     public void Init(string teamName, int teamSize, bool rightTeam, Dictionary<string, RcObject> rcObjects)
     {
@@ -125,6 +127,11 @@ public class Visualizer2D : MonoBehaviour, IVisualizer
             CreateUnknownPlayer(true, true);
         }
     }
+    
+    public void SetPlayer(RcPlayer player)
+    {
+        currentPlayer = player;
+    }
 
     public void AddEnemyTeamMember(string enemyTeamName, int enemyNumber, bool goalie)
     {
@@ -136,7 +143,7 @@ public class Visualizer2D : MonoBehaviour, IVisualizer
         enemyPlayerRt.Find("Goalie").gameObject.SetActive(goalie);
     }
 
-    public void UpdateVisualPositions(int subjectPlayer)
+    public void UpdateVisualPositions()
     {
         foreach (VisualObject vObj in visualObjects.Values)
         {
@@ -241,7 +248,7 @@ public class Visualizer2D : MonoBehaviour, IVisualizer
         return rt;
     }
 
-    public void ResetVisualPositions(int subjectPlayer)
+    public void ResetVisualPositions()
     {
         foreach (VisualObject vObj in visualObjects.Values)
         {

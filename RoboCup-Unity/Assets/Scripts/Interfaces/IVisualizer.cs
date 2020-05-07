@@ -3,10 +3,11 @@ using UnityEngine;
 
 public interface IVisualizer
 {
-    void Init(string teamName, int teamSize, bool rightTeam, Dictionary<string, RcObject> rcObjects);
+    void Init();
+    void SetPlayer(RcPlayer player);
     void AddEnemyTeamMember(string enemyTeamName, int enemyNumber, bool goalie);
-    void ResetVisualPositions(int playerNumber);
+    void ResetVisualPositions();
     void SetVisualPosition(string objectName, Vector2 relativePos, float relativeBodyFacingDir);
     void SetUnknownPlayerPosition(Vector2 relativePos, float relativeBodyFacingDir, bool knownTeam = false, bool enemyTeam = false);
-    void UpdateVisualPositions(int playerNumber);
+    void UpdateVisualPositions();
 }
