@@ -29,7 +29,7 @@ public class RcPlayer : MonoBehaviour, IPlayer
         }
     }
 
-    public void Init(int pNum)
+    public void Init(string teamName, int pNum, bool goalie, int x = 0, int y = 0)
     {
         playerNumber = pNum;
         
@@ -39,7 +39,12 @@ public class RcPlayer : MonoBehaviour, IPlayer
         socket.Bind(new IPEndPoint(IPAddress.Any, 0));
         socket.Blocking = false;
         
+        string goalieString = (goalie) ? " (goalie)" : "";
+        Send($"(init {teamName} (version 16){goalieString})");
+
         StartCoroutine(Poll());
+        
+        StartCoroutine(MoveAfterInit(x, y));
     }
 
     public void Send(string text)
@@ -47,6 +52,12 @@ public class RcPlayer : MonoBehaviour, IPlayer
         Byte[] sendBytes = Encoding.ASCII.GetBytes(text + '\0');
         Debug.Log($"player {playerNumber} sending (port {endPoint.Port}): {text}");
         socket.SendTo(sendBytes, endPoint);
+    }
+
+    IEnumerator MoveAfterInit(int x, int y)
+    {
+        yield return new WaitForSeconds(0.25f);
+        Send($"(move {x} {y})");
     }
     
     IEnumerator Poll () {

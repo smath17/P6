@@ -2502,7 +2502,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bad29598571e4400a8c6516f830614bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  trainingScenario: 0
+  trainingScenario: 2
   defaultAgent: {fileID: 1373919170}
   defenderAgent: {fileID: 1337571801}
   attackerAgent: {fileID: 1771547223}

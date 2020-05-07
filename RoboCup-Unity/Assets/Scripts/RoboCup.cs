@@ -42,11 +42,15 @@ public class RoboCup : MonoBehaviour
     // Player objects
     GameObject playerPrefab;
     GameObject coachPrefab;
-    List<RcPlayer> players = new List<RcPlayer>();
+    List<RcPlayer> team1 = new List<RcPlayer>();
+    List<RcPlayer> team2 = new List<RcPlayer>();
     
     RcCoach coach;
     
     Dictionary<string, RcObject> rcObjects = new Dictionary<string, RcObject>();
+    
+    List<PlayerSetupInfo> team1Setup = new List<PlayerSetupInfo>();
+    List<PlayerSetupInfo> team2Setup = new List<PlayerSetupInfo>();
 
     #region FlagNames
     string[] other = new[]
@@ -136,13 +140,62 @@ public class RoboCup : MonoBehaviour
         else
             Destroy(gameObject);
 
+        playerPrefab = Resources.Load<GameObject>("prefabs/RC Player");
+        coachPrefab = Resources.Load<GameObject>("prefabs/RC Coach");
         visualizer = visualizerObject.GetComponent<IVisualizer>();
         CreateRcObjects();
     }
     
     void Start()
     {
+        // Setup teams
+        switch (roboCupMode)
+        {
+            case RoboCupMode.ManualControlFullTeam:
+                for (int i = 0; i < FullTeamSize-1; i++)
+                    team1Setup.Add(new PlayerSetupInfo(false, -20, i*5 - 30));
+        
+                team1Setup.Add(new PlayerSetupInfo(true, -50, 20));
+                break;
+            
+            case RoboCupMode.ManualControlSinglePlayer:
+                team1Setup.Add(new PlayerSetupInfo(false, -20, 0));
+                break;
+            
+            case RoboCupMode.Training:
+                team1Setup = agentTrainer.GetTeam1Setup();
+                team2Setup = agentTrainer.GetTeam2Setup();
+                break;
+        }
+        
+        // Create players based on setup
         StartCoroutine(CreatePlayers());
+    }
+    
+    IEnumerator CreatePlayers()
+    {
+        int playerIndex = 0;
+        foreach (PlayerSetupInfo setupInfo in team1Setup)
+        {
+            team1.Add(CreatePlayer(playerIndex, setupInfo.goalie, setupInfo.x, setupInfo.y, true));
+            playerIndex++;
+            yield return new WaitForSeconds(0.2f);
+        }
+        
+        playerIndex = 0;
+        foreach (PlayerSetupInfo setupInfo in team2Setup)
+        {
+            team2.Add(CreatePlayer(playerIndex, setupInfo.goalie, setupInfo.x, setupInfo.y, false));
+            playerIndex++;
+            yield return new WaitForSeconds(0.2f);
+        }
+        
+        if (roboCupMode == RoboCupMode.Training)
+            coach = CreateCoach(false);
+        
+        yield return new WaitForSeconds(0.2f);
+        
+        OnInitialized();
     }
 
     void OnInitialized()
@@ -152,6 +205,7 @@ public class RoboCup : MonoBehaviour
             case RoboCupMode.ManualControlFullTeam:
             case RoboCupMode.ManualControlSinglePlayer:
                 break;
+            
             case RoboCupMode.Training:
                 agentTrainer.Init();
                 break;
@@ -203,57 +257,13 @@ public class RoboCup : MonoBehaviour
         rcObjects.Add(rcPlayerObj.name, rcPlayerObj);
         rcObjects[rcPlayerObj.name].isVisible = true;
     }
-    
-    IEnumerator CreatePlayers()
-    {
-        playerPrefab = Resources.Load<GameObject>("prefabs/RC Player");
-        coachPrefab = Resources.Load<GameObject>("prefabs/RC Coach");
-        
-        switch (roboCupMode)
-        {
-            case RoboCupMode.ManualControlFullTeam:
-                for (int i = 0; i < FullTeamSize-1; i++)
-                {
-                    players.Add(CreatePlayer(i, false));
-                    yield return new WaitForSeconds(0.2f);
-                }
-        
-                players.Add(CreatePlayer(FullTeamSize-1, true));
-                yield return new WaitForSeconds(0.25f);
 
-                for (int i = 0; i < FullTeamSize-1; i++)
-                {
-                    players[i].Send($"(move -20 {i*5 - 30})");
-                    yield return new WaitForSeconds(0.2f);
-                }
-        
-                players[FullTeamSize-1].Send("(move -50 20)");
-                break;
-            case RoboCupMode.ManualControlSinglePlayer:
-            case RoboCupMode.Training:
-                players.Add(CreatePlayer(0, false));
-                yield return new WaitForSeconds(0.25f);
-                players[0].Send("(move -20 0)");
-                break;
-        }
-        
-        if (roboCupMode == RoboCupMode.Training)
-            coach = CreateCoach(false);
-        
-        yield return new WaitForSeconds(0.2f);
-        
-        OnInitialized();
-    }
-
-    RcPlayer CreatePlayer(int playerNumber, bool goalie)
+    RcPlayer CreatePlayer(int playerNumber, bool goalie, int x, int y, bool mainTeam = true)
     {
         GameObject p = Instantiate(playerPrefab);
         
         RcPlayer rcPlayer = p.GetComponent<RcPlayer>();
-        rcPlayer.Init(playerNumber);
-        
-        string goalieString = (goalie) ? " (goalie)" : "";
-        rcPlayer.Send($"(init {teamName} (version 16){goalieString})");
+        rcPlayer.Init(mainTeam ? teamName : enemyTeamName, playerNumber, goalie, x, y);
 
         return rcPlayer;
     }
@@ -288,6 +298,7 @@ public class RoboCup : MonoBehaviour
                     PlayerControl();
                 }
                 break;
+            
             case RoboCupMode.Training:
                 break;
         }
@@ -331,32 +342,32 @@ public class RoboCup : MonoBehaviour
         if (sendDashInput)
         {
             if (Input.GetKey(KeyCode.A))
-                players[currentPlayer].Send($"(dash {dashAmount} -90)");
+                team1[currentPlayer].Send($"(dash {dashAmount} -90)");
 
             else if (Input.GetKey(KeyCode.D))
-                players[currentPlayer].Send($"(dash {dashAmount} 90)");
+                team1[currentPlayer].Send($"(dash {dashAmount} 90)");
 
             else if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
-                players[currentPlayer].Send($"(dash {dashAmount})");
+                team1[currentPlayer].Send($"(dash {dashAmount})");
 
             else if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
-                players[currentPlayer].Send($"(dash {dashAmount} 180)");
+                team1[currentPlayer].Send($"(dash {dashAmount} 180)");
         }
         
         if (Input.GetKeyDown(KeyCode.Space))
-            players[currentPlayer].Send($"(kick {kickAmount} 0)");
+            team1[currentPlayer].Send($"(kick {kickAmount} 0)");
 
         else if (Input.GetKeyDown(KeyCode.LeftControl))
-            players[currentPlayer].Send("(catch 0)");
+            team1[currentPlayer].Send("(catch 0)");
 
         else if (Input.GetKeyDown(KeyCode.T))
-            players[currentPlayer].Send("(tackle 0)");
+            team1[currentPlayer].Send("(tackle 0)");
     
         else if (Input.GetKey(KeyCode.LeftArrow))
-            players[currentPlayer].Send($"(turn -{turnAmount})");
+            team1[currentPlayer].Send($"(turn -{turnAmount})");
 
         else if (Input.GetKey(KeyCode.RightArrow))
-            players[currentPlayer].Send($"(turn {turnAmount})");
+            team1[currentPlayer].Send($"(turn {turnAmount})");
     }
     
     public void ReceiveMessage(string txt, RcMessage.RcMessageType type)
@@ -484,9 +495,9 @@ public class RoboCup : MonoBehaviour
         }
     }
 
-    public RcPlayer GetPlayer(int number)
+    public RcPlayer GetPlayer(int number, bool mainTeam = true)
     {
-        return players[number];
+        return mainTeam ? team1[number] : team2[number];
     }
     
     public RcCoach GetCoach()
@@ -497,6 +508,30 @@ public class RoboCup : MonoBehaviour
     public RcObject GetRcObject(string objName)
     {
         return rcObjects[objName];
+    }
+
+    public void SetTeamName(string newName)
+    {
+        teamName = newName;
+    }
+
+    public void SetEnemyTeamName(string newName)
+    {
+        enemyTeamName = newName;
+    }
+}
+
+public class PlayerSetupInfo
+{
+    public bool goalie;
+    public int x;
+    public int y;
+
+    public PlayerSetupInfo(bool goalie, int x, int y)
+    {
+        this.goalie = goalie;
+        this.x = x;
+        this.y = y;
     }
 }
 
