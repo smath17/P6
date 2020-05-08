@@ -383,10 +383,10 @@ public class RoboCup : MonoBehaviour
             visualizer.UpdateVisualPositions();
 
             // Online training
-            if (roboCupMode == RoboCupMode.Training)
-            {
-                agentTrainer.Step();
-            }
+            //if (roboCupMode == RoboCupMode.Training)
+            //{
+            //    agentTrainer.Step();
+            //}
         }
     }
 

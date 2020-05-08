@@ -23,7 +23,7 @@ public class RoboCupAttackerAgent : Agent
     int goalDirection;
     int goalDistance;
 
-    int playerStartX = 10;
+    int playerStartX = -20;
     int playerStartY = 0;
 
     int dashSpeed = 100;
@@ -40,7 +40,7 @@ public class RoboCupAttackerAgent : Agent
 
     public override void OnEpisodeBegin()
     {
-        coach.MoveBall(0, 0);
+        coach.MoveBall(-25, 0);
         coach.MovePlayer(RoboCup.singleton.GetEnemyTeamName(), 1, playerStartX, playerStartY, 180);
         coach.Recover();
     }
@@ -54,6 +54,9 @@ public class RoboCupAttackerAgent : Agent
     
     public void SetBallInfo(bool visible, int direction = 0, int distance = 0)
     {
+        if (ballVisible && !visible)
+            OnLostBall();
+        
         ballVisible = visible;
         ballDirection = direction;
         ballDistance = distance;
@@ -91,59 +94,109 @@ public class RoboCupAttackerAgent : Agent
 
     public override void OnActionReceived(float[] vectorAction)
     {
-        if (vectorAction[0] < -0.5) // left
-        {
-            if (vectorAction[1] < -0.5) // down
-                player.Dash(dashSpeed, -135); // south west
-            else if (vectorAction[1] > 0.5) // up
-                player.Dash(dashSpeed, -45); // north west
-            else
-                player.Dash(dashSpeed, -90); // west
+        int action = Mathf.FloorToInt(vectorAction[0]);
 
-        }
-        else if (vectorAction[0] > 0.5) // right
+        switch (action)
         {
-            if (vectorAction[1] < -0.5) // down
-                player.Dash(dashSpeed, 135); // south east
-            else if (vectorAction[1] > 0.5) // up
-                player.Dash(dashSpeed, 45); // north east
-            else
-                player.Dash(dashSpeed, 90); // east
+            case 0: // do nothing
+                break;
+            
+            case 1: // move left
+                player.Dash(dashSpeed, -90);
+                break;
+            
+            case 2: // move right
+                player.Dash(dashSpeed, 90);
+                break;
+            
+            case 3: // move up
+                player.Dash(dashSpeed, 0);
+                break;
+            
+            case 4: // move down
+                player.Dash(dashSpeed, 180);
+                break;
+            
+            case 5: // turn left
+                player.Turn(-10);
+                break;
+            
+            case 6: // turn right
+                player.Turn(10);
+                break;
+            
+            case 7: // kick
+                player.Kick(100);
+                break;
         }
-        else
-        {
-            if (vectorAction[1] < -0.5) // down
-                player.Dash(dashSpeed, 180); // south
-            else if (vectorAction[1] > 0.5) // up
-                player.Dash(dashSpeed, 0); // north
-            //else
-            //    do nothing
-        }
-        
-        if (vectorAction[2] < -0.5) // turn left
-            player.Turn(-10);
-        else if (vectorAction[0] > 0.5) // turn right
-            player.Turn(10);
-        
-        if (vectorAction[3] > 0.5f)
-            player.Kick(100);
+    }
+
+    public void OnKickedBall()
+    {
+        AddReward(0.2f);
+    }
+    
+    public void OnBallMovedLeft()
+    {
+        AddReward(0.1f);
+    }
+
+    public void OnLostBall()
+    {
+        AddReward(-0.2f);
+    }
+    
+    public void OnTooFarRight()
+    {
+        AddReward(-0.2f);
+    }
+    
+    public void OnEnteredGoalArea()
+    {
+        AddReward(-0.5f);
     }
 
     public void OnScored()
     {
         SetReward(1f);
+        EndEpisode();
     }
 
     public void OnFailedToScore()
     {
         SetReward(-1f);
+        EndEpisode();
+    }
+
+    public void OnTimeOut()
+    {
+        SetReward(0);
+        EndEpisode();
     }
 
     public override void Heuristic(float[] actionsOut)
     {
-        actionsOut[0] = Input.GetKey(KeyCode.A) ? -1f : Input.GetKey(KeyCode.D) ? 1f : 0f;
-        actionsOut[1] = Input.GetAxis("Vertical");
-        actionsOut[2] = Input.GetAxis("Horizontal");
-        actionsOut[3] = Input.GetKey(KeyCode.Space) ? 1f : 0f;
+        actionsOut[0] = 0;
+        
+        if (Input.GetKey(KeyCode.A))
+            actionsOut[0] = 1;
+        
+        if (Input.GetKey(KeyCode.D))
+            actionsOut[0] = 2;
+        
+        if (Input.GetKey(KeyCode.W))
+            actionsOut[0] = 3;
+        
+        if (Input.GetKey(KeyCode.S))
+            actionsOut[0] = 4;
+
+        if (Input.GetAxis("Horizontal") < -0.5f)
+            actionsOut[0] = 5;
+        
+        if (Input.GetAxis("Horizontal") > 0.5f)
+            actionsOut[0] = 6;
+        
+        if (Input.GetKey(KeyCode.Space))
+            actionsOut[0] = 7;
     }
 }

@@ -6495,9 +6495,9 @@ MonoBehaviour:
   m_BrainParameters:
     VectorObservationSize: 7
     NumStackedVectorObservations: 1
-    VectorActionSize: 04000000
+    VectorActionSize: 08000000
     VectorActionDescriptions: []
-    VectorActionSpaceType: 1
+    VectorActionSpaceType: 0
   m_Model: {fileID: 0}
   m_InferenceDevice: 0
   m_BehaviorType: 0
@@ -9039,9 +9039,9 @@ MonoBehaviour:
   m_BrainParameters:
     VectorObservationSize: 9
     NumStackedVectorObservations: 1
-    VectorActionSize: 04000000
+    VectorActionSize: 08000000
     VectorActionDescriptions: []
-    VectorActionSpaceType: 1
+    VectorActionSpaceType: 0
   m_Model: {fileID: 0}
   m_InferenceDevice: 0
   m_BehaviorType: 0

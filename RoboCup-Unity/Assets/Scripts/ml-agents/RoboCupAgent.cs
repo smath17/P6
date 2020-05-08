@@ -54,7 +54,7 @@ public class RoboCupAgent : Agent
     
     void Start()
     {
-        coach.InitTraining(this, player);
+        coach.InitTraining(null);
         coach.KickOff();
 
         initialized = true;

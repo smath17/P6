@@ -216,44 +216,11 @@ public class RcPlayer : MonoBehaviour, IPlayer
         
         RoboCup.singleton.ResetVisualPositions(onMainTeam, playerNumber);
         
-        if (messageObject.values.Count > 2)
+        List<MessageObject.SeenObjectData> seenObjectsData = messageObject.GetSeenObjects();
+
+        foreach (MessageObject.SeenObjectData data in seenObjectsData)
         {
-            List<MessageObject> seenObjects = new List<MessageObject>();
-            for (int i = 2; i < messageObject.values.Count; i++)
-            {
-                if (messageObject.values[i].MObject != null)
-                    seenObjects.Add(messageObject.values[i].MObject);
-            }
-
-            foreach (MessageObject seenObject in seenObjects)
-            {
-                if (seenObject.values.Count > 0)
-                {
-                    string objectName = seenObject.values[0].MObject.SimplePrint();
-
-                    float distance = 100;
-                    if (seenObject.values.Count > 1)
-                        float.TryParse(seenObject.values[1].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out distance);
-
-                    float direction = 0;
-                    if (seenObject.values.Count > 2)
-                        float.TryParse(seenObject.values[2].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out direction);
-
-                    float distChange = 0;
-                    if (seenObject.values.Count > 3)
-                        float.TryParse(seenObject.values[3].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out distChange);
-                    
-                    float dirChange = 0;
-                    if (seenObject.values.Count > 4)
-                        float.TryParse(seenObject.values[4].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out dirChange);
-                    
-                    float bodyFacingDir = 0;
-                    if (seenObject.values.Count > 5)
-                        float.TryParse(seenObject.values[5].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out bodyFacingDir);
-                    
-                    UpdateRcObject(objectName, distance, direction, bodyFacingDir);
-                }
-            }
+            UpdateRcObject(data.objectName, data.distance, data.direction, data.bodyFacingDir);
         }
 
         prevPlayerPosition = curPlayerPosition;
@@ -328,7 +295,7 @@ public class RcPlayer : MonoBehaviour, IPlayer
                     {
                         string tName = regex.Match(objectName).Result("$1");
                         enemyTeamName = tName;
-                        RoboCup.singleton.SetEnemyTeamName(enemyTeamName);
+                        //RoboCup.singleton.SetEnemyTeamName(enemyTeamName);
  
                         // if there is a player number, assume enemy player and add to dict
                         if (regex.Match(objectName).Result("$2").Length > 0)

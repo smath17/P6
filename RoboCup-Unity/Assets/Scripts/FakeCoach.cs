@@ -23,6 +23,11 @@ public class FakeCoach : MonoBehaviour, ICoach
         this.player = fakePlayer.transform;
     }
 
+    public void InitTraining(AgentTrainer trainer)
+    {
+        throw new NotImplementedException();
+    }
+
     public void MoveBall(int x, int y)
     {
         ball.position = new Vector3(x, 0, y);
