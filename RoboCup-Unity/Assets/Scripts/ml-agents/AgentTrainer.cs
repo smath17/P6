@@ -196,6 +196,8 @@ public class AgentTrainer : MonoBehaviour
                             defenderAgent.OnLeftGoalArea();
                     }
                     
+                    attackerAgent.OnTimePassed();
+                    
                     if (attacker.GetCalculatedPosition().y < 20 &&
                         attacker.GetCalculatedPosition().y > -20 &&
                         attacker.GetCalculatedPosition().x < -35 &&

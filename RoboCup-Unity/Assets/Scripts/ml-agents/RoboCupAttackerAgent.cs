@@ -133,6 +133,11 @@ public class RoboCupAttackerAgent : Agent
         }
     }
 
+    public void OnTimePassed()
+    {
+        AddReward(-0.1f, "Time Passed");
+    }
+
     public void OnKickedBall()
     {
         AddReward(0.2f, "Kicked Ball");
