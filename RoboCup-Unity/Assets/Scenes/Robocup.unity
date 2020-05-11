@@ -4730,6 +4730,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ip: 127.0.0.1
   teamName: Unity
+  reconnect: 0
   roboCupMode: 2
   agentTrainer: {fileID: 529227137}
   overlayInfo: {fileID: 1193947861}

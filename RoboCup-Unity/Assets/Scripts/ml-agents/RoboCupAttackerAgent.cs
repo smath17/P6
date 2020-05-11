@@ -155,19 +155,18 @@ public class RoboCupAttackerAgent : Agent
 
     public void OnScored()
     {
-        SetReward(1f, "Scored");
+        AddReward(1f, "Scored");
         EndEpisode();
     }
 
     public void OnFailedToScore()
     {
-        SetReward(-1f, "Failed To Score");
+        AddReward(-1f, "Failed To Score");
         EndEpisode();
     }
 
     public void OnTimeOut()
     {
-        SetReward(0, "Time Out");
         EndEpisode();
     }
 
