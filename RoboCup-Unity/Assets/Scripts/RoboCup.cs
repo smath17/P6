@@ -22,6 +22,7 @@ public class RoboCup : MonoBehaviour
     
     [Header("Team")]
     public string teamName = "DefaultTeam";
+    public bool reconnect;
 
     [Header("Settings")]
     public RoboCupMode roboCupMode;
@@ -179,7 +180,7 @@ public class RoboCup : MonoBehaviour
         int playerIndex = 0;
         foreach (PlayerSetupInfo setupInfo in team1Setup)
         {
-            team1.Add(CreatePlayer(playerIndex, setupInfo.goalie, setupInfo.x, setupInfo.y, true));
+            team1.Add(CreatePlayer(playerIndex, setupInfo.goalie, setupInfo.x, setupInfo.y, true, reconnect));
             playerIndex++;
             yield return new WaitForSeconds(0.2f);
         }
@@ -187,13 +188,13 @@ public class RoboCup : MonoBehaviour
         playerIndex = 0;
         foreach (PlayerSetupInfo setupInfo in team2Setup)
         {
-            team2.Add(CreatePlayer(playerIndex, setupInfo.goalie, setupInfo.x, setupInfo.y, false));
+            team2.Add(CreatePlayer(playerIndex, setupInfo.goalie, setupInfo.x, setupInfo.y, false, reconnect));
             playerIndex++;
             yield return new WaitForSeconds(0.2f);
         }
         
         if (roboCupMode == RoboCupMode.Training)
-            coach = CreateCoach(false);
+            coach = CreateCoach(false, reconnect);
         
         yield return new WaitForSeconds(0.2f);
         
@@ -212,19 +213,22 @@ public class RoboCup : MonoBehaviour
                 agentTrainer.Init();
                 break;
         }
+        
+        OnSwitchPlayer();
     }
 
-    RcPlayer CreatePlayer(int playerNumber, bool goalie, int x, int y, bool mainTeam = true)
+    RcPlayer CreatePlayer(int playerNumber, bool goalie, int x, int y, bool mainTeam = true, bool reconnect = false)
     {
         GameObject p = Instantiate(playerPrefab);
+        p.name = $"RcPlayer_{(mainTeam ? "L" : "R")}_{playerNumber}";
         
         RcPlayer rcPlayer = p.GetComponent<RcPlayer>();
-        rcPlayer.Init(mainTeam, playerNumber, goalie, x, y);
+        rcPlayer.Init(mainTeam, playerNumber, goalie, x, y, reconnect, playerNumber);
 
         return rcPlayer;
     }
     
-    RcCoach CreateCoach(bool online)
+    RcCoach CreateCoach(bool online, bool reconnect = false)
     {
         GameObject c = Instantiate(coachPrefab);
         
@@ -232,21 +236,21 @@ public class RoboCup : MonoBehaviour
         rcCoach.Init(online);
         
         if (online)
-            rcCoach.Send($"(init {teamName} (version 16))");
+            rcCoach.Send($"({(reconnect ? "reconnect" : "init")} {teamName} (version 16))");
         else
-            rcCoach.Send($"(init (version 16))");
+            rcCoach.Send($"({(reconnect ? "reconnect" : "init")} (version 16))");
 
         return rcCoach;
     }
 
     void Update()
     {
+        PlayerSwitching();
+        
         switch (roboCupMode)
         {
             case RoboCupMode.ManualControlFullTeam:
             case RoboCupMode.ManualControlSinglePlayer:
-                PlayerSwitching();
-
                 if (Time.time > currentTick + tickTime)
                 {
                     currentTick = Time.time;
@@ -262,9 +266,9 @@ public class RoboCup : MonoBehaviour
 
     void PlayerSwitching()
     {
-        if (Input.GetKeyDown(KeyCode.Q))
+        if (Input.GetKeyDown(KeyCode.Z))
             PreviousPlayer();
-        else if (Input.GetKeyDown(KeyCode.E))
+        else if (Input.GetKeyDown(KeyCode.X))
             NextPlayer();
 
         for (int i = 1; i < 10; i++)
@@ -279,8 +283,7 @@ public class RoboCup : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.T))
         {
-            visualizeMainTeam = !visualizeMainTeam;
-            OnSwitchPlayer();
+            SwitchTeam();
         }
     }
 
@@ -288,7 +291,7 @@ public class RoboCup : MonoBehaviour
     {
         currentPlayer--;
         if (currentPlayer < 0)
-            currentPlayer = FullTeamSize-1;
+            currentPlayer = visualizeMainTeam ? team1.Count-1 : team2.Count-1;
         
         OnSwitchPlayer();
     }
@@ -296,8 +299,22 @@ public class RoboCup : MonoBehaviour
     void NextPlayer()
     {
         currentPlayer++;
-        if (currentPlayer > FullTeamSize-1)
+        if ((visualizeMainTeam && currentPlayer > team1.Count-1) || (!visualizeMainTeam && currentPlayer > team2.Count-1))
             currentPlayer = 0;
+        
+        OnSwitchPlayer();
+    }
+
+    void SwitchTeam()
+    {
+        if (team1.Count < 1 && team2.Count < 1)
+            return;
+        
+        visualizeMainTeam = !visualizeMainTeam;
+
+        if ((visualizeMainTeam && currentPlayer > team1.Count - 1) ||
+            (!visualizeMainTeam && currentPlayer > team2.Count - 1))
+            currentPlayer = visualizeMainTeam ? team1.Count - 1 : team2.Count - 1;
         
         OnSwitchPlayer();
     }
@@ -310,8 +327,12 @@ public class RoboCup : MonoBehaviour
 
     void OnSwitchPlayer()
     {
-        overlayInfo.UpdateCurrentPlayerText(currentPlayer);
-        visualizer.ResetVisualPositions();
+        overlayInfo.UpdateCurrentPlayerText(currentPlayer, visualizeMainTeam);
+
+        RcPlayer newPlayer = visualizeMainTeam ? team1[currentPlayer] : team2[currentPlayer];
+        
+        visualizer.SetPlayer(newPlayer);
+        visualizer.ResetVisualPositions(newPlayer);
     }
 
     void PlayerControl()
@@ -358,7 +379,7 @@ public class RoboCup : MonoBehaviour
         overlayInfo.DisplayText(txt, type);
     }
 
-    public void InitVisualizer(RcPlayer player)
+    public IVisualizer InitVisualizer(RcPlayer player)
     {
         if (!visualizerInitialized)
         {
@@ -366,32 +387,7 @@ public class RoboCup : MonoBehaviour
             visualizer.Init();
             visualizerInitialized = true;
         }
-    }
 
-    public void ResetVisualPositions(bool mainTeam, int playerNumber)
-    {
-        if (visualizeMainTeam == mainTeam && playerNumber == currentPlayer)
-        {
-            visualizer.ResetVisualPositions();
-        }
-    }
-
-    public void UpdateVisualPositions(bool mainTeam, int playerNumber)
-    {
-        if (visualizeMainTeam == mainTeam && playerNumber == currentPlayer)
-        {
-            visualizer.UpdateVisualPositions();
-
-            // Online training
-            //if (roboCupMode == RoboCupMode.Training)
-            //{
-            //    agentTrainer.Step();
-            //}
-        }
-    }
-
-    public IVisualizer GetVisualizer()
-    {
         return visualizer;
     }
 
@@ -490,5 +486,12 @@ public class RcObject
         
         string goalieText = goalie ? " goalie" : "";
         name = $"p \"{teamName}\" {playerNumber}{goalieText}";
+    }
+
+    public static Vector2 CalculateRelativePos(float distance, float direction)
+    {
+        float radDirection = Mathf.Deg2Rad * -(direction - 90f);
+        
+        return distance * new Vector2(Mathf.Cos(radDirection), Mathf.Sin(radDirection));
     }
 }

@@ -21,22 +21,20 @@ public class LocationCalculator : MonoBehaviour
         }
     }
 
-    public void TrilateratePlayerPosition(RcPlayer player, Dictionary<string, RcObject> visualObjects)
+    public void TrilateratePlayerPosition(RcPlayer player, List<MessageObject.SeenObjectData> seenObjectsData)
     {
         List<ReferenceFlag> flagsForCalculation = new List<ReferenceFlag>();
         
-        foreach (KeyValuePair<string, RcObject> rcObject in visualObjects)
+        foreach (MessageObject.SeenObjectData seenObject in seenObjectsData)
         {
-            if (rcObject.Value.curVisibility)
+            if (seenObject.distance < 1)
+                continue;
+
+            if (referenceFlags.ContainsKey(seenObject.objectName))
             {
-                if (rcObject.Value.curRelativePos.magnitude < 5)
-                    continue;
-                
-                if (referenceFlags.ContainsKey(rcObject.Key))
-                {
-                    referenceFlags[rcObject.Key].relativePos = rcObject.Value.curRelativePos;
-                    flagsForCalculation.Add(referenceFlags[rcObject.Key]);
-                }
+                Vector2 relativePos = RcObject.CalculateRelativePos(seenObject.distance, seenObject.direction);
+                referenceFlags[seenObject.objectName].relativePos = relativePos;
+                flagsForCalculation.Add(referenceFlags[seenObject.objectName]);
             }
         }
 
@@ -62,11 +60,7 @@ public class LocationCalculator : MonoBehaviour
             {
                 player.SetCalculatedPosition(Trilaterate(flagsForCalculation));
             }
-            //else
-            //    playerPosition = Vector2.zero;
         }
-        //else
-        //    playerPosition = Vector2.zero;
     }
     
     Vector2 Trilaterate(List<ReferenceFlag> flags)

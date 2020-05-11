@@ -23,6 +23,8 @@ public class RoboCupDefenderAgent : Agent
     int playerStartY = 0;
     
     int dashSpeed = 100;
+    
+    public bool printRewards;
 
     public void SetPlayer(IPlayer player)
     {
@@ -145,20 +147,34 @@ public class RoboCupDefenderAgent : Agent
         EndEpisode();
     }
 
+    void AddReward(float reward, string reason)
+    {
+        if (printRewards)
+            Debug.LogWarning($"AddReward: {reward}");
+        base.AddReward(reward);
+    }
+    
+    void SetReward(float reward, string reason)
+    {
+        if (printRewards)
+            Debug.LogWarning($"SetReward: {reward}");
+        base.SetReward(reward);
+    }
+
     public override void Heuristic(float[] actionsOut)
     {
         actionsOut[0] = 0;
         
-        if (Input.GetKey(KeyCode.A))
+        if (Input.GetKey(KeyCode.Q))
             actionsOut[0] = 1;
         
-        if (Input.GetKey(KeyCode.D))
+        if (Input.GetKey(KeyCode.E))
             actionsOut[0] = 2;
         
-        if (Input.GetKey(KeyCode.W))
+        if (Input.GetAxis("Vertical") > 0.5f)
             actionsOut[0] = 3;
         
-        if (Input.GetKey(KeyCode.S))
+        if (Input.GetAxis("Vertical") < -0.5f)
             actionsOut[0] = 4;
 
         if (Input.GetAxis("Horizontal") < -0.5f)

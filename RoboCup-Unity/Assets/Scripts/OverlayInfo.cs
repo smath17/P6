@@ -41,8 +41,8 @@ public class OverlayInfo : MonoBehaviour
         }
     }
     
-    public void UpdateCurrentPlayerText(int currentPlayer)
+    public void UpdateCurrentPlayerText(int currentPlayer, bool mainTeam)
     {
-        currentPlayerText.text = $"Current Player: {currentPlayer+1} {(currentPlayer == 10 ? "(goalie)" : "")}";
+        currentPlayerText.text = $"Current Player: {currentPlayer+1} {(currentPlayer == 10 ? "(goalie)" : "")} {(mainTeam ? "(left)" : "(right)")}";
     }
 }

@@ -147,8 +147,14 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
             unknownPlayers.Add(visualObject);
     }
 
-    public void AddEnemyTeamMember(string enemyTeamName, int enemyNumber, bool goalie)
+    public void AddEnemyTeamMember(RcPlayer player, string enemyTeamName, int enemyNumber, bool goalie)
     {
+        if (currentPlayer == null)
+            return;
+        
+        if (currentPlayer != player)
+            return;
+        
         string goalieText = goalie ? " goalie" : "";
         string eName = $"p \"{enemyTeamName}\" {enemyNumber}{goalieText}";
         
@@ -161,8 +167,14 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
         }
     }
 
-    public void ResetVisualPositions()
+    public void ResetVisualPositions(RcPlayer player)
     {
+        if (currentPlayer == null)
+            return;
+        
+        if (currentPlayer != player)
+            return;
+        
         foreach (KeyValuePair<string,VisualRcObject> rcObject in visualObjects)
         {
             rcObject.Value.prevRelativePos = rcObject.Value.curRelativePos;
@@ -191,8 +203,14 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
         }
     }
 
-    public void SetVisualPosition(string objectName, Vector2 relativePos, float relativeBodyFacingDir)
+    public void SetVisualPosition(RcPlayer player, string objectName, Vector2 relativePos, float relativeBodyFacingDir)
     {
+        if (currentPlayer == null)
+            return;
+        
+        if (currentPlayer != player)
+            return;
+        
         if (visualObjects.ContainsKey(objectName))
         {
             visualObjects[objectName].curVisibility = true;
@@ -200,8 +218,14 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
         }
     }
 
-    public void SetUnknownPlayerPosition(Vector2 relativePos, float relativeBodyFacingDir, bool knownTeam = false, bool enemyTeam = false)
+    public void SetUnknownPlayerPosition(RcPlayer player, Vector2 relativePos, float relativeBodyFacingDir, bool knownTeam = false, bool enemyTeam = false)
     {
+        if (currentPlayer == null)
+            return;
+        
+        if (currentPlayer != player)
+            return;
+        
         Transform t = null;
         
         if (knownTeam)
@@ -234,9 +258,12 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
         t.localRotation = Quaternion.Euler(0,0,relativeBodyFacingDir);
     }
 
-    public void UpdateVisualPositions()
+    public void UpdateVisualPositions(RcPlayer player)
     {
         if (currentPlayer == null)
+            return;
+        
+        if (currentPlayer != player)
             return;
         
         foreach (KeyValuePair<string,VisualRcObject> rcObject in visualObjects)

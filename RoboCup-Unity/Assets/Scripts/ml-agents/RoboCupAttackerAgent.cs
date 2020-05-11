@@ -28,6 +28,8 @@ public class RoboCupAttackerAgent : Agent
 
     int dashSpeed = 100;
 
+    public bool printRewards;
+
     public void SetPlayer(IPlayer player)
     {
         this.player = player;
@@ -133,61 +135,70 @@ public class RoboCupAttackerAgent : Agent
 
     public void OnKickedBall()
     {
-        AddReward(0.2f);
+        AddReward(0.2f, "Kicked Ball");
     }
     
     public void OnBallMovedLeft()
     {
-        AddReward(0.1f);
+        AddReward(0.1f, "Ball Moved Left");
     }
 
     public void OnLostBall()
     {
-        AddReward(-0.2f);
-    }
-    
-    public void OnTooFarRight()
-    {
-        AddReward(-0.2f);
+        AddReward(-0.2f, "Lost Ball");
     }
     
     public void OnEnteredGoalArea()
     {
-        AddReward(-0.5f);
+        AddReward(-0.5f, "Entered Goal Area");
     }
 
     public void OnScored()
     {
-        SetReward(1f);
+        SetReward(1f, "Scored");
         EndEpisode();
     }
 
     public void OnFailedToScore()
     {
-        SetReward(-1f);
+        SetReward(-1f, "Failed To Score");
         EndEpisode();
     }
 
     public void OnTimeOut()
     {
-        SetReward(0);
+        SetReward(0, "Time Out");
         EndEpisode();
+    }
+
+    void AddReward(float reward, string reason)
+    {
+        if (printRewards)
+            Debug.LogWarning($"{name} {reward} ({reason})");
+        base.AddReward(reward);
+    }
+    
+    void SetReward(float reward, string reason)
+    {
+        if (printRewards)
+            Debug.LogWarning($"{name} ={reward} ({reason})");
+        base.SetReward(reward);
     }
 
     public override void Heuristic(float[] actionsOut)
     {
         actionsOut[0] = 0;
         
-        if (Input.GetKey(KeyCode.A))
+        if (Input.GetKey(KeyCode.Q))
             actionsOut[0] = 1;
         
-        if (Input.GetKey(KeyCode.D))
+        if (Input.GetKey(KeyCode.E))
             actionsOut[0] = 2;
         
-        if (Input.GetKey(KeyCode.W))
+        if (Input.GetAxis("Vertical") > 0.5f)
             actionsOut[0] = 3;
         
-        if (Input.GetKey(KeyCode.S))
+        if (Input.GetAxis("Vertical") < -0.5f)
             actionsOut[0] = 4;
 
         if (Input.GetAxis("Horizontal") < -0.5f)

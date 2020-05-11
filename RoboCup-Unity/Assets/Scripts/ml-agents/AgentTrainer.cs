@@ -202,9 +202,6 @@ public class AgentTrainer : MonoBehaviour
                         attacker.GetCalculatedPosition().x > -52)
                         attackerAgent.OnEnteredGoalArea();
                     
-                    if (attacker.GetCalculatedPosition().x > -15)
-                        attackerAgent.OnTooFarRight();
-                    
                     RcObject coachBall = coach.GetRcObject("b");
                     if (coachBall != null)
                     {

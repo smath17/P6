@@ -39,6 +39,8 @@ public class RcPlayer : MonoBehaviour, IPlayer
     bool angleWasKnown;
     bool angleIsKnown;
 
+    IVisualizer visualizer;
+    
     void Awake()
     {
         CreateRcObjects();
@@ -98,7 +100,7 @@ public class RcPlayer : MonoBehaviour, IPlayer
         }
     }
 
-    public void Init(bool mainTeam, int pNum, bool goalie, int x = 0, int y = 0)
+    public void Init(bool mainTeam, int pNum, bool goalie, int x = 0, int y = 0, bool reconnect = false, int unum = 1)
     {
         playerNumber = pNum;
         
@@ -112,7 +114,11 @@ public class RcPlayer : MonoBehaviour, IPlayer
         teamName = onMainTeam ? RoboCup.singleton.GetTeamName() : RoboCup.singleton.GetEnemyTeamName();
         
         string goalieString = (goalie) ? " (goalie)" : "";
-        Send($"(init {teamName} (version 16){goalieString})");
+        
+        if (reconnect)
+            Send($"(reconnect {teamName} {unum+1})");
+        else
+            Send($"(init {teamName} (version 16){goalieString})");
 
         StartCoroutine(Poll());
         
@@ -167,8 +173,9 @@ public class RcPlayer : MonoBehaviour, IPlayer
                 break;
             
             case RcMessage.RcMessageType.Init:
+            case RcMessage.RcMessageType.Reconnect:
                 Debug.Log("Initialized");
-                RoboCup.singleton.InitVisualizer(this);
+                visualizer = RoboCup.singleton.InitVisualizer(this);
                 break;
             
             case RcMessage.RcMessageType.PlayerParam:
@@ -214,15 +221,8 @@ public class RcPlayer : MonoBehaviour, IPlayer
             rcObject.Value.prevRelativeBodyFacingDir = rcObject.Value.curRelativeBodyFacingDir;
         }
         
-        RoboCup.singleton.ResetVisualPositions(onMainTeam, playerNumber);
+        visualizer.ResetVisualPositions(this);
         
-        List<MessageObject.SeenObjectData> seenObjectsData = messageObject.GetSeenObjects();
-
-        foreach (MessageObject.SeenObjectData data in seenObjectsData)
-        {
-            UpdateRcObject(data.objectName, data.distance, data.direction, data.bodyFacingDir);
-        }
-
         prevPlayerPosition = curPlayerPosition;
         prevPlayerAngle = curPlayerAngle;
         
@@ -232,9 +232,16 @@ public class RcPlayer : MonoBehaviour, IPlayer
         positionIsKnown = false;
         angleIsKnown = false;
         
-        RoboCup.singleton.locationCalculator.TrilateratePlayerPosition(this, rcObjects);
+        List<MessageObject.SeenObjectData> seenObjectsData = messageObject.GetSeenObjects();
+        
+        foreach (MessageObject.SeenObjectData data in seenObjectsData)
+        {
+            UpdateRcObject(data.objectName, data.distance, data.direction, data.bodyFacingDir);
+        }
+        
+        RoboCup.singleton.locationCalculator.TrilateratePlayerPosition(this, seenObjectsData);
 
-        RoboCup.singleton.UpdateVisualPositions(onMainTeam, playerNumber);
+        visualizer.UpdateVisualPositions(this);
     }
 
     public void SetCalculatedAngle(float angle, bool blendWithPreviousAngle = false)
@@ -270,10 +277,9 @@ public class RcPlayer : MonoBehaviour, IPlayer
 
     void UpdateRcObject(string objectName, float distance, float direction, float bodyFacingDir)
     {
-        float radDirection = Mathf.Deg2Rad * -(direction - 90f);
         float relativeBodyFacingDir = -(bodyFacingDir);
-        
-        Vector2 relativePos = distance * new Vector2(Mathf.Cos(radDirection), Mathf.Sin(radDirection));
+
+        Vector2 relativePos = RcObject.CalculateRelativePos(distance, direction);
 
         bool uniqueObject = true;
 
@@ -304,16 +310,16 @@ public class RcPlayer : MonoBehaviour, IPlayer
                             bool goalie = regex.Match(objectName).Result("$3").Length > 0;
                             
                             CreatePlayerRcObject(true, enemyNumber, goalie);
-                            RoboCup.singleton.GetVisualizer().AddEnemyTeamMember(enemyTeamName, enemyNumber, goalie);
+                            visualizer.AddEnemyTeamMember(this, enemyTeamName, enemyNumber, goalie);
                         }
                         else // if there is no player number call setposition method depending on team
                         {
                             uniqueObject = false;
                             
                             if (tName.Equals(teamName))
-                                RoboCup.singleton.GetVisualizer().SetUnknownPlayerPosition(relativePos, relativeBodyFacingDir, true);
+                                visualizer.SetUnknownPlayerPosition(this, relativePos, relativeBodyFacingDir, true);
                             else
-                                RoboCup.singleton.GetVisualizer().SetUnknownPlayerPosition(relativePos, relativeBodyFacingDir, true, true);
+                                visualizer.SetUnknownPlayerPosition(this, relativePos, relativeBodyFacingDir, true, true);
                         }
                     }
                     else
@@ -325,7 +331,7 @@ public class RcPlayer : MonoBehaviour, IPlayer
             else // unknown player
             {
                 uniqueObject = false;
-                RoboCup.singleton.GetVisualizer().SetUnknownPlayerPosition(relativePos, relativeBodyFacingDir);
+                visualizer.SetUnknownPlayerPosition(this, relativePos, relativeBodyFacingDir);
             }
         }
 
@@ -338,11 +344,10 @@ public class RcPlayer : MonoBehaviour, IPlayer
                 rcObjects[objectName].direction = direction;
                 rcObjects[objectName].curRelativeBodyFacingDir = bodyFacingDir;
         
-                //rcObjects[objectName].visibleThisStep = true;
                 rcObjects[objectName].curRelativePos = relativePos;
                 rcObjects[objectName].curRelativeBodyFacingDir = relativeBodyFacingDir;
                 
-                RoboCup.singleton.GetVisualizer().SetVisualPosition(objectName, relativePos, relativeBodyFacingDir);
+                visualizer.SetVisualPosition(this, objectName, relativePos, relativeBodyFacingDir);
             }
             else
             {

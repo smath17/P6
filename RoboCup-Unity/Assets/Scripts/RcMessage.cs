@@ -16,6 +16,7 @@ public class RcMessage
         See,
         Hear,
         Ok,
+        Reconnect,
         Other
     }
 
@@ -59,6 +60,9 @@ public class RcMessage
                 break;
             case "ok":
                 MessageType = RcMessageType.Ok;
+                break;
+            case "reconnect":
+                MessageType = RcMessageType.Reconnect;
                 break;
             default:
                 MessageType = RcMessageType.Other;
@@ -185,11 +189,11 @@ public class MessageObject
     public struct SeenObjectData
     {
         public string objectName;
-        public int distance;
-        public int direction;
-        public int distChange;
-        public int dirChange;
-        public int bodyFacingDir;
+        public float distance;
+        public float direction;
+        public float distChange;
+        public float dirChange;
+        public float bodyFacingDir;
     }
     
     public override string ToString()
@@ -267,25 +271,25 @@ public class MessageObject
                 {
                     string objectName = seenObject.values[0].MObject.SimplePrint();
 
-                    int distance = 100;
+                    float distance = 100;
                     if (seenObject.values.Count > 1)
-                        int.TryParse(seenObject.values[1].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out distance);
+                        float.TryParse(seenObject.values[1].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out distance);
 
-                    int direction = 0;
+                    float direction = 0;
                     if (seenObject.values.Count > 2)
-                        int.TryParse(seenObject.values[2].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out direction);
+                        float.TryParse(seenObject.values[2].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out direction);
 
-                    int distChange = 0;
+                    float distChange = 0;
                     if (seenObject.values.Count > 3)
-                        int.TryParse(seenObject.values[3].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out distChange);
+                        float.TryParse(seenObject.values[3].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out distChange);
                     
-                    int dirChange = 0;
+                    float dirChange = 0;
                     if (seenObject.values.Count > 4)
-                        int.TryParse(seenObject.values[4].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out dirChange);
+                        float.TryParse(seenObject.values[4].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out dirChange);
                     
-                    int bodyFacingDir = 0;
+                    float bodyFacingDir = 0;
                     if (seenObject.values.Count > 5)
-                        int.TryParse(seenObject.values[5].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out bodyFacingDir);
+                        float.TryParse(seenObject.values[5].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out bodyFacingDir);
                     
                     SeenObjectData data = new SeenObjectData();
                     data.objectName = objectName;
