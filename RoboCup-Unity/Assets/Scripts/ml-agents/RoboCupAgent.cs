@@ -155,13 +155,30 @@ public class RoboCupAgent : Agent
             SetReward(-0.5f);
         }
                 
-        int dashAmount;
+        /*int dashAmount;
         if (vectorAction[0] < -0.5)
             dashAmount = -100;
         else if (vectorAction[0] > 0.5)
             dashAmount = 100;
         else
-            dashAmount = 0;
+            dashAmount = 0;*/
+        int dashAmount = 0;
+        int action = Mathf.FloorToInt(vectorAction[0]);
+        
+        switch (action)
+        {
+            case 0: 
+                dashAmount = 0;
+                break;
+            
+            case 1: 
+                dashAmount = -100;
+                break;
+            
+            case 2: 
+                dashAmount = 100;
+                break;
+        }
 
         player.Dash(dashAmount, 0);
     }
