@@ -39,7 +39,7 @@ public class Visualizer2D : MonoBehaviour
 
     RcPlayer currentPlayer;
 
-    public void Init(string teamName, int teamSize, bool rightTeam, Dictionary<string, RcObject> rcObjects)
+    public void Init(string teamName, int teamSize, bool rightTeam, Dictionary<string, RcPerceivedObject> rcObjects)
     {
         visGeneric            = Resources.Load<GameObject>("prefabs/visual/generic");
         visPlayer             = Resources.Load<GameObject>("prefabs/visual/player");
@@ -60,45 +60,45 @@ public class Visualizer2D : MonoBehaviour
         else
             selfPlayer.color = Color.blue;
         
-        foreach (KeyValuePair<string,RcObject> keyValuePair in rcObjects)
+        foreach (KeyValuePair<string, RcPerceivedObject> keyValuePair in rcObjects)
         {
             switch (keyValuePair.Value.objectType)
             {
-                case RcObject.RcObjectType.Unknown:
+                case RcPerceivedObject.RcObjectType.Unknown:
                     RectTransform rt = CreateVisualObject(keyValuePair.Value.name, visGeneric);
                     rt.Find("Text").GetComponent<TextMeshProUGUI>().text = keyValuePair.Value.name;
                     break;
                 
-                case RcObject.RcObjectType.UnknownPlayer:
+                case RcPerceivedObject.RcObjectType.UnknownPlayer:
                     CreateUnknownPlayer();
                     break;
                 
-                case RcObject.RcObjectType.UnknownTeamPlayer:
+                case RcPerceivedObject.RcObjectType.UnknownTeamPlayer:
                     CreateUnknownPlayer(true, true);
                     break;
                 
-                case RcObject.RcObjectType.UnknownEnemyPlayer:
+                case RcPerceivedObject.RcObjectType.UnknownEnemyPlayer:
                     CreateUnknownPlayer(true, false);
                     break;
                 
-                case RcObject.RcObjectType.TeamPlayer:
+                case RcPerceivedObject.RcObjectType.TeamPlayer:
                     RectTransform teamPlayerRt = CreateVisualObject(keyValuePair.Value.name, visPlayer);
                     teamPlayerRt.Find("PlayerNumber").GetComponent<TextMeshProUGUI>().text = ""+ keyValuePair.Value.playerNumber;
                     teamPlayerRt.Find("Goalie").gameObject.SetActive(keyValuePair.Value.goalie);
                     break;
                 
-                case RcObject.RcObjectType.EnemyPlayer:
+                case RcPerceivedObject.RcObjectType.EnemyPlayer:
                     break;
                 
-                case RcObject.RcObjectType.Ball:
+                case RcPerceivedObject.RcObjectType.Ball:
                     CreateVisualObject("b", visBall);
                     break;
                 
-                case RcObject.RcObjectType.BallClose:
+                case RcPerceivedObject.RcObjectType.BallClose:
                     CreateVisualObject("B", visBallClose);
                     break;
                 
-                case RcObject.RcObjectType.Flag:
+                case RcPerceivedObject.RcObjectType.Flag:
                     if (keyValuePair.Value.name.Contains("r"))
                         CreateVisualObject(keyValuePair.Value.name, visFlagRed);
                     else if (keyValuePair.Value.name.Contains("b"))

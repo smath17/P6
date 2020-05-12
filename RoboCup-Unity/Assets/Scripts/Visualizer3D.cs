@@ -37,32 +37,32 @@ public class Visualizer3D : MonoBehaviour, IVisualizer
 
     public void Init()
     {
-        foreach (KeyValuePair<string,RcObject> rcObject in currentPlayer.GetRcObjects())
+        foreach (KeyValuePair<string, RcPerceivedObject> rcObject in currentPlayer.GetRcObjects())
         {
             GameObject prefab = unknownPrefab;
             
             switch (rcObject.Value.objectType)
             {
-                case RcObject.RcObjectType.Unknown:
+                case RcPerceivedObject.RcObjectType.Unknown:
                     prefab = unknownPrefab;
                     break;
-                case RcObject.RcObjectType.UnknownPlayer:
+                case RcPerceivedObject.RcObjectType.UnknownPlayer:
                     prefab = unknownPlayerPrefab;
                     break;
-                case RcObject.RcObjectType.TeamPlayer:
-                case RcObject.RcObjectType.UnknownTeamPlayer:
+                case RcPerceivedObject.RcObjectType.TeamPlayer:
+                case RcPerceivedObject.RcObjectType.UnknownTeamPlayer:
                     prefab = teamPlayerPrefab;
                     break;
-                case RcObject.RcObjectType.EnemyPlayer:
-                case RcObject.RcObjectType.UnknownEnemyPlayer:
+                case RcPerceivedObject.RcObjectType.EnemyPlayer:
+                case RcPerceivedObject.RcObjectType.UnknownEnemyPlayer:
                     prefab = enemyPlayerPrefab;
                     break;
-                case RcObject.RcObjectType.Ball:
-                case RcObject.RcObjectType.BallClose:
+                case RcPerceivedObject.RcObjectType.Ball:
+                case RcPerceivedObject.RcObjectType.BallClose:
                     prefab = ballPrefab;
                     break;
-                case RcObject.RcObjectType.Flag:
-                case RcObject.RcObjectType.FlagClose:
+                case RcPerceivedObject.RcObjectType.Flag:
+                case RcPerceivedObject.RcObjectType.FlagClose:
                     prefab = flagPrefab;
                     break;
                 default:

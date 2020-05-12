@@ -27,7 +27,7 @@ public class RcPlayer : MonoBehaviour, IPlayer
 
     bool onMainTeam;
 
-    Dictionary<string, RcObject> rcObjects = new Dictionary<string, RcObject>();
+    Dictionary<string, RcPerceivedObject> rcObjects = new Dictionary<string, RcPerceivedObject>();
     
     Vector2 prevPlayerPosition = Vector2.zero;
     Vector2 curPlayerPosition = Vector2.zero;
@@ -39,6 +39,8 @@ public class RcPlayer : MonoBehaviour, IPlayer
     bool angleWasKnown;
     bool angleIsKnown;
 
+    int kickBallCount;
+
     IVisualizer visualizer;
     
     void Awake()
@@ -48,27 +50,27 @@ public class RcPlayer : MonoBehaviour, IPlayer
 
     void CreateRcObjects()
     {
-        CreateRcObject("b", RcObject.RcObjectType.Ball);
-        CreateRcObject("B", RcObject.RcObjectType.BallClose);
+        CreateRcObject("b", RcPerceivedObject.RcObjectType.Ball);
+        CreateRcObject("B", RcPerceivedObject.RcObjectType.BallClose);
 
         foreach (string o in RoboCup.other)
         {
-            CreateRcObject(o, RcObject.RcObjectType.Flag);
+            CreateRcObject(o, RcPerceivedObject.RcObjectType.Flag);
         }
         
         foreach (string flagName in RoboCup.whiteFlags)
         {
-            CreateRcObject(flagName, RcObject.RcObjectType.Flag);
+            CreateRcObject(flagName, RcPerceivedObject.RcObjectType.Flag);
         }
         
         foreach (string flagName in RoboCup.redFlags)
         {
-            CreateRcObject(flagName, RcObject.RcObjectType.Flag);
+            CreateRcObject(flagName, RcPerceivedObject.RcObjectType.Flag);
         }
         
         foreach (string flagName in RoboCup.blueFlags)
         {
-            CreateRcObject(flagName, RcObject.RcObjectType.Flag);
+            CreateRcObject(flagName, RcPerceivedObject.RcObjectType.Flag);
         }
 
         for (int i = 0; i < RoboCup.FullTeamSize+1; i++)
@@ -78,16 +80,16 @@ public class RcPlayer : MonoBehaviour, IPlayer
         }
     }
 
-    void CreateRcObject(string objectName, RcObject.RcObjectType objectType)
+    void CreateRcObject(string objectName, RcPerceivedObject.RcObjectType objectType)
     {
-        rcObjects.Add(objectName, new RcObject(objectName, objectType));
+        rcObjects.Add(objectName, new RcPerceivedObject(objectName, objectType));
     }
 
     void CreatePlayerRcObject(bool enemyTeam, int playerNumber, bool goalie)
     {
-        RcObject.RcObjectType objectType = enemyTeam ? RcObject.RcObjectType.EnemyPlayer : RcObject.RcObjectType.TeamPlayer;
+        RcPerceivedObject.RcObjectType objectType = enemyTeam ? RcPerceivedObject.RcObjectType.EnemyPlayer : RcPerceivedObject.RcObjectType.TeamPlayer;
         string tName = enemyTeam ? enemyTeamName : teamName;
-        RcObject rcPlayerObj = new RcObject(objectType, tName, playerNumber, goalie);
+        RcPerceivedObject rcPlayerObj = new RcPerceivedObject(objectType, tName, playerNumber, goalie);
         rcObjects.Add(rcPlayerObj.name, rcPlayerObj);
         rcObjects[rcPlayerObj.name].curVisibility = true;
     }
@@ -210,9 +212,15 @@ public class RcPlayer : MonoBehaviour, IPlayer
         RoboCup.singleton.ReceiveMessage(msg, rcMessage.MessageType);
     }
 
+    void Sense(MessageObject messageObject)
+    {
+        MessageObject.SenseBodyData senseBodyData = messageObject.GetSenseBody();
+        kickBallCount = senseBodyData.kick;
+    }
+
     void See(MessageObject messageObject)
     {
-        foreach (KeyValuePair<string, RcObject> rcObject in rcObjects)
+        foreach (KeyValuePair<string, RcPerceivedObject> rcObject in rcObjects)
         {
             rcObject.Value.prevVisibility = rcObject.Value.curVisibility;
             rcObject.Value.curVisibility = false;
@@ -279,7 +287,7 @@ public class RcPlayer : MonoBehaviour, IPlayer
     {
         float relativeBodyFacingDir = -(bodyFacingDir);
 
-        Vector2 relativePos = RcObject.CalculateRelativePos(distance, direction);
+        Vector2 relativePos = RcPerceivedObject.CalculateRelativePos(distance, direction);
 
         bool uniqueObject = true;
 
@@ -357,17 +365,22 @@ public class RcPlayer : MonoBehaviour, IPlayer
         }
     }
     
-    public Dictionary<string, RcObject> GetRcObjects()
+    public Dictionary<string, RcPerceivedObject> GetRcObjects()
     {
         return rcObjects;
     }
     
-    public RcObject GetRcObject(string objName)
+    public RcPerceivedObject GetRcObject(string objName)
     {
         if (rcObjects.ContainsKey(objName))
             return rcObjects[objName];
         else
             return null;
+    }
+
+    public int GetKickBallCount()
+    {
+        return kickBallCount;
     }
 
     public void Move(int x, int y)
@@ -393,5 +406,66 @@ public class RcPlayer : MonoBehaviour, IPlayer
     public void Catch()
     {
         Send("(catch 0)");
+    }
+}
+
+
+public class RcPerceivedObject
+{
+    public enum RcObjectType
+    {
+        Unknown,
+        UnknownPlayer,
+        UnknownTeamPlayer,
+        UnknownEnemyPlayer,
+        TeamPlayer,
+        EnemyPlayer,
+        Ball,
+        BallClose,
+        Flag,
+        FlagClose
+    }
+    
+    public string name;
+    public RcObjectType objectType;
+
+    public string teamName;
+    public int playerNumber;
+    public bool goalie;
+
+    public bool prevVisibility;
+    public bool curVisibility;
+    
+    public float distance;
+    public float direction;
+    
+    public Vector2 prevRelativePos;
+    public Vector2 curRelativePos;
+
+    public float prevRelativeBodyFacingDir;
+    public float curRelativeBodyFacingDir;
+
+    public RcPerceivedObject(string name, RcObjectType objectType)
+    {
+        this.name = name;
+        this.objectType = objectType;
+    }
+    public RcPerceivedObject(RcObjectType objectType, string teamName, int playerNumber, bool goalie)
+    {
+        this.objectType = objectType;
+        
+        this.teamName = teamName;
+        this.playerNumber = playerNumber;
+        this.goalie = goalie;
+        
+        string goalieText = goalie ? " goalie" : "";
+        name = $"p \"{teamName}\" {playerNumber}{goalieText}";
+    }
+
+    public static Vector2 CalculateRelativePos(float distance, float direction)
+    {
+        float radDirection = Mathf.Deg2Rad * -(direction - 90f);
+        
+        return distance * new Vector2(Mathf.Cos(radDirection), Mathf.Sin(radDirection));
     }
 }

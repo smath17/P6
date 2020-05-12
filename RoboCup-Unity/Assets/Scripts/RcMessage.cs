@@ -186,6 +186,11 @@ public class MessageObject
         public MessageObject MObject;
     }
     
+    public struct SenseBodyData
+    { 
+        public int kick;
+    }
+    
     public struct SeenObjectData
     {
         public string objectName;
@@ -194,6 +199,17 @@ public class MessageObject
         public float distChange;
         public float dirChange;
         public float bodyFacingDir;
+    }
+    
+    public struct CoachSeenObjectData
+    {
+        public string objectName;
+        public float x;
+        public float y;
+        public float deltaX;
+        public float deltaY;
+        public float bodyAngle;
+        public float neckAngle;
     }
     
     public override string ToString()
@@ -251,6 +267,40 @@ public class MessageObject
         
         return (result.Length > 1) ? result.Substring(1) : result;
     }
+    
+    public SenseBodyData GetSenseBody()
+    {
+        SenseBodyData senseBodyData = new SenseBodyData();
+        
+        if (values.Count > 2)
+        {
+            List<MessageObject> senseObjects = new List<MessageObject>();
+            for (int i = 2; i < values.Count; i++)
+            {
+                if (values[i].MObject != null)
+                    senseObjects.Add(values[i].MObject);
+            }
+
+            foreach (MessageObject senseObject in senseObjects)
+            {
+                if (senseObject.values.Count > 0)
+                {
+                    string senseName = senseObject.values[0].MObject.SimplePrint();
+
+                    if (senseName.Equals("kick"))
+                    {
+                        int kick = 0;
+                        if (senseObject.values.Count > 1)
+                            int.TryParse(senseObject.values[1].MString, out kick);
+
+                        senseBodyData.kick = kick;
+                    }
+                }
+            }
+        }
+
+        return senseBodyData;
+    }
 
     public List<SeenObjectData> GetSeenObjects()
     {
@@ -298,6 +348,66 @@ public class MessageObject
                     data.distChange = distChange;
                     data.dirChange = dirChange;
                     data.bodyFacingDir = bodyFacingDir;
+
+                    seenObjectsData.Add(data);
+                }
+            }
+        }
+
+        return seenObjectsData;
+    }
+    
+    public List<CoachSeenObjectData> GetSeenObjectsCoach()
+    {
+        List<CoachSeenObjectData> seenObjectsData = new List<CoachSeenObjectData>();
+        
+        if (values.Count > 2)
+        {
+            List<MessageObject> seenObjects = new List<MessageObject>();
+            for (int i = 2; i < values.Count; i++)
+            {
+                if (values[i].MObject != null)
+                    seenObjects.Add(values[i].MObject);
+            }
+
+            foreach (MessageObject seenObject in seenObjects)
+            {
+                if (seenObject.values.Count > 0)
+                {
+                    string objectName = seenObject.values[0].MObject.SimplePrint();
+
+                    float x = 0;
+                    if (seenObject.values.Count > 1)
+                        float.TryParse(seenObject.values[1].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out x);
+
+                    float y = 0;
+                    if (seenObject.values.Count > 2)
+                        float.TryParse(seenObject.values[2].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out y);
+
+                    float deltaX = 0;
+                    if (seenObject.values.Count > 3)
+                        float.TryParse(seenObject.values[3].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out deltaX);
+                    
+                    float deltaY = 0;
+                    if (seenObject.values.Count > 4)
+                        float.TryParse(seenObject.values[4].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out deltaY);
+                    
+                    float bodyAngle = 0;
+                    if (seenObject.values.Count > 5)
+                        float.TryParse(seenObject.values[5].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out bodyAngle);
+                    
+                    float neckAngle = 0;
+                    if (seenObject.values.Count > 6)
+                        float.TryParse(seenObject.values[6].MString,NumberStyles.Float, CultureInfo.InvariantCulture, out neckAngle);
+                    
+                    CoachSeenObjectData data = new CoachSeenObjectData();
+                    data.objectName = objectName;
+                    data.x = x;
+                    data.y = y;
+                    data.deltaX = deltaX;
+                    data.deltaY = deltaY;
+                    data.bodyAngle = bodyAngle;
+                    data.neckAngle = neckAngle;
 
                     seenObjectsData.Add(data);
                 }

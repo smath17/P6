@@ -32,7 +32,7 @@ public class LocationCalculator : MonoBehaviour
 
             if (referenceFlags.ContainsKey(seenObject.objectName))
             {
-                Vector2 relativePos = RcObject.CalculateRelativePos(seenObject.distance, seenObject.direction);
+                Vector2 relativePos = RcPerceivedObject.CalculateRelativePos(seenObject.distance, seenObject.direction);
                 referenceFlags[seenObject.objectName].relativePos = relativePos;
                 flagsForCalculation.Add(referenceFlags[seenObject.objectName]);
             }

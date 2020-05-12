@@ -11,6 +11,8 @@ public class RoboCupAttackerAgent : Agent
     float selfPositionY;
     float selfDirection;
 
+    int kickBallCount;
+
     bool ballVisible;
     int ballDirection;
     int ballDistance;
@@ -27,6 +29,8 @@ public class RoboCupAttackerAgent : Agent
 
     public bool printRewards;
 
+    public RewardDisplay rewardDisplay;
+
     public void SetPlayer(IPlayer player)
     {
         this.player = player;
@@ -41,18 +45,20 @@ public class RoboCupAttackerAgent : Agent
     {
     }
     
-    public void SetSelfInfo(float positionX, float positionY, float direction)
+    public void SetSelfInfo(float positionX, float positionY, float direction, int kickBallCount)
     {
         selfPositionX = positionX;
         selfPositionY = positionY;
         selfDirection = direction;
+        
+        if (this.kickBallCount < kickBallCount)
+            OnKickedBall();
+
+        this.kickBallCount = kickBallCount;
     }
     
     public void SetBallInfo(bool visible, int direction = 0, int distance = 0)
     {
-        if (ballVisible && !visible)
-            OnLostBall();
-        
         ballVisible = visible;
         ballDirection = direction;
         ballDistance = distance;
@@ -125,47 +131,64 @@ public class RoboCupAttackerAgent : Agent
                 player.Kick(100);
                 break;
         }
-    }
-
-    public void OnTimePassed()
-    {
-        AddReward(-0.1f, "Time Passed");
+        
+        if (rewardDisplay != null)
+            rewardDisplay.DisplayCumulativeReward(GetCumulativeReward());
     }
     
-    public void OnLookRight()
+    public void OnBallWithinRange()
     {
-        AddReward(-0.5f, "Looked To The Right");
+        AddReward(0.2f, "Ball Within Range");
+        DisplayIcon(0);
     }
 
     public void OnKickedBall()
     {
         AddReward(0.2f, "Kicked Ball");
+        DisplayIcon(1);
     }
     
     public void OnBallMovedLeft()
     {
         AddReward(0.1f, "Ball Moved Left");
-    }
-
-    public void OnLostBall()
-    {
-        AddReward(-0.2f, "Lost Ball");
-    }
-    
-    public void OnEnteredGoalArea()
-    {
-        AddReward(-0.5f, "Entered Goal Area");
+        DisplayIcon(2);
     }
 
     public void OnScored()
     {
         AddReward(1f, "Scored");
+        DisplayIcon(3);
         EndEpisode();
+    }
+
+    public void OnTimePassed()
+    {
+        AddReward(-0.1f, "Time Passed");
+        DisplayIcon(4);
+    }
+
+    public void OnBallNotVisible()
+    {
+        AddReward(-0.2f, "Ball Not Visible");
+        DisplayIcon(5);
+    }
+    
+    public void OnLookRight()
+    {
+        AddReward(-0.5f, "Looked To The Right");
+        DisplayIcon(6);
+    }
+    
+    public void OnEnteredGoalArea()
+    {
+        AddReward(-0.5f, "Entered Goal Area");
+        DisplayIcon(7);
     }
 
     public void OnFailedToScore()
     {
         AddReward(-1f, "Failed To Score");
+        DisplayIcon(8);
         EndEpisode();
     }
 
@@ -181,6 +204,12 @@ public class RoboCupAttackerAgent : Agent
         if (printRewards)
             Debug.LogWarning($"{name} ={reward} ({reason})");
         base.SetReward(reward);
+    }
+
+    void DisplayIcon(int icon)
+    {
+        if (rewardDisplay != null)
+            rewardDisplay.DisplayIcon(icon);
     }
 
     public override void Heuristic(float[] actionsOut)

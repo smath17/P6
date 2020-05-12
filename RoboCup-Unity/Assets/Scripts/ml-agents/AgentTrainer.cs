@@ -125,6 +125,8 @@ public class AgentTrainer : MonoBehaviour
 
     public void OnEpisodeBegin()
     {
+        stepsLeftInCurrentEpisode = stepsPerEpisode;
+        
         switch (trainingScenario)
         {
             case TrainingScenario.LookAtBall:
@@ -151,11 +153,9 @@ public class AgentTrainer : MonoBehaviour
         if (!initialized)
             return;
         
-        
         stepsLeftInCurrentEpisode--;
         if (stepsLeftInCurrentEpisode < 1)
         {
-            stepsLeftInCurrentEpisode = stepsPerEpisode;
             switch (trainingScenario)
             {
                 case TrainingScenario.LookAtBall:
@@ -180,7 +180,7 @@ public class AgentTrainer : MonoBehaviour
             case TrainingScenario.LookAtBall:
             case TrainingScenario.RunTowardsBall:
 
-                RcObject ball = RoboCup.singleton.GetPlayer(0, true).GetRcObject("b");
+                RcPerceivedObject ball = RoboCup.singleton.GetPlayer(0, true).GetRcObject("b");
                 
                 if (ball.curVisibility)
                     defaultAgent.SetBallInfo(true, ball.direction, ball.distance);
@@ -201,27 +201,33 @@ public class AgentTrainer : MonoBehaviour
                     // Defender Observations
                     defenderAgent.SetSelfInfo(defender.GetCalculatedPosition().x, defender.GetCalculatedPosition().y, defender.GetCalculatedAngle());
                     
-                    RcObject defenderBall = defender.GetRcObject("b");
+                    RcPerceivedObject defenderBall = defender.GetRcObject("b");
                     if (defenderBall != null)
                         defenderAgent.SetBallInfo(defenderBall.curVisibility, (int)defenderBall.direction, (int)defenderBall.distance);
                     
-                    RcObject defenderOpponent = defender.GetRcObject("p \"Attacker\" 1");
+                    RcPerceivedObject defenderOpponent = defender.GetRcObject("p \"Attacker\" 1");
                     if (defenderOpponent != null)
                         defenderAgent.SetAttackerInfo(defenderOpponent.curVisibility, (int)defenderOpponent.direction, (int)defenderOpponent.distance);
                 }
                 
                 // Attacker Observations
-                attackerAgent.SetSelfInfo(attacker.GetCalculatedPosition().x, attacker.GetCalculatedPosition().y, attacker.GetCalculatedAngle());
+                attackerAgent.SetSelfInfo(attacker.GetCalculatedPosition().x, attacker.GetCalculatedPosition().y, attacker.GetCalculatedAngle(), attacker.GetKickBallCount());
                 
-                RcObject attackerBall = attacker.GetRcObject("b");
+                RcPerceivedObject attackerBall = attacker.GetRcObject("b");
                 if (attackerBall != null)
+                {
                     attackerAgent.SetBallInfo(attackerBall.curVisibility, (int)attackerBall.direction, (int)attackerBall.distance);
+                    if (!attackerBall.curVisibility)
+                        attackerAgent.OnBallNotVisible();
+                    else if (attackerBall.distance < 0.7f)
+                        attackerAgent.OnBallWithinRange();
+                }
                 
-                RcObject attackerGoal = attacker.GetRcObject("g l");
+                RcPerceivedObject attackerGoal = attacker.GetRcObject("g l");
                 if (attackerGoal != null)
                     attackerAgent.SetGoalInfo(attackerGoal.curVisibility, (int)attackerGoal.direction, (int)attackerGoal.distance);
                 
-                RcObject attackerOpponent = attacker.GetRcObject("p \"Defender\" 1 goalie");
+                RcPerceivedObject attackerOpponent = attacker.GetRcObject("p \"Defender\" 1 goalie");
                 if (attackerOpponent != null)
                     attackerAgent.SetDefenderInfo(attackerOpponent.curVisibility, (int)attackerOpponent.direction, (int)attackerOpponent.distance);
                 
@@ -249,29 +255,29 @@ public class AgentTrainer : MonoBehaviour
                 RcObject coachBall = coach.GetRcObject("b");
                 if (coachBall != null)
                 {
-                    if (coachBall.curRelativePos.x < coachBall.prevRelativePos.x)
+                    if (coachBall.delta.x < 0)
                         attackerAgent.OnBallMovedLeft();
                     
                     prevBallInGoalArea = curBallInGoalArea;
-                    curBallInGoalArea = coachBall.curRelativePos.y < 10 && coachBall.curRelativePos.y > -10 && coachBall.curRelativePos.x < -46 && coachBall.curRelativePos.x > -52;
+                    curBallInGoalArea = coachBall.position.y < 10 && coachBall.position.y > -10 && coachBall.position.x < -46 && coachBall.position.x > -52;
             
+                    // Ball enters goal
+                    if (coachBall.position.y < 10 && coachBall.position.y > -10 && coachBall.position.x < -52)
+                    {
+                        attackerAgent.OnScored();
+                        if (trainingScenario != TrainingScenario.AttackDefendAttackOnly)
+                            defenderAgent.OnFailedToDefend();
+                        
+                        OnEpisodeBegin();
+                        return;
+                    }
+                    
                     // Ball exits goal area
                     if (prevBallInGoalArea && !curBallInGoalArea)
                     {
                         attackerAgent.OnFailedToScore();
                         if (trainingScenario != TrainingScenario.AttackDefendAttackOnly)
                             defenderAgent.OnDefended();
-                        
-                        OnEpisodeBegin();
-                        return;
-                    }
-
-                    // Ball enters goal
-                    if (coachBall.curRelativePos.y < 10 && coachBall.curRelativePos.y > -10 && coachBall.curRelativePos.x < -52)
-                    {
-                        attackerAgent.OnScored();
-                        if (trainingScenario != TrainingScenario.AttackDefendAttackOnly)
-                            defenderAgent.OnFailedToDefend();
                         
                         OnEpisodeBegin();
                         return;

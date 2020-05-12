@@ -83,46 +83,32 @@ public class RcCoach : MonoBehaviour, ICoach
     
     void See(MessageObject messageObject)
     {
-        foreach (KeyValuePair<string, RcObject> rcObject in rcObjects)
-        {
-            rcObject.Value.prevVisibility = rcObject.Value.curVisibility;
-            rcObject.Value.curVisibility = false;
-            
-            rcObject.Value.prevRelativePos = rcObject.Value.curRelativePos;
-            rcObject.Value.prevRelativeBodyFacingDir = rcObject.Value.curRelativeBodyFacingDir;
-        }
+        List<MessageObject.CoachSeenObjectData> seenObjectsData = messageObject.GetSeenObjectsCoach();
 
-        List<MessageObject.SeenObjectData> seenObjectsData = messageObject.GetSeenObjects();
-
-        foreach (MessageObject.SeenObjectData data in seenObjectsData)
+        foreach (MessageObject.CoachSeenObjectData data in seenObjectsData)
         {
-            UpdateRcObject(data.objectName, data.distance, data.direction, data.bodyFacingDir);
+            UpdateRcObject(data.objectName, data.x, data.y, data.deltaX, data.deltaY, data.bodyAngle, data.neckAngle);
         }
 
         if (agentTrainer != null)
             agentTrainer.Step();
     }
     
-    void UpdateRcObject(string objectName, float distance, float direction, float bodyFacingDir)
+    void UpdateRcObject(string objectName, float x, float y, float deltaX, float deltaY, float bodyAngle, float neckAngle)
     {
-        float radDirection = Mathf.Deg2Rad * -(direction - 90f);
-        float relativeBodyFacingDir = -(bodyFacingDir);
-        
-        Vector2 relativePos = distance * new Vector2(Mathf.Cos(radDirection), Mathf.Sin(radDirection));
-
         if (objectName.Length < 1)
             return;
         
         if (!rcObjects.ContainsKey(objectName))
-            rcObjects.Add(objectName, new RcObject(objectName, RcObject.RcObjectType.Unknown));
+            rcObjects.Add(objectName, new RcObject(objectName));
         
-        rcObjects[objectName].curVisibility = true;
-        rcObjects[objectName].distance = distance;
-        rcObjects[objectName].direction = direction;
-        rcObjects[objectName].curRelativeBodyFacingDir = bodyFacingDir;
+        Vector2 position = new Vector2(x, y);
+        Vector2 delta = new Vector2(deltaX, deltaY);
         
-        rcObjects[objectName].curRelativePos = relativePos;
-        rcObjects[objectName].curRelativeBodyFacingDir = relativeBodyFacingDir;
+        rcObjects[objectName].position = position;
+        rcObjects[objectName].delta = delta;
+        rcObjects[objectName].bodyAngle = bodyAngle;
+        rcObjects[objectName].neckAngle = neckAngle;
     }
 
     public RcObject GetRcObject(string objName)
@@ -163,5 +149,19 @@ public class RcCoach : MonoBehaviour, ICoach
     public void KickOff()
     {
         Send("(start)");
+    }
+}
+
+public class RcObject
+{
+    public string name;
+    public Vector2 position;
+    public Vector2 delta;
+    public float bodyAngle;
+    public float neckAngle;
+
+    public RcObject(string name)
+    {
+        this.name = name;
     }
 }
