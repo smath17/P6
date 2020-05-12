@@ -19,9 +19,6 @@ public class RoboCupDefenderAgent : Agent
     int attackerDirection;
     int attackerDistance;
     
-    int playerStartX = -50;
-    int playerStartY = 0;
-    
     int dashSpeed = 100;
     
     public bool printRewards;
@@ -38,8 +35,6 @@ public class RoboCupDefenderAgent : Agent
     
     public override void OnEpisodeBegin()
     {
-        coach.MovePlayer(RoboCup.singleton.GetTeamName(), 1, playerStartX, playerStartY, 0);
-        coach.Recover();
     }
     
     public void SetSelfInfo(float positionX, float positionY, float direction)
@@ -138,12 +133,6 @@ public class RoboCupDefenderAgent : Agent
     public void OnFailedToDefend()
     {
         SetReward(-1f);
-        EndEpisode();
-    }
-
-    public void OnTimeOut()
-    {
-        SetReward(0);
         EndEpisode();
     }
 

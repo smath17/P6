@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class AgentTrainer : MonoBehaviour
 {
@@ -118,12 +119,61 @@ public class AgentTrainer : MonoBehaviour
         }
 
         initialized = true;
+        
+        OnEpisodeBegin();
+    }
+
+    public void OnEpisodeBegin()
+    {
+        switch (trainingScenario)
+        {
+            case TrainingScenario.LookAtBall:
+                break;
+            
+            case TrainingScenario.RunTowardsBall:
+                break;
+            
+            case TrainingScenario.AttackDefend:
+            case TrainingScenario.AttackDefendAttackOnly:
+                int goalieY = Random.Range(-10, 10);
+                
+                coach.MovePlayer(RoboCup.singleton.GetTeamName(), 1, -50, goalieY, 0);
+                coach.MovePlayer(RoboCup.singleton.GetEnemyTeamName(), 1, -20, 0, 180);
+                
+                coach.MoveBall(-25, 0);
+                coach.Recover();
+                break;
+        }
     }
 
     public void Step()
     {
         if (!initialized)
             return;
+        
+        
+        stepsLeftInCurrentEpisode--;
+        if (stepsLeftInCurrentEpisode < 1)
+        {
+            stepsLeftInCurrentEpisode = stepsPerEpisode;
+            switch (trainingScenario)
+            {
+                case TrainingScenario.LookAtBall:
+                    break;
+            
+                case TrainingScenario.RunTowardsBall:
+                    break;
+            
+                case TrainingScenario.AttackDefend:
+                case TrainingScenario.AttackDefendAttackOnly:
+                    attackerAgent.EndEpisode();
+                    if (trainingScenario != TrainingScenario.AttackDefendAttackOnly)
+                        defenderAgent.EndEpisode();
+                    break;
+            }
+            OnEpisodeBegin();
+            return;
+        }
 
         switch (trainingScenario)
         {
@@ -176,58 +226,55 @@ public class AgentTrainer : MonoBehaviour
                     attackerAgent.SetDefenderInfo(attackerOpponent.curVisibility, (int)attackerOpponent.direction, (int)attackerOpponent.distance);
                 
                 // Rewards
-                stepsLeftInCurrentEpisode--;
-                if (stepsLeftInCurrentEpisode < 1)
+                if (trainingScenario != TrainingScenario.AttackDefendAttackOnly)
                 {
-                    stepsLeftInCurrentEpisode = stepsPerEpisode;
-                    attackerAgent.OnTimeOut();
-                    if (trainingScenario != TrainingScenario.AttackDefendAttackOnly)
-                        defenderAgent.OnTimeOut();
+                    if (defender.GetCalculatedPosition().y > 20 ||
+                        defender.GetCalculatedPosition().y < -20 ||
+                        defender.GetCalculatedPosition().x > -35 ||
+                        defender.GetCalculatedPosition().x < -52)
+                        defenderAgent.OnLeftGoalArea();
                 }
-                else
-                {
-
-                    if (trainingScenario != TrainingScenario.AttackDefendAttackOnly)
-                    {
-                        if (defender.GetCalculatedPosition().y > 20 ||
-                            defender.GetCalculatedPosition().y < -20 ||
-                            defender.GetCalculatedPosition().x > -35 ||
-                            defender.GetCalculatedPosition().x < -52)
-                            defenderAgent.OnLeftGoalArea();
-                    }
-                    
-                    attackerAgent.OnTimePassed();
-                    
-                    if (attacker.GetCalculatedPosition().y < 20 &&
-                        attacker.GetCalculatedPosition().y > -20 &&
-                        attacker.GetCalculatedPosition().x < -35 &&
-                        attacker.GetCalculatedPosition().x > -52)
-                        attackerAgent.OnEnteredGoalArea();
-                    
-                    RcObject coachBall = coach.GetRcObject("b");
-                    if (coachBall != null)
-                    {
-                        if (coachBall.curRelativePos.x < coachBall.prevRelativePos.x)
-                            attackerAgent.OnBallMovedLeft();
-                        
-                        prevBallInGoalArea = curBallInGoalArea;
-                        curBallInGoalArea = coachBall.curRelativePos.y < 10 && coachBall.curRelativePos.y > -10 && coachBall.curRelativePos.x < -46 && coachBall.curRelativePos.x > -52;
                 
-                        // Ball exits goal area
-                        if (prevBallInGoalArea && !curBallInGoalArea)
-                        {
-                            attackerAgent.OnFailedToScore();
-                            if (trainingScenario != TrainingScenario.AttackDefendAttackOnly)
-                                defenderAgent.OnDefended();
-                        }
+                attackerAgent.OnTimePassed();
+                
+                if (attacker.GetCalculatedPosition().y < 20 &&
+                    attacker.GetCalculatedPosition().y > -20 &&
+                    attacker.GetCalculatedPosition().x < -35 &&
+                    attacker.GetCalculatedPosition().x > -52)
+                    attackerAgent.OnEnteredGoalArea();
 
-                        // Ball enters goal
-                        if (coachBall.curRelativePos.y < 10 && coachBall.curRelativePos.y > -10 && coachBall.curRelativePos.x < -52)
-                        {
-                            attackerAgent.OnScored();
-                            if (trainingScenario != TrainingScenario.AttackDefendAttackOnly)
-                                defenderAgent.OnFailedToDefend();
-                        }
+                if (attacker.GetCalculatedAngle() > 0)
+                    attackerAgent.OnLookRight();
+                
+                RcObject coachBall = coach.GetRcObject("b");
+                if (coachBall != null)
+                {
+                    if (coachBall.curRelativePos.x < coachBall.prevRelativePos.x)
+                        attackerAgent.OnBallMovedLeft();
+                    
+                    prevBallInGoalArea = curBallInGoalArea;
+                    curBallInGoalArea = coachBall.curRelativePos.y < 10 && coachBall.curRelativePos.y > -10 && coachBall.curRelativePos.x < -46 && coachBall.curRelativePos.x > -52;
+            
+                    // Ball exits goal area
+                    if (prevBallInGoalArea && !curBallInGoalArea)
+                    {
+                        attackerAgent.OnFailedToScore();
+                        if (trainingScenario != TrainingScenario.AttackDefendAttackOnly)
+                            defenderAgent.OnDefended();
+                        
+                        OnEpisodeBegin();
+                        return;
+                    }
+
+                    // Ball enters goal
+                    if (coachBall.curRelativePos.y < 10 && coachBall.curRelativePos.y > -10 && coachBall.curRelativePos.x < -52)
+                    {
+                        attackerAgent.OnScored();
+                        if (trainingScenario != TrainingScenario.AttackDefendAttackOnly)
+                            defenderAgent.OnFailedToDefend();
+                        
+                        OnEpisodeBegin();
+                        return;
                     }
                 }
 

@@ -23,9 +23,6 @@ public class RoboCupAttackerAgent : Agent
     int goalDirection;
     int goalDistance;
 
-    int playerStartX = -20;
-    int playerStartY = 0;
-
     int dashSpeed = 100;
 
     public bool printRewards;
@@ -42,9 +39,6 @@ public class RoboCupAttackerAgent : Agent
 
     public override void OnEpisodeBegin()
     {
-        coach.MoveBall(-25, 0);
-        coach.MovePlayer(RoboCup.singleton.GetEnemyTeamName(), 1, playerStartX, playerStartY, 180);
-        coach.Recover();
     }
     
     public void SetSelfInfo(float positionX, float positionY, float direction)
@@ -137,6 +131,11 @@ public class RoboCupAttackerAgent : Agent
     {
         AddReward(-0.1f, "Time Passed");
     }
+    
+    public void OnLookRight()
+    {
+        AddReward(-0.5f, "Looked To The Right");
+    }
 
     public void OnKickedBall()
     {
@@ -167,11 +166,6 @@ public class RoboCupAttackerAgent : Agent
     public void OnFailedToScore()
     {
         AddReward(-1f, "Failed To Score");
-        EndEpisode();
-    }
-
-    public void OnTimeOut()
-    {
         EndEpisode();
     }
 
