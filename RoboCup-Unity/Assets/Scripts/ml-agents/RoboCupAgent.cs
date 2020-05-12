@@ -16,9 +16,18 @@ public class RoboCupAgent : Agent
     [Header("Settings")]
     public bool resetBallEachEpisode = true;
 
-    float rewardLookAtBall = 1f;
+    float rewardLookAtBall = 0.6f;
     float rewardBallNotVisible = -1f;
     
+    float rewardUltraCloseToBall = 1f;
+    float rewardVeryCloseToBall = 0.8f;
+    float rewardCloseToball = 0.6f;
+    float rewardKindaCloseToball = 0.4f;
+    float rewardNotEvenCloseToBall = 0.2f;
+    float rewardAwayFromBall = -0.5f;
+    //float rewardNotMoving = -2f;
+    
+
     bool ballVisible;
     float ballDistance;
     float ballDirection;
@@ -131,8 +140,29 @@ public class RoboCupAgent : Agent
             }
             if (ballDistance < 0.7 && ballDistance > 0.0)
             {
-                AddReward(1.0f);
+                AddReward(rewardUltraCloseToBall);
+            } else if (ballDistance < 3 && ballDistance >= 0.7)
+            {
+                AddReward(rewardVeryCloseToBall);
             }
+            else if (ballDistance < 10 && ballDistance >= 3)
+            {
+                AddReward(rewardCloseToball);
+            }
+            else if (ballDistance < 40 && ballDistance >= 10)
+            {
+                AddReward(rewardKindaCloseToball);
+            }
+            else if (ballDistance < 80 && ballDistance >= 40)
+            {
+                AddReward(rewardNotEvenCloseToBall);
+            }
+            else if (ballDistance < 160 && ballDistance >= 80)
+            {
+                AddReward(rewardNotEvenCloseToBall);
+            }
+            /*else 
+                AddReward(rewardAwayFromBall); */// Doesn't seem to have the right effect
         }
         else
         {
