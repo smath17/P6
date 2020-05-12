@@ -120,50 +120,40 @@ public class RoboCupAgent : Agent
             default:
                 throw new ArgumentOutOfRangeException();
         }
+        
+        DoRewards();
     }
 
     void ActionLookAtBall(float[] vectorAction)
     {
-        if (ballVisible)
+        int action = Mathf.FloorToInt(vectorAction[0]);
+        
+        int turnAmount = 0;
+        
+        switch (action)
         {
-            if (ballDirection < 5 && ballDirection > -5)
-            {
-                SetReward(rewardLookAtBall);
-            }
-        }
-        else
-        {
-            SetReward(rewardBallNotVisible);
+            case 0: 
+                turnAmount = 0;
+                break;
+            
+            case 1: 
+                turnAmount = -30;
+                break;
+            
+            case 2: 
+                turnAmount = 30;
+                break;
         }
 
-        int turnAmount = (int) (vectorAction[0] * 180f);
-
+        //int turnAmount = (int) (vectorAction[0] * 180f);
         player.Turn(turnAmount);
     }
     
     public void ActionRunTowardsBall(float[] vectorAction)
     {
-        if (ballVisible)
-        {
-            if (ballDistance < 0.7 && ballDistance > 0.0)
-            {
-                SetReward(1.0f);
-            }
-        }
-        else
-        {
-            SetReward(-0.5f);
-        }
-                
-        /*int dashAmount;
-        if (vectorAction[0] < -0.5)
-            dashAmount = -100;
-        else if (vectorAction[0] > 0.5)
-            dashAmount = 100;
-        else
-            dashAmount = 0;*/
-        int dashAmount = 0;
         int action = Mathf.FloorToInt(vectorAction[0]);
+        
+        int dashAmount = 0;
         
         switch (action)
         {
@@ -181,6 +171,41 @@ public class RoboCupAgent : Agent
         }
 
         player.Dash(dashAmount, 0);
+    }
+    
+    void DoRewards()
+    {
+        switch (trainingScenario)
+        {
+            case AgentTrainer.TrainingScenario.LookAtBall:
+                if (ballVisible)
+                {
+                    if (ballDirection < 5 && ballDirection > -5)
+                    {
+                        SetReward(rewardLookAtBall);
+                    }
+                }
+                else
+                {
+                    SetReward(rewardBallNotVisible);
+                }
+                break;
+            case AgentTrainer.TrainingScenario.RunTowardsBall:
+                if (ballVisible)
+                {
+                    if (ballDistance < 0.7 && ballDistance > 0.0)
+                    {
+                        SetReward(1.0f);
+                    }
+                }
+                else
+                {
+                    SetReward(-0.5f);
+                }
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
     }
 
     public override void Heuristic(float[] actionsOut)

@@ -170,7 +170,7 @@ public class AgentTrainer : MonoBehaviour
                     defaultAgent.SetBallInfo(true, ball.direction, ball.distance);
                 else
                     defaultAgent.SetBallInfo(false);
-                
+
                 defaultAgent.RequestDecision();
                 
                 break;
