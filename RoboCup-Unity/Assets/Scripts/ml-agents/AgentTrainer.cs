@@ -15,7 +15,6 @@ public class AgentTrainer : MonoBehaviour
     
     [Header("Settings")]
     public TrainingScenario trainingScenario;
-    bool offlineTraining = false;
     
     [Header("Agents")]
     public RoboCupAgent defaultAgent;
@@ -76,24 +75,11 @@ public class AgentTrainer : MonoBehaviour
             case TrainingScenario.LookAtBall:
             case TrainingScenario.RunTowardsBall:
         
-                defaultAgent.SetOfflineTraining(offlineTraining);
                 defaultAgent.SetTrainingScenario(trainingScenario);
         
-                if (offlineTraining)
-                {
-                    GameObject fakeCoach = Instantiate(Resources.Load<GameObject>("prefabs/Fake Coach"));
-            
-                    defaultAgent.SetCoach(fakeCoach.GetComponent<FakeCoach>());
-                    defaultAgent.SetPlayer(offlineVisualPlayer.AddComponent<FakePlayer>());
-            
-                    defaultAgent.gameObject.SetActive(true);
-                }
-                else
-                {
-                    defaultAgent.SetPlayer(RoboCup.singleton.GetPlayer(0));
-                    defaultAgent.SetCoach(coach);
-                    defaultAgent.gameObject.SetActive(true);
-                }
+                defaultAgent.SetPlayer(RoboCup.singleton.GetPlayer(0));
+                defaultAgent.SetCoach(coach);
+                defaultAgent.gameObject.SetActive(true);
                 
                 break;
             
@@ -113,11 +99,11 @@ public class AgentTrainer : MonoBehaviour
                 attackerAgent.SetCoach(coach);
                 attackerAgent.gameObject.SetActive(true);
                 
-                coach.InitTraining(this);
-                
                 break;
         }
 
+        coach.InitTraining(this);
+        
         initialized = true;
         
         OnEpisodeBegin();
@@ -188,7 +174,6 @@ public class AgentTrainer : MonoBehaviour
                     defaultAgent.SetBallInfo(false);
                 
                 defaultAgent.RequestDecision();
-                defaultAgent.Step();
                 
                 break;
             

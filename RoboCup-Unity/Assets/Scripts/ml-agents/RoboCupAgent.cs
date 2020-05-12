@@ -9,7 +9,6 @@ using Random = UnityEngine.Random;
 public class RoboCupAgent : Agent
 {
     AgentTrainer.TrainingScenario trainingScenario;
-    bool offlineTraining;
 
     IPlayer player;
     ICoach coach;
@@ -20,9 +19,6 @@ public class RoboCupAgent : Agent
     int playerStartX = -20;
     int playerStartY = 0;
 
-    int stepsPerEpisode = 100;
-    int stepsLeftInCurrentEpisode;
-
     float rewardLookAtBall = 1f;
     float rewardBallNotVisible = -1f;
     
@@ -30,13 +26,6 @@ public class RoboCupAgent : Agent
     float ballDistance;
     float ballDirection;
 
-    bool initialized = false;
-    
-    public void SetOfflineTraining(bool offline)
-    {
-        offlineTraining = offline;
-    }
-    
     public void SetTrainingScenario(AgentTrainer.TrainingScenario scenario)
     {
         trainingScenario = scenario;
@@ -52,19 +41,9 @@ public class RoboCupAgent : Agent
         this.coach = coach;
     }
     
-    void Start()
-    {
-        coach.InitTraining(null);
-        coach.KickOff();
-
-        initialized = true;
-    }
-    
     public override void OnEpisodeBegin()
     {
         player.Move(playerStartX, playerStartY);
-        
-        stepsLeftInCurrentEpisode = stepsPerEpisode;
 
         switch (trainingScenario)
         {
@@ -105,19 +84,6 @@ public class RoboCupAgent : Agent
         ballVisible = visible;
         ballDirection = direction;
         ballDistance = distance;
-    }
-
-    public void Step()
-    {
-        if (!initialized)
-            return;
-        
-        if (offlineTraining)
-            RequestDecision();
-        
-        stepsLeftInCurrentEpisode--;
-        if (stepsLeftInCurrentEpisode < 1)
-            EndEpisode();
     }
     
     public override void CollectObservations(VectorSensor sensor)
