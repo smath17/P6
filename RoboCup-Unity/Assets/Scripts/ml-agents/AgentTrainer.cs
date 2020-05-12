@@ -144,9 +144,8 @@ public class AgentTrainer : MonoBehaviour
             switch (trainingScenario)
             {
                 case TrainingScenario.LookAtBall:
-                    break;
-            
                 case TrainingScenario.RunTowardsBall:
+                    defaultAgent.EndEpisode();
                     break;
             
                 case TrainingScenario.AttackDefend:
