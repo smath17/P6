@@ -15,9 +15,6 @@ public class RoboCupAgent : Agent
     
     [Header("Settings")]
     public bool resetBallEachEpisode = true;
-    
-    int playerStartX = -20;
-    int playerStartY = 0;
 
     float rewardLookAtBall = 1f;
     float rewardBallNotVisible = -1f;
@@ -43,34 +40,11 @@ public class RoboCupAgent : Agent
     
     public override void OnEpisodeBegin()
     {
-        player.Move(playerStartX, playerStartY);
-
-        switch (trainingScenario)
-        {
-            case AgentTrainer.TrainingScenario.LookAtBall:
-                BeginLookAtBall();
-                break;
-            case AgentTrainer.TrainingScenario.RunTowardsBall:
-                BeginRunTowardsBall();
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-    }
-    
-    void BeginLookAtBall()
-    {
-        int ballX = Random.Range(-10, 10) + playerStartX;
-        int ballY = Random.Range(-10, 10) + playerStartY;
-
-        if (resetBallEachEpisode)
-            coach.MoveBall(ballX, ballY);
-    }
-
-    void BeginRunTowardsBall()
-    {
-        int ballX = ballX = Random.Range(5, 30);
-        int ballY = 0;
+        int ballX = Random.Range(-52, 52);
+        int ballY = Random.Range(-32, 32);
+        
+        int playerStartX = Random.Range(-52, 52);
+        int playerStartY = Random.Range(-32, 32);
         
         coach.MovePlayer(RoboCup.singleton.teamName, 1, playerStartX, playerStartY);
         coach.Recover();
@@ -88,128 +62,98 @@ public class RoboCupAgent : Agent
     
     public override void CollectObservations(VectorSensor sensor)
     {
-        switch (trainingScenario)
+
+        if (ballVisible)
         {
-            case AgentTrainer.TrainingScenario.LookAtBall:
-                if (ballVisible)
-                    sensor.AddObservation(ballDirection / 45);
-                else
-                    sensor.AddObservation(-1);
-                break;
-            case AgentTrainer.TrainingScenario.RunTowardsBall:
-                if (ballVisible)
-                    sensor.AddObservation(ballDistance);
-                else
-                    sensor.AddObservation(-1);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
+            sensor.AddObservation(ballDistance);
+            sensor.AddObservation(ballDirection / 45);
         }
+        else
+        {
+            sensor.AddObservation(-1);
+            sensor.AddObservation(-1);
+        }
+
     }
     
     public override void OnActionReceived(float[] vectorAction)
     {
-        switch (trainingScenario)
-        {
-            case AgentTrainer.TrainingScenario.LookAtBall:
-                ActionLookAtBall(vectorAction);
-                break;
-            case AgentTrainer.TrainingScenario.RunTowardsBall:
-                ActionRunTowardsBall(vectorAction);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-        
-        DoRewards();
-    }
-
-    void ActionLookAtBall(float[] vectorAction)
-    {
-        int action = Mathf.FloorToInt(vectorAction[0]);
-        
-        int turnAmount = 0;
-        
-        switch (action)
-        {
-            case 0: 
-                turnAmount = 0;
-                break;
-            
-            case 1: 
-                turnAmount = -30;
-                break;
-            
-            case 2: 
-                turnAmount = 30;
-                break;
-        }
-
-        //int turnAmount = (int) (vectorAction[0] * 180f);
-        player.Turn(turnAmount);
-    }
-    
-    public void ActionRunTowardsBall(float[] vectorAction)
-    {
         int action = Mathf.FloorToInt(vectorAction[0]);
         
         int dashAmount = 0;
+        int turnAmount = 0;
+        bool dash = false;
+        bool turn = false;
         
         switch (action)
         {
-            case 0: 
+            case 0:
+                dash = true;
                 dashAmount = 0;
                 break;
             
             case 1: 
+                dash = true;
                 dashAmount = -100;
                 break;
             
             case 2: 
+                dash = true;
                 dashAmount = 100;
+                break;
+            
+            case 3:
+                turn = true;
+                turnAmount = -30;
+                break;
+            
+            case 4:
+                turn = true;
+                turnAmount = 30;
                 break;
         }
 
-        player.Dash(dashAmount, 0);
+        if (dash)
+            player.Dash(dashAmount, 0);
+        else
+            player.Turn(turnAmount);
+        
+        DoRewards();
     }
-    
+
     void DoRewards()
     {
-        switch (trainingScenario)
+        if (ballVisible)
         {
-            case AgentTrainer.TrainingScenario.LookAtBall:
-                if (ballVisible)
-                {
-                    if (ballDirection < 5 && ballDirection > -5)
-                    {
-                        SetReward(rewardLookAtBall);
-                    }
-                }
-                else
-                {
-                    SetReward(rewardBallNotVisible);
-                }
-                break;
-            case AgentTrainer.TrainingScenario.RunTowardsBall:
-                if (ballVisible)
-                {
-                    if (ballDistance < 0.7 && ballDistance > 0.0)
-                    {
-                        SetReward(1.0f);
-                    }
-                }
-                else
-                {
-                    SetReward(-0.5f);
-                }
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
+            if (ballDirection < 5 && ballDirection > -5)
+            {
+                AddReward(rewardLookAtBall);
+            }
+            if (ballDistance < 0.7 && ballDistance > 0.0)
+            {
+                AddReward(1.0f);
+            }
+        }
+        else
+        {
+            AddReward(rewardBallNotVisible);
         }
     }
 
     public override void Heuristic(float[] actionsOut)
     {
-        actionsOut[0] = Input.GetAxis("Horizontal");
+        actionsOut[0] = 0;
+
+        if (Input.GetAxis("Vertical") > 0.5f)
+            actionsOut[0] = 2;
+        
+        if (Input.GetAxis("Vertical") < -0.5f)
+            actionsOut[0] = 1;
+
+        if (Input.GetAxis("Horizontal") < -0.5f)
+            actionsOut[0] = 3;
+        
+        if (Input.GetAxis("Horizontal") > 0.5f)
+            actionsOut[0] = 4;
     }
 }
