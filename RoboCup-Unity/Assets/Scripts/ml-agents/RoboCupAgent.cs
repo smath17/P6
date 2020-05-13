@@ -16,8 +16,8 @@ public class RoboCupAgent : Agent
     [Header("Settings")]
     public bool resetBallEachEpisode = true;
 
-    float rewardLookAtBall = 0.6f;
-    float rewardBallNotVisible = -1f;
+    float rewardLookAtBall = 0.4f;
+    float rewardBallNotVisible = -0.4f;
     
     float rewardUltraCloseToBall = 1f;
     float rewardVeryCloseToBall = 0.8f;
@@ -103,20 +103,15 @@ public class RoboCupAgent : Agent
             
             case 1: 
                 dash = true;
-                dashAmount = -100;
-                break;
-            
-            case 2: 
-                dash = true;
                 dashAmount = 100;
                 break;
             
-            case 3:
+            case 2:
                 turn = true;
                 turnAmount = -30;
                 break;
             
-            case 4:
+            case 3:
                 turn = true;
                 turnAmount = 30;
                 break;
@@ -134,39 +129,12 @@ public class RoboCupAgent : Agent
     {
         if (ballVisible)
         {
-            if (ballDirection < 5 && ballDirection > -5)
+            if (ballDistance < 5 && ballDistance > 0.0)
             {
-                AddReward(rewardLookAtBall);
-            }
-            if (ballDistance < 0.7 && ballDistance > 0.0)
-            {
-                AddReward(rewardUltraCloseToBall);
-            } else if (ballDistance < 3 && ballDistance >= 0.7)
-            {
-                AddReward(rewardVeryCloseToBall);
-            }
-            else if (ballDistance < 10 && ballDistance >= 3)
-            {
-                AddReward(rewardCloseToball);
-            }
-            else if (ballDistance < 40 && ballDistance >= 10)
-            {
-                AddReward(rewardKindaCloseToball);
-            }
-            else if (ballDistance < 80 && ballDistance >= 40)
-            {
-                AddReward(rewardNotEvenCloseToBall);
-            }
-            else if (ballDistance < 160 && ballDistance >= 80)
-            {
-                AddReward(rewardNotEvenCloseToBall);
-            }
+                SetReward(rewardUltraCloseToBall);
+            } 
             /*else 
                 AddReward(rewardAwayFromBall); */// Doesn't seem to have the right effect
-        }
-        else
-        {
-            AddReward(rewardBallNotVisible);
         }
     }
 
@@ -175,15 +143,12 @@ public class RoboCupAgent : Agent
         actionsOut[0] = 0;
 
         if (Input.GetAxis("Vertical") > 0.5f)
-            actionsOut[0] = 2;
-        
-        if (Input.GetAxis("Vertical") < -0.5f)
             actionsOut[0] = 1;
 
         if (Input.GetAxis("Horizontal") < -0.5f)
-            actionsOut[0] = 3;
+            actionsOut[0] = 2;
         
         if (Input.GetAxis("Horizontal") > 0.5f)
-            actionsOut[0] = 4;
+            actionsOut[0] = 3;
     }
 }
