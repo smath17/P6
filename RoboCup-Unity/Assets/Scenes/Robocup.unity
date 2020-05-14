@@ -7895,7 +7895,7 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
-  resetBallEachEpisode: 1
+  rewardDisplay: {fileID: 1968320745}
 --- !u!114 &1480538969
 MonoBehaviour:
   m_ObjectHideFlags: 0

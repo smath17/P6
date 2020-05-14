@@ -187,14 +187,22 @@ public class RoboCupAttackerAgent : Agent
     {
         if (printRewards)
             Debug.LogWarning($"{name} {reward} ({reason})");
+        
         base.AddReward(reward);
+        
+        if (rewardDisplay != null)
+            rewardDisplay.DisplayCumulativeReward(GetCumulativeReward());
     }
     
     void SetReward(float reward, string reason)
     {
         if (printRewards)
             Debug.LogWarning($"{name} ={reward} ({reason})");
+
         base.SetReward(reward);
+        
+        if (rewardDisplay != null)
+            rewardDisplay.DisplayCumulativeReward(GetCumulativeReward());
     }
 
     public override void Heuristic(float[] actionsOut)

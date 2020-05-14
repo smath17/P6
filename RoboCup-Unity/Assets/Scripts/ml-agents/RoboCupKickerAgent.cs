@@ -10,7 +10,7 @@ public class RoboCupKickerAgent : Agent
     ICoach coach;
     
     [Header("Settings")]
-    public bool resetBallEachEpisode = true;
+    public RewardDisplay rewardDisplay;
 
     float selfPositionX;
     float selfPositionY;
@@ -54,8 +54,7 @@ public class RoboCupKickerAgent : Agent
         coach.MovePlayer(RoboCup.singleton.teamName, 1, playerStartX, playerStartY);
         coach.Recover();
         
-        if (resetBallEachEpisode)
-            coach.MoveBall(ballX, ballY);
+        coach.MoveBall(ballX, ballY);
     }
     public void SetSelfInfo(int kickBallCount)
     {
@@ -119,6 +118,23 @@ public class RoboCupKickerAgent : Agent
         DoRewards();
     }
     
+    public override void Heuristic(float[] actionsOut)
+    {
+        actionsOut[0] = 0;
+
+        if (Input.GetAxis("Vertical") > 0.5f)
+            actionsOut[0] = 1;
+
+        if (Input.GetAxis("Horizontal") < -0.5f)
+            actionsOut[0] = 2;
+        
+        if (Input.GetAxis("Horizontal") > 0.5f)
+            actionsOut[0] = 3;
+        
+        if (Input.GetKeyDown(KeyCode.Space))
+            actionsOut[0] = 4;
+    }
+    
     void DoRewards()
     {
         if (ballVisible)
@@ -137,20 +153,26 @@ public class RoboCupKickerAgent : Agent
                 SetReward(reward);
             } 
         }
+        else
+        {
+            SetReward(-0.1f);
+        }
+    }
+
+    new void AddReward(float reward)
+    {
+        base.AddReward(reward);
+        
+        if (rewardDisplay != null)
+            rewardDisplay.DisplayCumulativeReward(GetCumulativeReward());
     }
     
-    public override void Heuristic(float[] actionsOut)
+    new void SetReward(float reward)
     {
-        actionsOut[0] = 0;
-
-        if (Input.GetAxis("Vertical") > 0.5f)
-            actionsOut[0] = 1;
-
-        if (Input.GetAxis("Horizontal") < -0.5f)
-            actionsOut[0] = 2;
+        base.SetReward(reward);
         
-        if (Input.GetAxis("Horizontal") > 0.5f)
-            actionsOut[0] = 3;
+        if (rewardDisplay != null)
+            rewardDisplay.DisplayCumulativeReward(GetCumulativeReward());
     }
     
 }
