@@ -235,6 +235,7 @@ public class AgentTrainer : MonoBehaviour
                 if (attacker.GetCalculatedAngle() > 0)
                     attackerAgent.OnLookRight();
                 
+                
                 RcObject coachBall = coach.GetRcObject("b");
                 if (coachBall != null)
                 {
@@ -254,7 +255,7 @@ public class AgentTrainer : MonoBehaviour
                         OnEpisodeBegin();
                         return;
                     }
-                    
+
                     // Ball exits goal area
                     if (prevBallInGoalArea && !curBallInGoalArea)
                     {
@@ -265,6 +266,7 @@ public class AgentTrainer : MonoBehaviour
                         OnEpisodeBegin();
                         return;
                     }
+                    
                 }
 
                 // Request Decisions
