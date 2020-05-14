@@ -19,7 +19,9 @@ public class RoboCupKickerAgent : Agent
     bool ballVisible;
     float ballDistance;
     float ballDirection;
-    
+
+    float bestDistanceThisEpisode;
+
     int dashSpeed = 100;
     int touchedBallCounter = 0;
     int kickBallCount;
@@ -46,6 +48,8 @@ public class RoboCupKickerAgent : Agent
         
         int playerStartX = Random.Range(-52, 52);
         int playerStartY = Random.Range(-32, 32);
+
+        bestDistanceThisEpisode = Mathf.Infinity;
         
         coach.MovePlayer(RoboCup.singleton.teamName, 1, playerStartX, playerStartY);
         coach.Recover();
@@ -119,8 +123,9 @@ public class RoboCupKickerAgent : Agent
     {
         if (ballVisible)
         {
-            if (ballDistance >= 0.7 && touchedBallCounter < 10)
+            if (ballDistance >= 0.7 && touchedBallCounter < 10 && ballDistance < bestDistanceThisEpisode)
             {
+                bestDistanceThisEpisode = ballDistance;
                 float reward = 1 / ballDistance;
                 if (reward > 1)
                 {
