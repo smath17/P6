@@ -37,6 +37,9 @@ AttackerBrain:
 DefenderBrain:
     summary_freq: 1000
 
+KickerBrain:
+    summary_freq: 1000
+
 FoodCollector:
     normalize: false
     beta: 5.0e-3
