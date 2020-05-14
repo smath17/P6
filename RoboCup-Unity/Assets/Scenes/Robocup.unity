@@ -7895,6 +7895,7 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
+  resetBallEachEpisode: 1
 --- !u!114 &1480538969
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7910,10 +7911,10 @@ MonoBehaviour:
   m_BrainParameters:
     VectorObservationSize: 2
     NumStackedVectorObservations: 1
-    VectorActionSize: 04000000
+    VectorActionSize: 05000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
-  m_Model: {fileID: 5022602860645237092, guid: b9589ff440f7e764a983a4edf03059da, type: 3}
+  m_Model: {fileID: 0}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: RoboCupBrain
