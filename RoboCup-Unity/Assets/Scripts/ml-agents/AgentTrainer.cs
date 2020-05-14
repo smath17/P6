@@ -7,8 +7,8 @@ public class AgentTrainer : MonoBehaviour
 {
     public enum TrainingScenario
     {
-        LookAtBall,
         RunTowardsBall,
+        RunTowardsBallAndKick,
         AttackDefendAttackOnly,
         AttackDefend
     }
@@ -20,6 +20,7 @@ public class AgentTrainer : MonoBehaviour
     public RoboCupAgent defaultAgent;
     public RoboCupDefenderAgent defenderAgent;
     public RoboCupAttackerAgent attackerAgent;
+    public RoboCupKickerAgent KickerAgent;
     
     [Header("Other")]
     public GameObject offlineVisualPlayer;
@@ -37,6 +38,7 @@ public class AgentTrainer : MonoBehaviour
     // AttackVsDefend
     RcPlayer defender;
     RcPlayer attacker;
+    RcPlayer kicker;
     
     bool prevBallInGoalArea;
     bool curBallInGoalArea;
@@ -45,13 +47,14 @@ public class AgentTrainer : MonoBehaviour
     {
         switch (trainingScenario)
         {
-            case TrainingScenario.LookAtBall:
-                RoboCup.singleton.SetTeamName("LookAtBall");
-                team1Setup.Add(new PlayerSetupInfo(false, -20, 0));
-                break;
             
             case TrainingScenario.RunTowardsBall:
                 RoboCup.singleton.SetTeamName("RunTowardsBall");
+                team1Setup.Add(new PlayerSetupInfo(false, -20, 0));
+                break;
+            
+            case TrainingScenario.RunTowardsBallAndKick:
+                RoboCup.singleton.SetTeamName("RunAndKick");
                 team1Setup.Add(new PlayerSetupInfo(false, -20, 0));
                 break;
             
@@ -72,14 +75,25 @@ public class AgentTrainer : MonoBehaviour
         
         switch (trainingScenario)
         {
-            case TrainingScenario.LookAtBall:
             case TrainingScenario.RunTowardsBall:
-        
+
                 defaultAgent.SetTrainingScenario(trainingScenario);
         
                 defaultAgent.SetPlayer(RoboCup.singleton.GetPlayer(0));
                 defaultAgent.SetCoach(coach);
                 defaultAgent.gameObject.SetActive(true);
+                
+                break;
+            
+            case TrainingScenario.RunTowardsBallAndKick:
+                
+                kicker = RoboCup.singleton.GetPlayer(0, true);
+                
+                KickerAgent.SetTrainingScenario(trainingScenario);
+                
+                KickerAgent.SetPlayer(kicker);
+                KickerAgent.SetCoach(coach);
+                KickerAgent.gameObject.SetActive(true);
                 
                 break;
             
@@ -115,9 +129,12 @@ public class AgentTrainer : MonoBehaviour
         
         switch (trainingScenario)
         {
-            case TrainingScenario.LookAtBall:
             case TrainingScenario.RunTowardsBall:
                 defaultAgent.OnEpisodeBegin();
+                break;
+            
+            case TrainingScenario.RunTowardsBallAndKick:
+                KickerAgent.OnEpisodeBegin();
                 break;
             
             case TrainingScenario.AttackDefend:
@@ -143,9 +160,12 @@ public class AgentTrainer : MonoBehaviour
         {
             switch (trainingScenario)
             {
-                case TrainingScenario.LookAtBall:
                 case TrainingScenario.RunTowardsBall:
                     defaultAgent.EndEpisode();
+                    break;
+                
+                case TrainingScenario.RunTowardsBallAndKick:
+                    KickerAgent.EndEpisode();
                     break;
             
                 case TrainingScenario.AttackDefend:
@@ -161,7 +181,6 @@ public class AgentTrainer : MonoBehaviour
 
         switch (trainingScenario)
         {
-            case TrainingScenario.LookAtBall:
             case TrainingScenario.RunTowardsBall:
 
                 RcPerceivedObject ball = RoboCup.singleton.GetPlayer(0, true).GetRcObject("b");
@@ -172,6 +191,21 @@ public class AgentTrainer : MonoBehaviour
                     defaultAgent.SetBallInfo(false);
 
                 defaultAgent.RequestDecision();
+                
+                break;
+            
+            case TrainingScenario.RunTowardsBallAndKick:
+                
+                RcPerceivedObject kickerBall = kicker.GetRcObject("b");
+                
+                KickerAgent.SetSelfInfo(kicker.GetKickBallCount());
+                
+                if (kickerBall.curVisibility)
+                    KickerAgent.SetBallInfo(true, kickerBall.direction, kickerBall.distance);
+                else
+                    KickerAgent.SetBallInfo(false);
+
+                KickerAgent.RequestDecision();
                 
                 break;
             

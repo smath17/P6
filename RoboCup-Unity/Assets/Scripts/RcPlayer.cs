@@ -193,7 +193,7 @@ public class RcPlayer : MonoBehaviour, IPlayer
                 break;
             
             case RcMessage.RcMessageType.Sense:
-                //process sense
+                Sense(rcMessage.GetMessageObject().values[0].MObject);
                 break;
             
             case RcMessage.RcMessageType.See:

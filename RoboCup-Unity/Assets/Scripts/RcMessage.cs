@@ -285,7 +285,7 @@ public class MessageObject
             {
                 if (senseObject.values.Count > 0)
                 {
-                    string senseName = senseObject.values[0].MObject.SimplePrint();
+                    string senseName = senseObject.values[0].MString;
 
                     if (senseName.Equals("kick"))
                     {
