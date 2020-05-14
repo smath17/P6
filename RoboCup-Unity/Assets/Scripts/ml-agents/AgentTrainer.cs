@@ -29,7 +29,7 @@ public class AgentTrainer : MonoBehaviour
 
     bool initialized;
     
-    int stepsPerEpisode = 100;
+    int stepsPerEpisode = 50;
     int stepsLeftInCurrentEpisode;
 
     RcCoach coach;

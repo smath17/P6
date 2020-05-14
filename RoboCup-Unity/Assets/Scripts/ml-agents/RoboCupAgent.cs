@@ -122,9 +122,13 @@ public class RoboCupAgent : Agent
     {
         if (ballVisible)
         {
-            if (ballDistance < 5 && ballDistance > 0.0)
+            if (ballDistance >= 0.7)
             {
-                SetReward(rewardCloseToBall);
+                float reward = 1 / ballDistance;
+                if (reward > 1)
+                    reward = 1;
+                
+                SetReward(reward);
             } 
         }
     }
