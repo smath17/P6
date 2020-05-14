@@ -139,56 +139,47 @@ public class RoboCupAttackerAgent : Agent
     public void OnBallWithinRange()
     {
         AddReward(0.2f, "Ball Within Range");
-        DisplayIcon(0);
     }
 
     public void OnKickedBall()
     {
         AddReward(0.2f, "Kicked Ball");
-        DisplayIcon(1);
     }
     
     public void OnBallMovedLeft()
     {
         AddReward(0.1f, "Ball Moved Left");
-        DisplayIcon(2);
     }
 
     public void OnScored()
     {
         AddReward(1f, "Scored");
-        DisplayIcon(3);
         EndEpisode();
     }
 
     public void OnTimePassed()
     {
         AddReward(-0.1f, "Time Passed");
-        DisplayIcon(4);
     }
 
     public void OnBallNotVisible()
     {
         AddReward(-0.2f, "Ball Not Visible");
-        DisplayIcon(5);
     }
     
     public void OnLookRight()
     {
         AddReward(-0.5f, "Looked To The Right");
-        DisplayIcon(6);
     }
     
     public void OnEnteredGoalArea()
     {
         AddReward(-0.5f, "Entered Goal Area");
-        DisplayIcon(7);
     }
 
     public void OnFailedToScore()
     {
         AddReward(-1f, "Failed To Score");
-        DisplayIcon(8);
         EndEpisode();
     }
 
@@ -204,12 +195,6 @@ public class RoboCupAttackerAgent : Agent
         if (printRewards)
             Debug.LogWarning($"{name} ={reward} ({reason})");
         base.SetReward(reward);
-    }
-
-    void DisplayIcon(int icon)
-    {
-        if (rewardDisplay != null)
-            rewardDisplay.DisplayIcon(icon);
     }
 
     public override void Heuristic(float[] actionsOut)
