@@ -138,7 +138,7 @@ public class RoboCupKickerAgent : Agent
     {
         if (ballVisible)
         {
-            if (ballDistance >= 0.7 && ballDistance < bestDistanceThisEpisode)
+            if (ballDistance >= 0.7 && kickBallCount < 100 && ballDistance < bestDistanceThisEpisode)
             {
                 bestDistanceThisEpisode = ballDistance;
                 float reward = (ballDistance - 50) / (0.7f - 50);
