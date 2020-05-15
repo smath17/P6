@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class RotateText : MonoBehaviour
+public class StopRotation : MonoBehaviour
 {
     void LateUpdate()
     {
