@@ -131,9 +131,6 @@ public class RoboCupAttackerAgent : Agent
                 player.Kick(100);
                 break;
         }
-        
-        if (rewardDisplay != null)
-            rewardDisplay.DisplayCumulativeReward(GetCumulativeReward());
     }
     
     public void OnBallWithinRange()
@@ -189,9 +186,9 @@ public class RoboCupAttackerAgent : Agent
             Debug.LogWarning($"{name} {reward} ({reason})");
         
         base.AddReward(reward);
-        
+
         if (rewardDisplay != null)
-            rewardDisplay.DisplayCumulativeReward(GetCumulativeReward());
+            rewardDisplay.DisplayRewards(GetReward(), GetCumulativeReward());
     }
     
     void SetReward(float reward, string reason)
@@ -202,7 +199,7 @@ public class RoboCupAttackerAgent : Agent
         base.SetReward(reward);
         
         if (rewardDisplay != null)
-            rewardDisplay.DisplayCumulativeReward(GetCumulativeReward());
+            rewardDisplay.DisplayRewards(GetReward(), GetCumulativeReward());
     }
 
     public override void Heuristic(float[] actionsOut)

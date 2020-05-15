@@ -6,12 +6,18 @@ using UnityEngine.UI;
 
 public class RewardDisplay : MonoBehaviour
 {
-    public Transform bar;
-    public TextMeshProUGUI text;
+    public Transform stepBar;
+    public Transform episodeBar;
     
-    public void DisplayCumulativeReward(float value)
+    public TextMeshProUGUI stepText;
+    public TextMeshProUGUI episodeText;
+    
+    public void DisplayRewards(float step, float episode)
     {
-        bar.localScale = new Vector3(1,value,1);
-        text.text = $"{value}";
+        stepBar.localScale = new Vector3(1,step,1);
+        episodeBar.localScale = new Vector3(1,episode,1);
+
+        stepText.text = $"{step}";
+        episodeText.text = $"{episode}";
     }
 }

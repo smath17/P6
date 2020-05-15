@@ -164,7 +164,7 @@ public class RoboCupKickerAgent : Agent
         base.AddReward(reward);
         
         if (rewardDisplay != null)
-            rewardDisplay.DisplayCumulativeReward(GetCumulativeReward());
+            rewardDisplay.DisplayRewards(GetReward(), GetCumulativeReward());
     }
     
     new void SetReward(float reward)
@@ -172,7 +172,7 @@ public class RoboCupKickerAgent : Agent
         base.SetReward(reward);
         
         if (rewardDisplay != null)
-            rewardDisplay.DisplayCumulativeReward(GetCumulativeReward());
+            rewardDisplay.DisplayRewards(GetReward(), GetCumulativeReward());
     }
     
 }
