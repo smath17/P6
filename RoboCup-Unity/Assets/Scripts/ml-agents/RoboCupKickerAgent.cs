@@ -23,7 +23,6 @@ public class RoboCupKickerAgent : Agent
     float bestDistanceThisEpisode;
 
     int dashSpeed = 100;
-    int touchedBallCounter = 0;
     int kickBallCount;
     
     public void SetTrainingScenario(AgentTrainer.TrainingScenario scenario)
@@ -139,18 +138,19 @@ public class RoboCupKickerAgent : Agent
     {
         if (ballVisible)
         {
-            if (ballDistance >= 0.7 && touchedBallCounter < 10 && ballDistance < bestDistanceThisEpisode)
+            if (ballDistance >= 0.7 && ballDistance < bestDistanceThisEpisode)
             {
                 bestDistanceThisEpisode = ballDistance;
-                float reward = 1 / ballDistance;
+                float reward = (ballDistance - 50) / (0.7f - 50);
                 if (reward > 1)
                 {
                     reward = 1;
-                    touchedBallCounter++;
-                    Debug.LogWarning(touchedBallCounter);
                 }
 
-                SetReward(reward);
+                if (reward > 0)
+                {
+                    SetReward(reward);
+                }
             } 
         }
         else
