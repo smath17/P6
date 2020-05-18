@@ -91,7 +91,7 @@ public class AgentTrainer : MonoBehaviour
                 kicker = RoboCup.singleton.GetPlayer(0, true);
                 
                 kickerAgent.SetTrainingScenario(trainingScenario);
-                
+                kickerAgent.SetAgentTrainer(this);
                 kickerAgent.SetPlayer(kicker);
                 kickerAgent.SetCoach(coach);
                 kickerAgent.gameObject.SetActive(true);
@@ -198,15 +198,29 @@ public class AgentTrainer : MonoBehaviour
             case TrainingScenario.RunTowardsBallAndKick:
                 
                 RcPerceivedObject kickerBall = kicker.GetRcObject("b");
-                
-                kickerAgent.SetSelfInfo(kicker.GetKickBallCount());
-                
                 if (kickerBall.curVisibility)
                     kickerAgent.SetBallInfo(true, kickerBall.direction, kickerBall.distance);
                 else
                     kickerAgent.SetBallInfo(false);
-
+                
+                RcPerceivedObject kickerGoal = kicker.GetRcObject("g r");
+                if (kickerGoal != null)
+                    kickerAgent.SetGoalInfo(kickerGoal.curVisibility, kickerGoal.direction, kickerGoal.distance);
+                
+                kickerAgent.SetSelfInfo(kicker.GetKickBallCount());
                 kickerAgent.RequestDecision();
+                
+                RcObject kickerCoachBall = coach.GetRcObject("b");
+                if (kickerCoachBall != null)
+                {
+                    // Ball enters goal
+                    if (kickerCoachBall.position.y < 10 && kickerCoachBall.position.y > -10 && kickerCoachBall.position.x > 52)
+                    {
+                        kickerAgent.OnScored();
+                        OnEpisodeBegin();
+                    }
+
+                }
                 
                 break;
             
@@ -321,5 +335,10 @@ public class AgentTrainer : MonoBehaviour
     public List<PlayerSetupInfo> GetTeam2Setup()
     {
         return team2Setup;
+    }
+
+    public void SetEpisodeLength(int steps)
+    {
+        stepsPerEpisode = steps;
     }
 }

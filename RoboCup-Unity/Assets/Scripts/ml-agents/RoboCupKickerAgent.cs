@@ -5,6 +5,7 @@ using UnityEngine;
 public class RoboCupKickerAgent : Agent
 {
     AgentTrainer.TrainingScenario trainingScenario;
+    AgentTrainer agentTrainer;
     
     IPlayer player;
     ICoach coach;
@@ -19,11 +20,20 @@ public class RoboCupKickerAgent : Agent
     bool ballVisible;
     float ballDistance;
     float ballDirection;
+    
+    bool goalVisible;
+    float goalDirection;
+    float goalDistance;
 
     float bestDistanceThisEpisode;
 
     int dashSpeed = 100;
     int kickBallCount;
+
+    public void SetAgentTrainer(AgentTrainer agentTrainer)
+    {
+        this.agentTrainer = agentTrainer;
+    }
     
     public void SetTrainingScenario(AgentTrainer.TrainingScenario scenario)
     {
@@ -54,6 +64,11 @@ public class RoboCupKickerAgent : Agent
         coach.Recover();
         
         coach.MoveBall(ballX, ballY);
+        
+        Vector2 ballPos = new Vector2(ballX, ballY);
+        Vector2 playerPos = new Vector2(playerStartX, playerStartY);
+        float distance = (ballPos - playerPos).magnitude;
+        agentTrainer.SetEpisodeLength(((int)distance + 1) * 10);
     }
     public void SetSelfInfo(int kickBallCount)
     {
@@ -71,13 +86,30 @@ public class RoboCupKickerAgent : Agent
         ballDistance = distance;
     }
     
+    public void SetGoalInfo(bool visible, float direction = 0, float distance = 0)
+    {
+        goalVisible = visible;
+        goalDirection = direction;
+        goalDistance = distance;
+    }
+    
     public override void CollectObservations(VectorSensor sensor)
     {
-
         if (ballVisible)
         {
             sensor.AddObservation(ballDistance);
             sensor.AddObservation(ballDirection / 45);
+        }
+        else
+        {
+            sensor.AddObservation(-1);
+            sensor.AddObservation(-1);
+        }
+        
+        if (goalVisible)
+        {
+            sensor.AddObservation(goalDistance);
+            sensor.AddObservation(goalDirection / 45);
         }
         else
         {
@@ -138,7 +170,7 @@ public class RoboCupKickerAgent : Agent
     {
         if (ballVisible)
         {
-            if (ballDistance >= 0.7 && kickBallCount < 100 && ballDistance < bestDistanceThisEpisode)
+            if (ballDistance >= 0.7 && kickBallCount < 20 && ballDistance < bestDistanceThisEpisode)
             {
                 bestDistanceThisEpisode = ballDistance;
                 float reward = (ballDistance - 50) / (0.7f - 50);
@@ -174,5 +206,10 @@ public class RoboCupKickerAgent : Agent
         if (rewardDisplay != null)
             rewardDisplay.DisplayRewards(GetReward(), GetCumulativeReward());
     }
-    
+
+    public void OnScored()
+    {
+        SetReward(1f);
+        EndEpisode();
+    }
 }
