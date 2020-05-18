@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class RoboCupKickerAgent : Agent
 {
-    AgentTrainer.TrainingScenario trainingScenario;
     AgentTrainer agentTrainer;
     
     IPlayer player;
@@ -12,10 +11,6 @@ public class RoboCupKickerAgent : Agent
     
     [Header("Settings")]
     public RewardDisplay rewardDisplay;
-
-    float selfPositionX;
-    float selfPositionY;
-    float selfDirection;
     
     bool ballVisible;
     float ballDistance;
@@ -23,21 +18,29 @@ public class RoboCupKickerAgent : Agent
     
     bool goalVisible;
     float goalDirection;
-    float goalDistance;
+    //float goalDistance;
 
-    float bestDistanceThisEpisode;
+    float bestPlayerDistanceFromBallThisEpisode;
+    float bestBallDistanceFromGoalThisEpisode;
 
-    int dashSpeed = 100;
     int kickBallCount;
 
+    bool realMatch;
+
+    int ballX = -50;
+    int ballY = -30;
+    
+    int playerX = 0;
+    int playerY = 0;
+
+    public void SetRealMatch()
+    {
+        realMatch = true;
+    }
+    
     public void SetAgentTrainer(AgentTrainer agentTrainer)
     {
         this.agentTrainer = agentTrainer;
-    }
-    
-    public void SetTrainingScenario(AgentTrainer.TrainingScenario scenario)
-    {
-        trainingScenario = scenario;
     }
     
     public void SetPlayer(IPlayer player)
@@ -52,28 +55,56 @@ public class RoboCupKickerAgent : Agent
     
     public override void OnEpisodeBegin()
     {
-        int ballX = Random.Range(-52, 52);
-        int ballY = Random.Range(-32, 32);
-        
-        int playerStartX = Random.Range(-52, 52);
-        int playerStartY = Random.Range(-32, 32);
+        if (!realMatch)
+        {
+            ballX += 10;
+            if (ballX > 50)
+            {
+                ballX = -50;
+                
+                ballY += 10;
+                if (ballY > 30)
+                {
+                    ballY = -30;
 
-        bestDistanceThisEpisode = Mathf.Infinity;
+                    playerX += 10;
+                    if (playerX > 50)
+                    {
+                        playerX = -50;
+
+                        playerY += 10;
+                        if (playerY > 30)
+                        {
+                            playerY = -30;
+                        }
+                    }
+                }
+            }
+
+            int direction = Random.Range(-180, 180);
+
+            bestPlayerDistanceFromBallThisEpisode = Mathf.Infinity;
+            bestBallDistanceFromGoalThisEpisode = Mathf.Infinity;
         
-        coach.MovePlayer(RoboCup.singleton.teamName, 1, playerStartX, playerStartY);
-        coach.Recover();
+            coach.MovePlayer(RoboCup.singleton.teamName, 1, playerX, playerY, direction);
+            coach.Recover();
         
-        coach.MoveBall(ballX, ballY);
+            coach.MoveBall(ballX, ballY);
         
-        Vector2 ballPos = new Vector2(ballX, ballY);
-        Vector2 playerPos = new Vector2(playerStartX, playerStartY);
-        float distance = (ballPos - playerPos).magnitude;
-        agentTrainer.SetEpisodeLength(((int)distance + 1) * 10);
+            Vector2 ballPos = new Vector2(ballX, ballY);
+            Vector2 playerPos = new Vector2(playerX, playerY);
+            float distance = (ballPos - playerPos).magnitude;
+        
+            agentTrainer.SetEpisodeLength(((int)distance + 1) * 8);
+        }
     }
+    
+    
+    
     public void SetSelfInfo(int kickBallCount)
     {
         if (this.kickBallCount < kickBallCount)
-            SetReward(1.0f);
+            AddReward(0.5f);
 
         this.kickBallCount = kickBallCount;
         
@@ -90,33 +121,16 @@ public class RoboCupKickerAgent : Agent
     {
         goalVisible = visible;
         goalDirection = direction;
-        goalDistance = distance;
+        //goalDistance = distance;
     }
     
     public override void CollectObservations(VectorSensor sensor)
     {
-        if (ballVisible)
-        {
-            sensor.AddObservation(ballDistance);
-            sensor.AddObservation(ballDirection / 45);
-        }
-        else
-        {
-            sensor.AddObservation(-1);
-            sensor.AddObservation(-1);
-        }
+        sensor.AddObservation(ballVisible ? ballDirection / 45 : -1);
+        sensor.AddObservation(ballVisible ? ballDistance : -1);
         
-        if (goalVisible)
-        {
-            sensor.AddObservation(goalDistance);
-            sensor.AddObservation(goalDirection / 45);
-        }
-        else
-        {
-            sensor.AddObservation(-1);
-            sensor.AddObservation(-1);
-        }
-
+        sensor.AddObservation(goalVisible ? goalDirection / 45 : -1);
+        //sensor.AddObservation(goalVisible ? goalDistance : -1);
     }
     
     public override void OnActionReceived(float[] vectorAction)
@@ -125,25 +139,28 @@ public class RoboCupKickerAgent : Agent
         
         switch (action)
         {
+            //case 0:
+            //    player.Dash(0, 0);
+            //    break;
+            
             case 0:
-                player.Dash(0, 0);
+                if (ballVisible && ballDistance < 1)
+                    player.Kick(100);
+                else
+                    player.Dash(100, 0);
                 break;
             
-            case 1: 
-                player.Dash(100, 0);
-                break;
-            
-            case 2:
+            case 1:
                 player.Turn(-30);
                 break;
             
-            case 3:
+            case 2:
                 player.Turn(30);
                 break;
             
-            case 4:
-                player.Kick(100);
-                break;
+            //case 3:
+            //    player.Kick(100);
+            //    break;
         }
         
         DoRewards();
@@ -154,34 +171,36 @@ public class RoboCupKickerAgent : Agent
         actionsOut[0] = 0;
 
         if (Input.GetAxis("Vertical") > 0.5f)
-            actionsOut[0] = 1;
+            actionsOut[0] = 0;
 
         if (Input.GetAxis("Horizontal") < -0.5f)
-            actionsOut[0] = 2;
+            actionsOut[0] = 1;
         
         if (Input.GetAxis("Horizontal") > 0.5f)
-            actionsOut[0] = 3;
+            actionsOut[0] = 2;
         
-        if (Input.GetKeyDown(KeyCode.Space))
-            actionsOut[0] = 4;
+        //if (Input.GetKeyDown(KeyCode.Space))
+        //    actionsOut[0] = 3;
     }
     
     void DoRewards()
     {
         if (ballVisible)
         {
-            if (ballDistance >= 0.7 && kickBallCount < 20 && ballDistance < bestDistanceThisEpisode)
+            if (ballDistance >= 0.7 && ballDistance < bestPlayerDistanceFromBallThisEpisode - 2.5f)
             {
-                bestDistanceThisEpisode = ballDistance;
-                float reward = (ballDistance - 50) / (0.7f - 50);
-                if (reward > 1)
+                bestPlayerDistanceFromBallThisEpisode = ballDistance;
+                float distanceReward = (ballDistance - 50) / (0.7f - 50);
+                if (distanceReward > 1)
                 {
-                    reward = 1;
+                    distanceReward = 1;
                 }
 
-                if (reward > 0)
+                distanceReward *= 0.25f;
+
+                if (distanceReward > 0)
                 {
-                    SetReward(reward);
+                    AddReward(distanceReward);
                 }
             } 
         }
@@ -189,27 +208,46 @@ public class RoboCupKickerAgent : Agent
         {
             SetReward(-0.1f);
         }
+        
+        if (rewardDisplay != null)
+            rewardDisplay.DisplayRewards(GetReward(), GetCumulativeReward());
     }
 
-    new void AddReward(float reward)
+    public void OnBallMoved(float distanceFromGoal)
     {
-        base.AddReward(reward);
-        
-        if (rewardDisplay != null)
-            rewardDisplay.DisplayRewards(GetReward(), GetCumulativeReward());
-    }
-    
-    new void SetReward(float reward)
-    {
-        base.SetReward(reward);
-        
-        if (rewardDisplay != null)
-            rewardDisplay.DisplayRewards(GetReward(), GetCumulativeReward());
+        if (distanceFromGoal < bestBallDistanceFromGoalThisEpisode - 2.5f)
+        {
+            bestBallDistanceFromGoalThisEpisode = distanceFromGoal;
+            float ballMoveReward = (distanceFromGoal - 50) / (0.7f - 50);
+            if (ballMoveReward > 1)
+            {
+                ballMoveReward = 1;
+            }
+
+            ballMoveReward *= 0.75f;
+
+            if (ballMoveReward > 0)
+            {
+                AddReward(ballMoveReward);
+            }
+        } 
     }
 
     public void OnScored()
     {
-        SetReward(1f);
+        AddReward(1f);
+        EndEpisode();
+    }
+    
+    public void OnLeftField()
+    {
+        AddReward(-0.5f);
+        EndEpisode();
+    }
+    
+    public void OnBallLeftField()
+    {
+        AddReward(-1f);
         EndEpisode();
     }
 }

@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class RoboCup : MonoBehaviour
 {
-    public enum RoboCupMode {ManualControlFullTeam, ManualControlSinglePlayer, Training}
+    public enum RoboCupMode {ManualControlFullTeam, ManualControlSinglePlayer, Training, AgentSinglePlayer, Agent1V1, AgentFullTeam, Agent2Teams}
     
     public const int FullTeamSize = 11;
     public const int Port = 6000;
@@ -32,6 +32,7 @@ public class RoboCup : MonoBehaviour
     public OverlayInfo overlayInfo;
     public GameObject visualizerObject;
     public LocationCalculator locationCalculator;
+    public GameObject agentPrefab;
 
     // Tickrate
     float currentTick = 0f;
@@ -53,6 +54,9 @@ public class RoboCup : MonoBehaviour
     
     List<PlayerSetupInfo> team1Setup = new List<PlayerSetupInfo>();
     List<PlayerSetupInfo> team2Setup = new List<PlayerSetupInfo>();
+
+    List<RoboCupKickerAgent> team1Agents = new List<RoboCupKickerAgent>();
+    List<RoboCupKickerAgent> team2Agents = new List<RoboCupKickerAgent>();
 
     #region FlagNames
     public static string[] other = new[]
@@ -169,6 +173,34 @@ public class RoboCup : MonoBehaviour
                 team1Setup = agentTrainer.GetTeam1Setup();
                 team2Setup = agentTrainer.GetTeam2Setup();
                 break;
+            
+            case RoboCupMode.AgentSinglePlayer:
+                team1Setup.Add(new PlayerSetupInfo(false, -20, 0));
+                break;
+            
+            case RoboCupMode.Agent1V1:
+                team1Setup.Add(new PlayerSetupInfo(false, -20, 0));
+                team2Setup.Add(new PlayerSetupInfo(false, 20, 0));
+                break;
+            
+            case RoboCupMode.AgentFullTeam:
+                for (int i = 0; i < FullTeamSize-1; i++)
+                    team1Setup.Add(new PlayerSetupInfo(false, -20, i*5 - 30));
+        
+                team1Setup.Add(new PlayerSetupInfo(true, -50, 20));
+                break;
+            
+            case RoboCupMode.Agent2Teams:
+                for (int i = 0; i < FullTeamSize-1; i++)
+                    team1Setup.Add(new PlayerSetupInfo(false, -20, i*5 - 30));
+        
+                team1Setup.Add(new PlayerSetupInfo(true, -50, 20));
+                
+                for (int i = 0; i < FullTeamSize-1; i++)
+                    team2Setup.Add(new PlayerSetupInfo(false, -20, i*5 - 30));
+        
+                team2Setup.Add(new PlayerSetupInfo(true, -50, 20));
+                break;
         }
         
         // Create players based on setup
@@ -180,21 +212,59 @@ public class RoboCup : MonoBehaviour
         int playerIndex = 0;
         foreach (PlayerSetupInfo setupInfo in team1Setup)
         {
-            team1.Add(CreatePlayer(playerIndex, setupInfo.goalie, setupInfo.x, setupInfo.y, true, reconnect));
+            RcPlayer player = CreatePlayer(playerIndex, setupInfo.goalie, setupInfo.x, setupInfo.y, true, reconnect);
+            team1.Add(player);
             playerIndex++;
+            
+            if (roboCupMode == RoboCupMode.AgentSinglePlayer ||
+                roboCupMode == RoboCupMode.Agent1V1 ||
+                roboCupMode == RoboCupMode.AgentFullTeam ||
+                roboCupMode == RoboCupMode.Agent2Teams)
+            {
+                GameObject agentObj = Instantiate(agentPrefab);
+                RoboCupKickerAgent agent = agentObj.GetComponent<RoboCupKickerAgent>();
+                agent.SetPlayer(player);
+                agent.SetRealMatch();
+                agentObj.SetActive(true);
+                
+                team1Agents.Add(agent);
+            }
+            
             yield return new WaitForSeconds(0.2f);
         }
         
         playerIndex = 0;
         foreach (PlayerSetupInfo setupInfo in team2Setup)
         {
-            team2.Add(CreatePlayer(playerIndex, setupInfo.goalie, setupInfo.x, setupInfo.y, false, reconnect));
+            RcPlayer player = CreatePlayer(playerIndex, setupInfo.goalie, setupInfo.x, setupInfo.y, false, reconnect);
+            team2.Add(player);
             playerIndex++;
+            
+            if (roboCupMode == RoboCupMode.AgentSinglePlayer ||
+                roboCupMode == RoboCupMode.Agent1V1 ||
+                roboCupMode == RoboCupMode.AgentFullTeam ||
+                roboCupMode == RoboCupMode.Agent2Teams)
+            {
+                GameObject agentObj = Instantiate(agentPrefab);
+                RoboCupKickerAgent agent = agentObj.GetComponent<RoboCupKickerAgent>();
+                agent.SetPlayer(player);
+                agent.SetRealMatch();
+                agentObj.SetActive(true);
+                
+                team2Agents.Add(agent);
+            }
+            
             yield return new WaitForSeconds(0.2f);
         }
         
         if (roboCupMode == RoboCupMode.Training)
             coach = CreateCoach(false, reconnect);
+        
+        if (roboCupMode == RoboCupMode.AgentSinglePlayer ||
+            roboCupMode == RoboCupMode.Agent1V1 ||
+            roboCupMode == RoboCupMode.AgentFullTeam ||
+            roboCupMode == RoboCupMode.Agent2Teams)
+            coach = CreateCoach(true, reconnect);
         
         yield return new WaitForSeconds(0.2f);
         
@@ -211,6 +281,13 @@ public class RoboCup : MonoBehaviour
             
             case RoboCupMode.Training:
                 agentTrainer.Init();
+                break;
+            
+            case RoboCupMode.AgentSinglePlayer:
+            case RoboCupMode.Agent1V1:
+            case RoboCupMode.AgentFullTeam:
+            case RoboCupMode.Agent2Teams:
+                coach.InitMatch();
                 break;
         }
         
@@ -261,6 +338,33 @@ public class RoboCup : MonoBehaviour
             
             case RoboCupMode.Training:
                 break;
+        }
+    }
+
+    public void StepAgents()
+    {
+        for (int i = 0; i < team1Agents.Count; i++)
+        {
+            RcPerceivedObject ball = team1[i].GetRcObject("b");
+            team1Agents[i].SetBallInfo(ball.curVisibility, ball.direction, ball.distance);
+                
+            RcPerceivedObject goal = team1[i].GetRcObject("g r");
+            team1Agents[i].SetGoalInfo(goal.curVisibility, goal.direction, goal.distance);
+                
+            team1Agents[i].SetSelfInfo(team1[i].GetKickBallCount());
+            team1Agents[i].RequestDecision();
+        }
+        
+        for (int i = 0; i < team2Agents.Count; i++)
+        {
+            RcPerceivedObject ball = team2[i].GetRcObject("b");
+            team2Agents[i].SetBallInfo(ball.curVisibility, ball.direction, ball.distance);
+                
+            RcPerceivedObject goal = team2[i].GetRcObject("g l");
+            team2Agents[i].SetGoalInfo(goal.curVisibility, goal.direction, goal.distance);
+                
+            team2Agents[i].SetSelfInfo(team2[i].GetKickBallCount());
+            team2Agents[i].RequestDecision();
         }
     }
 

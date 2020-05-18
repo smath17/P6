@@ -90,7 +90,6 @@ public class AgentTrainer : MonoBehaviour
                 
                 kicker = RoboCup.singleton.GetPlayer(0, true);
                 
-                kickerAgent.SetTrainingScenario(trainingScenario);
                 kickerAgent.SetAgentTrainer(this);
                 kickerAgent.SetPlayer(kicker);
                 kickerAgent.SetCoach(coach);
@@ -213,13 +212,43 @@ public class AgentTrainer : MonoBehaviour
                 RcObject kickerCoachBall = coach.GetRcObject("b");
                 if (kickerCoachBall != null)
                 {
+                    if (kickerCoachBall.delta.x > 0.1f)
+                    {
+                        Vector2 ballPos = new Vector2(kickerCoachBall.position.x, kickerCoachBall.position.y);
+                        RcObject kickerCoachGoal = coach.GetRcObject("g r");
+                        Vector2 goalPos = new Vector2(kickerCoachGoal.position.x, kickerCoachGoal.position.y);
+
+                        kickerAgent.OnBallMoved((ballPos - goalPos).magnitude);
+                    }
+                    
                     // Ball enters goal
                     if (kickerCoachBall.position.y < 10 && kickerCoachBall.position.y > -10 && kickerCoachBall.position.x > 52)
                     {
                         kickerAgent.OnScored();
                         OnEpisodeBegin();
+                        return;
                     }
 
+                    if (kickerCoachBall.position.y < -32 || kickerCoachBall.position.y > 32 ||
+                        kickerCoachBall.position.x > 52 || kickerCoachBall.position.x < -52)
+                    {
+                        kickerAgent.OnBallLeftField();
+                        OnEpisodeBegin();
+                        return;
+                    }
+
+                }
+                
+                RcObject kickerCoachPlayer = coach.GetRcObject("p \"RunAndKick\" 1");
+                if (kickerCoachPlayer != null)
+                {
+                    if (kickerCoachPlayer.position.y < -32 || kickerCoachPlayer.position.y > 32 ||
+                        kickerCoachPlayer.position.x > 52 || kickerCoachPlayer.position.x < -52)
+                    {
+                        kickerAgent.OnLeftField();
+                        OnEpisodeBegin();
+                        return;
+                    }
                 }
                 
                 break;

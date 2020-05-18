@@ -22,6 +22,7 @@ public class RcCoach : MonoBehaviour, ICoach
     Dictionary<string, RcObject> rcObjects = new Dictionary<string, RcObject>();
 
     AgentTrainer agentTrainer;
+    bool reportSeeToRoboCup;
 
     public void Init(bool online)
     {
@@ -92,6 +93,9 @@ public class RcCoach : MonoBehaviour, ICoach
 
         if (agentTrainer != null)
             agentTrainer.Step();
+        
+        if (reportSeeToRoboCup)
+            RoboCup.singleton.StepAgents();
     }
     
     void UpdateRcObject(string objectName, float x, float y, float deltaX, float deltaY, float bodyAngle, float neckAngle)
@@ -124,6 +128,12 @@ public class RcCoach : MonoBehaviour, ICoach
         agentTrainer = trainer;
         Send("(eye on)");
         KickOff();
+    }
+
+    public void InitMatch()
+    {
+        reportSeeToRoboCup = true;
+        Send("(eye on)");
     }
 
     public void MoveBall(int x, int y)
