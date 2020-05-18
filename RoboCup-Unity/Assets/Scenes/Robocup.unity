@@ -5204,6 +5204,7 @@ MonoBehaviour:
   teamName: Unity
   reconnect: 0
   roboCupMode: 2
+  seriousMode: 1
   agentTrainer: {fileID: 529227137}
   overlayInfo: {fileID: 1193947861}
   visualizerObject: {fileID: 550579031}
@@ -8238,7 +8239,7 @@ MonoBehaviour:
     VectorActionSize: 03000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
-  m_Model: {fileID: 0}
+  m_Model: {fileID: 5022602860645237092, guid: 08bee3971b4297a41a479bfbd01a8e6b, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: KickerBrain

@@ -26,6 +26,7 @@ public class RoboCup : MonoBehaviour
 
     [Header("Settings")]
     public RoboCupMode roboCupMode;
+    public bool seriousMode = true;
 
     [Header("References")]
     public AgentTrainer agentTrainer;
@@ -450,32 +451,32 @@ public class RoboCup : MonoBehaviour
         if (sendDashInput)
         {
             if (Input.GetKey(KeyCode.A))
-                team1[currentPlayer].Send($"(dash {dashAmount} -90)");
+                team1[currentPlayer].Dash(dashAmount, -90);
 
             else if (Input.GetKey(KeyCode.D))
-                team1[currentPlayer].Send($"(dash {dashAmount} 90)");
+                team1[currentPlayer].Dash(dashAmount, 90);
 
             else if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
-                team1[currentPlayer].Send($"(dash {dashAmount})");
+                team1[currentPlayer].Dash(dashAmount, 0);
 
             else if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
-                team1[currentPlayer].Send($"(dash {dashAmount} 180)");
+                team1[currentPlayer].Dash(dashAmount, 180);
         }
         
-        if (Input.GetKeyDown(KeyCode.Space))
-            team1[currentPlayer].Send($"(kick {kickAmount} 0)");
+        if (Input.GetKey(KeyCode.Space))
+            team1[currentPlayer].Kick(kickAmount);
 
         else if (Input.GetKeyDown(KeyCode.LeftControl))
-            team1[currentPlayer].Send("(catch 0)");
+            team1[currentPlayer].Catch();
 
         else if (Input.GetKeyDown(KeyCode.T))
             team1[currentPlayer].Send("(tackle 0)");
     
         else if (Input.GetKey(KeyCode.LeftArrow))
-            team1[currentPlayer].Send($"(turn -{turnAmount})");
+            team1[currentPlayer].Turn(-turnAmount);
 
         else if (Input.GetKey(KeyCode.RightArrow))
-            team1[currentPlayer].Send($"(turn {turnAmount})");
+            team1[currentPlayer].Turn(turnAmount);
     }
     
     public void ReceiveMessage(string txt, RcMessage.RcMessageType type)

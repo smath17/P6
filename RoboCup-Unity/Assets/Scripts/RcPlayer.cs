@@ -42,9 +42,24 @@ public class RcPlayer : MonoBehaviour, IPlayer
     int kickBallCount;
 
     IVisualizer visualizer;
+    AudioSource source1;
+    AudioSource source2;
+    AudioSource source3;
+
+    AudioEvent kick;
+    AudioEvent kickVo;
+    AudioEvent dash;
     
     void Awake()
     {
+        source1 = GetComponents<AudioSource>()[0];
+        source2 = GetComponents<AudioSource>()[1];
+        source3 = GetComponents<AudioSource>()[2];
+
+        kick = Resources.Load<AudioEvent>("audio/kick");
+        kickVo = Resources.Load<AudioEvent>("audio/kickvo");
+        dash = Resources.Load<AudioEvent>("audio/dash");
+        
         CreateRcObjects();
     }
 
@@ -215,6 +230,9 @@ public class RcPlayer : MonoBehaviour, IPlayer
     void Sense(MessageObject messageObject)
     {
         MessageObject.SenseBodyData senseBodyData = messageObject.GetSenseBody();
+        if (kickBallCount < senseBodyData.kick)
+            OnKick();
+        
         kickBallCount = senseBodyData.kick;
     }
 
@@ -391,6 +409,11 @@ public class RcPlayer : MonoBehaviour, IPlayer
     public void Dash(int amount, int direction)
     {
         Send($"(dash {amount} {direction})");
+        if (!RoboCup.singleton.seriousMode)
+        {
+            if (!source1.isPlaying)
+                dash.Play(source1);
+        }
     }
 
     public void Turn(int amount)
@@ -401,11 +424,19 @@ public class RcPlayer : MonoBehaviour, IPlayer
     public void Kick(int power)
     {
         Send($"(kick {power} 0)");
+        if (!RoboCup.singleton.seriousMode)
+            kickVo.Play(source2);
     }
 
     public void Catch()
     {
         Send("(catch 0)");
+    }
+
+    void OnKick()
+    {
+        if (!RoboCup.singleton.seriousMode) 
+            kick.Play(source3);
     }
 }
 
