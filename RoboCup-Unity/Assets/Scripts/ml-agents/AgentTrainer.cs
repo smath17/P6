@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
 public class AgentTrainer : MonoBehaviour
@@ -20,8 +21,8 @@ public class AgentTrainer : MonoBehaviour
     public RoboCupAgent defaultAgent;
     public RoboCupDefenderAgent defenderAgent;
     public RoboCupAttackerAgent attackerAgent;
-    public RoboCupKickerAgent KickerAgent;
-    
+    public RoboCupKickerAgent kickerAgent;
+
     [Header("Other")]
     public GameObject offlineVisualPlayer;
 
@@ -89,11 +90,11 @@ public class AgentTrainer : MonoBehaviour
                 
                 kicker = RoboCup.singleton.GetPlayer(0, true);
                 
-                KickerAgent.SetTrainingScenario(trainingScenario);
+                kickerAgent.SetTrainingScenario(trainingScenario);
                 
-                KickerAgent.SetPlayer(kicker);
-                KickerAgent.SetCoach(coach);
-                KickerAgent.gameObject.SetActive(true);
+                kickerAgent.SetPlayer(kicker);
+                kickerAgent.SetCoach(coach);
+                kickerAgent.gameObject.SetActive(true);
                 
                 break;
             
@@ -134,7 +135,7 @@ public class AgentTrainer : MonoBehaviour
                 break;
             
             case TrainingScenario.RunTowardsBallAndKick:
-                KickerAgent.OnEpisodeBegin();
+                kickerAgent.OnEpisodeBegin();
                 break;
             
             case TrainingScenario.AttackDefend:
@@ -165,7 +166,7 @@ public class AgentTrainer : MonoBehaviour
                     break;
                 
                 case TrainingScenario.RunTowardsBallAndKick:
-                    KickerAgent.EndEpisode();
+                    kickerAgent.EndEpisode();
                     break;
             
                 case TrainingScenario.AttackDefend:
@@ -198,14 +199,14 @@ public class AgentTrainer : MonoBehaviour
                 
                 RcPerceivedObject kickerBall = kicker.GetRcObject("b");
                 
-                KickerAgent.SetSelfInfo(kicker.GetKickBallCount());
+                kickerAgent.SetSelfInfo(kicker.GetKickBallCount());
                 
                 if (kickerBall.curVisibility)
-                    KickerAgent.SetBallInfo(true, kickerBall.direction, kickerBall.distance);
+                    kickerAgent.SetBallInfo(true, kickerBall.direction, kickerBall.distance);
                 else
-                    KickerAgent.SetBallInfo(false);
+                    kickerAgent.SetBallInfo(false);
 
-                KickerAgent.RequestDecision();
+                kickerAgent.RequestDecision();
                 
                 break;
             

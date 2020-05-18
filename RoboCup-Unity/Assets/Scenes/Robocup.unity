@@ -2743,7 +2743,7 @@ MonoBehaviour:
   defaultAgent: {fileID: 1373919170}
   defenderAgent: {fileID: 1337571801}
   attackerAgent: {fileID: 1771547223}
-  KickerAgent: {fileID: 1480538968}
+  kickerAgent: {fileID: 1480538968}
   offlineVisualPlayer: {fileID: 8713521159276576652}
 --- !u!4 &529227138
 Transform:
@@ -5117,7 +5117,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80c285052ce57354499b10eabccfe693, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ip: 172.30.57.193
+  ip: 172.29.56.20
   teamName: Unity
   reconnect: 0
   roboCupMode: 2
@@ -7340,15 +7340,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 2
+    VectorObservationSize: 1
     NumStackedVectorObservations: 1
-    VectorActionSize: 04000000
+    VectorActionSize: 01000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
-  m_Model: {fileID: 5022602860645237092, guid: b9589ff440f7e764a983a4edf03059da, type: 3}
+  m_Model: {fileID: 0}
   m_InferenceDevice: 0
   m_BehaviorType: 0
-  m_BehaviorName: RoboCupBrain
+  m_BehaviorName: My Behavior
   TeamId: 0
   m_UseChildSensors: 1
 --- !u!4 &1373919172
@@ -8070,7 +8070,7 @@ MonoBehaviour:
     VectorActionSize: 05000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
-  m_Model: {fileID: 5022602860645237092, guid: 4497daa7c47194e419353869cfd2d1d4, type: 3}
+  m_Model: {fileID: 0}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: RoboCupBrain
