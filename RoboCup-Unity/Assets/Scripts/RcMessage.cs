@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using UnityEngine;
 
 public class RcMessage
 {
@@ -189,6 +190,7 @@ public class MessageObject
     public struct SenseBodyData
     { 
         public int kick;
+        public bool colliding;
     }
     
     public struct SeenObjectData
@@ -294,6 +296,19 @@ public class MessageObject
                             int.TryParse(senseObject.values[1].MString, out kick);
 
                         senseBodyData.kick = kick;
+                    }
+
+                    if (senseName.Equals("collision"))
+                    {
+                        if (senseObject.values.Count > 1)
+                        {
+                            string collisionParam1 = senseObject.values[1].MString;
+
+                            if (collisionParam1 != null && collisionParam1.Equals("none"))
+                                senseBodyData.colliding = false;
+                            else
+                                senseBodyData.colliding = true;
+                        }
                     }
                 }
             }

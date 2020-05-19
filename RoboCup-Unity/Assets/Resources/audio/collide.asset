@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3653eb0a46269648891601de8752147, type: 3}
+  m_Name: collide
+  m_EditorClassIdentifier: 
+  clips:
+  - {fileID: 8300000, guid: 3f9767e2eedb24640a060220740dd1ac, type: 3}
+  - {fileID: 8300000, guid: e47700e3ac81d394b9d70ca0953bb083, type: 3}
+  - {fileID: 8300000, guid: 57fc9e4c7689dae4690c9f400a33e29b, type: 3}
+  - {fileID: 8300000, guid: 598d20cbbe242064486127e7a009d61a, type: 3}
+  volume:
+    minValue: 0.24363638
+    maxValue: 0.36
+  pitch:
+    minValue: 1
+    maxValue: 1

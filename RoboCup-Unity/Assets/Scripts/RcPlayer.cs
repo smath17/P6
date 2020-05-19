@@ -45,7 +45,9 @@ public class RcPlayer : MonoBehaviour, IPlayer
     AudioSource source1;
     AudioSource source2;
     AudioSource source3;
+    AudioSource source4;
 
+    AudioEvent collide;
     AudioEvent kick;
     AudioEvent kickVo;
     AudioEvent dash;
@@ -55,7 +57,9 @@ public class RcPlayer : MonoBehaviour, IPlayer
         source1 = GetComponents<AudioSource>()[0];
         source2 = GetComponents<AudioSource>()[1];
         source3 = GetComponents<AudioSource>()[2];
+        source4 = GetComponents<AudioSource>()[3];
 
+        collide = Resources.Load<AudioEvent>("audio/collide");
         kick = Resources.Load<AudioEvent>("audio/kick");
         kickVo = Resources.Load<AudioEvent>("audio/kickvo");
         dash = Resources.Load<AudioEvent>("audio/dash");
@@ -234,6 +238,9 @@ public class RcPlayer : MonoBehaviour, IPlayer
             OnKick();
         
         kickBallCount = senseBodyData.kick;
+        
+        if (senseBodyData.colliding)
+            OnCollide();
     }
 
     void See(MessageObject messageObject)
@@ -437,6 +444,12 @@ public class RcPlayer : MonoBehaviour, IPlayer
     {
         if (!RoboCup.singleton.seriousMode) 
             kick.Play(source3);
+    }
+
+    void OnCollide()
+    {
+        if (!RoboCup.singleton.seriousMode) 
+            collide.Play(source4);
     }
 }
 

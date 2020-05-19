@@ -118,11 +118,11 @@ public class RoboCupKickerAgent : Agent
         {
             if (ballVisible && goalVisible)
             {
-                AddReward(0.25f);
+                //AddReward(0.25f);
                 if (ballDirection < goalDirection + 10 && ballDirection > goalDirection - 10)
                 {
                     AddReward(0.75f);
-                    Debug.LogWarning("Good Kick");
+                    //Debug.LogWarning("Good Kick");
                 }
             }
         }
@@ -176,7 +176,19 @@ public class RoboCupKickerAgent : Agent
         sensor.AddObservation(leftSideVisible ? leftSideDirection / 45 : -1);
         sensor.AddObservation(rightSideVisible ? rightSideDirection / 45 : -1);
     }
-    
+
+    public override void CollectDiscreteActionMasks(DiscreteActionMasker actionMasker)
+    {
+        // Can not dash if in front of ball
+        if (ballVisible && ballDistance < 1)
+            actionMasker.SetMask(0, new int[1]{0});
+        
+        // Can not kick if away from ball
+        if (!ballVisible || ballDistance > 1)
+            actionMasker.SetMask(0, new int[1]{2});
+    }
+
+
     public override void OnActionReceived(float[] vectorAction)
     {
         int action = Mathf.FloorToInt(vectorAction[0]);
@@ -188,23 +200,29 @@ public class RoboCupKickerAgent : Agent
             //    break;
             
             case 0:
-                if (ballVisible && ballDistance < 1)
-                    player.Kick(100);
+                //if (ballVisible && ballDistance < 1)
+                //    player.Kick(100);
+                //else
+                if (ballVisible && ballDistance < 10)
+                    player.Dash(10 + (9 * (int)ballDistance), 0);
                 else
                     player.Dash(100, 0);
                 break;
             
             case 1:
-                player.Turn(-30);
+                player.Turn(15);
                 break;
+            
+            //case 2:
+            //    player.Turn(90);
+            //    break;
             
             case 2:
-                player.Turn(30);
+                player.Kick(100);
+                ////Penalty for kicking nothing
+                //if (ballVisible || ballDistance > 1f)
+                //    AddReward(-0.05f);
                 break;
-            
-            //case 3:
-            //    player.Kick(100);
-            //    break;
         }
         
         DoRewards();
@@ -220,11 +238,11 @@ public class RoboCupKickerAgent : Agent
         if (Input.GetAxis("Horizontal") < -0.5f)
             actionsOut[0] = 1;
         
-        if (Input.GetAxis("Horizontal") > 0.5f)
-            actionsOut[0] = 2;
+        //if (Input.GetAxis("Horizontal") > 0.5f)
+        //    actionsOut[0] = 2;
         
-        //if (Input.GetKeyDown(KeyCode.Space))
-        //    actionsOut[0] = 3;
+        if (Input.GetKeyDown(KeyCode.Space))
+            actionsOut[0] = 2;
     }
     
     void DoRewards()
@@ -240,7 +258,7 @@ public class RoboCupKickerAgent : Agent
                     distanceReward = 1;
                 }
 
-                distanceReward *= 0.15f;
+                distanceReward *= 0.25f;
 
                 if (distanceReward > 0)
                 {
@@ -250,7 +268,7 @@ public class RoboCupKickerAgent : Agent
         }
         else
         {
-            SetReward(-0.1f);
+            AddReward(-0.2f);
         }
         
         if (rewardDisplay != null)
@@ -288,7 +306,7 @@ public class RoboCupKickerAgent : Agent
                 ballMoveReward = 1;
             }
 
-            ballMoveReward *= 0.75f;
+            ballMoveReward *= 1f;
 
             if (ballMoveReward > 0)
             {
