@@ -104,7 +104,18 @@ public class RoboCupKickerAgent : Agent
     public void SetSelfInfo(int kickBallCount)
     {
         if (this.kickBallCount < kickBallCount)
-            AddReward(0.5f);
+        {
+            if (ballVisible && goalVisible)
+            {
+                AddReward(0.5f);
+                if (ballDirection < goalDirection + 10 && ballDirection > goalDirection - 10)
+                {
+                    AddReward(0.5f);
+                    Debug.LogWarning("Good Kick");
+                }
+            }
+        }
+
 
         this.kickBallCount = kickBallCount;
         
@@ -127,7 +138,7 @@ public class RoboCupKickerAgent : Agent
     public override void CollectObservations(VectorSensor sensor)
     {
         sensor.AddObservation(ballVisible ? ballDirection / 45 : -1);
-        sensor.AddObservation(ballVisible ? ballDistance : -1);
+        sensor.AddObservation(ballVisible ? ballDistance / 65 : -1);
         
         sensor.AddObservation(goalVisible ? goalDirection / 45 : -1);
         //sensor.AddObservation(goalVisible ? goalDistance : -1);
