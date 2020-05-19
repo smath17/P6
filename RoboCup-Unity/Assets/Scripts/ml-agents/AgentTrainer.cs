@@ -206,6 +206,18 @@ public class AgentTrainer : MonoBehaviour
                 if (kickerGoal != null)
                     kickerAgent.SetGoalInfo(kickerGoal.curVisibility, kickerGoal.direction, kickerGoal.distance);
                 
+                RcPerceivedObject kickerOwnGoal = kicker.GetRcObject("g l");
+                if (kickerOwnGoal != null)
+                    kickerAgent.SetGoalInfo(kickerOwnGoal.curVisibility, kickerOwnGoal.direction, kickerOwnGoal.distance);
+                
+                RcPerceivedObject kickerLeftSide = kicker.GetRcObject("f b 0");
+                if (kickerLeftSide != null)
+                    kickerAgent.SetGoalInfo(kickerLeftSide.curVisibility, kickerLeftSide.direction, kickerLeftSide.distance);
+                
+                RcPerceivedObject kickerRightSide = kicker.GetRcObject("f t 0");
+                if (kickerRightSide != null)
+                    kickerAgent.SetGoalInfo(kickerRightSide.curVisibility, kickerRightSide.direction, kickerRightSide.distance);
+                
                 kickerAgent.SetSelfInfo(kicker.GetKickBallCount());
                 kickerAgent.RequestDecision();
                 
@@ -218,7 +230,16 @@ public class AgentTrainer : MonoBehaviour
                         RcObject kickerCoachGoal = coach.GetRcObject("g r");
                         Vector2 goalPos = new Vector2(kickerCoachGoal.position.x, kickerCoachGoal.position.y);
 
-                        kickerAgent.OnBallMoved((ballPos - goalPos).magnitude);
+                        kickerAgent.OnBallMovedRight((ballPos - goalPos).magnitude);
+                    }
+                    
+                    if (kickerCoachBall.delta.x < -0.1f)
+                    {
+                        Vector2 ballPos = new Vector2(kickerCoachBall.position.x, kickerCoachBall.position.y);
+                        RcObject kickerCoachGoal = coach.GetRcObject("g l");
+                        Vector2 goalPos = new Vector2(kickerCoachGoal.position.x, kickerCoachGoal.position.y);
+
+                        kickerAgent.OnBallMovedLeft((ballPos - goalPos).magnitude);
                     }
                     
                     // Ball enters goal

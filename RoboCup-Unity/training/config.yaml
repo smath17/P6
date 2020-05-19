@@ -11,7 +11,7 @@ default:
     max_steps: 5.0e5
     memory_size: 128
     normalize: false
-    num_epoch: 3
+    num_epoch: 8
     num_layers: 2
     time_horizon: 64
     sequence_length: 64

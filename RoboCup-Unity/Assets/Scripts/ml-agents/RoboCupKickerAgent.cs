@@ -19,9 +19,19 @@ public class RoboCupKickerAgent : Agent
     bool goalVisible;
     float goalDirection;
     //float goalDistance;
+    
+    bool ownGoalVisible;
+    float ownGoalDirection;
+    
+    bool leftSideVisible;
+    float leftSideDirection;
+    
+    bool rightSideVisible;
+    float rightSideDirection;
 
     float bestPlayerDistanceFromBallThisEpisode;
-    float bestBallDistanceFromGoalThisEpisode;
+    float bestBallDistanceFromEnemyGoalThisEpisode;
+    float worstBallDistanceFromOwnGoalThisEpisode;
 
     int kickBallCount;
 
@@ -84,7 +94,8 @@ public class RoboCupKickerAgent : Agent
             int direction = Random.Range(-180, 180);
 
             bestPlayerDistanceFromBallThisEpisode = Mathf.Infinity;
-            bestBallDistanceFromGoalThisEpisode = Mathf.Infinity;
+            bestBallDistanceFromEnemyGoalThisEpisode = Mathf.Infinity;
+            worstBallDistanceFromOwnGoalThisEpisode = Mathf.Infinity;
         
             coach.MovePlayer(RoboCup.singleton.teamName, 1, playerX, playerY, direction);
             coach.Recover();
@@ -107,10 +118,10 @@ public class RoboCupKickerAgent : Agent
         {
             if (ballVisible && goalVisible)
             {
-                AddReward(0.5f);
+                AddReward(0.25f);
                 if (ballDirection < goalDirection + 10 && ballDirection > goalDirection - 10)
                 {
-                    AddReward(0.5f);
+                    AddReward(0.75f);
                     Debug.LogWarning("Good Kick");
                 }
             }
@@ -135,6 +146,24 @@ public class RoboCupKickerAgent : Agent
         //goalDistance = distance;
     }
     
+    public void SetOwnGoalInfo(bool visible, float direction = 0)
+    {
+        ownGoalVisible = visible;
+        ownGoalDirection = direction;
+    }
+    
+    public void SetLeftSideInfo(bool visible, float direction = 0)
+    {
+        leftSideVisible = visible;
+        leftSideDirection = direction;
+    }
+    
+    public void SetRightSideInfo(bool visible, float direction = 0)
+    {
+        rightSideVisible = visible;
+        rightSideDirection = direction;
+    }
+    
     public override void CollectObservations(VectorSensor sensor)
     {
         sensor.AddObservation(ballVisible ? ballDirection / 45 : -1);
@@ -142,6 +171,10 @@ public class RoboCupKickerAgent : Agent
         
         sensor.AddObservation(goalVisible ? goalDirection / 45 : -1);
         //sensor.AddObservation(goalVisible ? goalDistance : -1);
+        
+        sensor.AddObservation(ownGoalVisible ? ownGoalDirection / 45 : -1);
+        sensor.AddObservation(leftSideVisible ? leftSideDirection / 45 : -1);
+        sensor.AddObservation(rightSideVisible ? rightSideDirection / 45 : -1);
     }
     
     public override void OnActionReceived(float[] vectorAction)
@@ -207,7 +240,7 @@ public class RoboCupKickerAgent : Agent
                     distanceReward = 1;
                 }
 
-                distanceReward *= 0.25f;
+                distanceReward *= 0.15f;
 
                 if (distanceReward > 0)
                 {
@@ -224,11 +257,11 @@ public class RoboCupKickerAgent : Agent
             rewardDisplay.DisplayRewards(GetReward(), GetCumulativeReward());
     }
 
-    public void OnBallMoved(float distanceFromGoal)
+    public void OnBallMovedRight(float distanceFromGoal)
     {
-        if (distanceFromGoal < bestBallDistanceFromGoalThisEpisode - 2.5f)
+        if (distanceFromGoal < bestBallDistanceFromEnemyGoalThisEpisode - 2.5f)
         {
-            bestBallDistanceFromGoalThisEpisode = distanceFromGoal;
+            bestBallDistanceFromEnemyGoalThisEpisode = distanceFromGoal;
             float ballMoveReward = (distanceFromGoal - 50) / (0.7f - 50);
             if (ballMoveReward > 1)
             {
@@ -240,6 +273,26 @@ public class RoboCupKickerAgent : Agent
             if (ballMoveReward > 0)
             {
                 AddReward(ballMoveReward);
+            }
+        } 
+    }
+    
+    public void OnBallMovedLeft(float distanceFromGoal)
+    {
+        if (distanceFromGoal < worstBallDistanceFromOwnGoalThisEpisode - 2.5f)
+        {
+            worstBallDistanceFromOwnGoalThisEpisode = distanceFromGoal;
+            float ballMoveReward = (distanceFromGoal - 50) / (0.7f - 50);
+            if (ballMoveReward > 1)
+            {
+                ballMoveReward = 1;
+            }
+
+            ballMoveReward *= 0.75f;
+
+            if (ballMoveReward > 0)
+            {
+                AddReward(-ballMoveReward);
             }
         } 
     }
