@@ -232,7 +232,7 @@ public class AgentTrainer : MonoBehaviour
                     if (kickerCoachBall.position.y < -32 || kickerCoachBall.position.y > 32 ||
                         kickerCoachBall.position.x > 52 || kickerCoachBall.position.x < -52)
                     {
-                        kickerAgent.OnBallLeftField();
+                        kickerAgent.OnBallOutOfField();
                         OnEpisodeBegin();
                         return;
                     }
@@ -245,7 +245,7 @@ public class AgentTrainer : MonoBehaviour
                     if (kickerCoachPlayer.position.y < -32 || kickerCoachPlayer.position.y > 32 ||
                         kickerCoachPlayer.position.x > 52 || kickerCoachPlayer.position.x < -52)
                     {
-                        kickerAgent.OnLeftField();
+                        kickerAgent.OnOutOfField();
                         OnEpisodeBegin();
                         return;
                     }

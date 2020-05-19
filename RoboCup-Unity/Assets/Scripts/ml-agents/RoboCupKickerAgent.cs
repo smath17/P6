@@ -239,13 +239,13 @@ public class RoboCupKickerAgent : Agent
         EndEpisode();
     }
     
-    public void OnLeftField()
+    public void OnOutOfField()
     {
         AddReward(-0.5f);
         EndEpisode();
     }
     
-    public void OnBallLeftField()
+    public void OnBallOutOfField()
     {
         AddReward(-1f);
         EndEpisode();
