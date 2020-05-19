@@ -15,11 +15,6 @@ public class RoboCupAgent : Agent
     
     [Header("Settings")]
     public bool resetBallEachEpisode = true;
-
-    float rewardLookAtBall = 1f;
-    float rewardBallNotVisible = -1f;
-    
-    float rewardCloseToBall = 1f;
     
     bool ballVisible;
     float ballDistance;
@@ -82,38 +77,23 @@ public class RoboCupAgent : Agent
     {
         int action = Mathf.FloorToInt(vectorAction[0]);
         
-        int dashAmount = 0;
-        int turnAmount = 0;
-        bool dash = false;
-        bool turn = false;
-        
         switch (action)
         {
             case 0:
-                dash = true;
-                dashAmount = 0;
                 break;
             
             case 1: 
-                dash = true;
-                dashAmount = 100;
+                player.Dash(100, 0);
                 break;
             
             case 2:
-                turn = true;
-                turnAmount = -30;
+                player.Turn(-30);
                 break;
             
             case 3:
-                turn = true;
-                turnAmount = 30;
+                player.Turn(30);
                 break;
         }
-
-        if (dash)
-            player.Dash(dashAmount, 0);
-        else
-            player.Turn(turnAmount);
         
         DoRewards();
     }
