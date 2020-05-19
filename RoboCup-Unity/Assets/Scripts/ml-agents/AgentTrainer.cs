@@ -330,6 +330,7 @@ public class AgentTrainer : MonoBehaviour
                         if (trainingScenario != TrainingScenario.AttackDefendAttackOnly)
                             defenderAgent.OnFailedToDefend();
                         
+                        coach.Goal(false);
                         OnEpisodeBegin();
                         return;
                     }

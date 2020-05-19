@@ -160,6 +160,11 @@ public class RcCoach : MonoBehaviour, ICoach
     {
         Send("(start)");
     }
+
+    public void Goal(bool rightSide)
+    {
+        Send($"(referee goal_{(rightSide ? "r" : "l")})");
+    }
 }
 
 public class RcObject
