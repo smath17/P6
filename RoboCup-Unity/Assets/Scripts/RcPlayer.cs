@@ -42,27 +42,31 @@ public class RcPlayer : MonoBehaviour, IPlayer
     int kickBallCount;
 
     IVisualizer visualizer;
-    AudioSource source1;
-    AudioSource source2;
-    AudioSource source3;
-    AudioSource source4;
+    AudioSource dashSource;
+    AudioSource kickVoSource;
+    AudioSource kickSource;
+    AudioSource collideSource;
+    AudioSource turnSource;
 
     AudioEvent collide;
     AudioEvent kick;
     AudioEvent kickVo;
     AudioEvent dash;
+    AudioEvent turn;
     
     void Awake()
     {
-        source1 = GetComponents<AudioSource>()[0];
-        source2 = GetComponents<AudioSource>()[1];
-        source3 = GetComponents<AudioSource>()[2];
-        source4 = GetComponents<AudioSource>()[3];
+        dashSource = GetComponents<AudioSource>()[0];
+        kickVoSource = GetComponents<AudioSource>()[1];
+        kickSource = GetComponents<AudioSource>()[2];
+        collideSource = GetComponents<AudioSource>()[3];
+        turnSource = GetComponents<AudioSource>()[4];
 
         collide = Resources.Load<AudioEvent>("audio/collide");
         kick = Resources.Load<AudioEvent>("audio/kick");
         kickVo = Resources.Load<AudioEvent>("audio/kickvo");
         dash = Resources.Load<AudioEvent>("audio/dash");
+        turn = Resources.Load<AudioEvent>("audio/turn");
         
         CreateRcObjects();
     }
@@ -418,21 +422,26 @@ public class RcPlayer : MonoBehaviour, IPlayer
         Send($"(dash {amount} {direction})");
         if (!RoboCup.singleton.seriousMode)
         {
-            if (!source1.isPlaying)
-                dash.Play(source1);
+            if (!dashSource.isPlaying)
+                dash.Play(dashSource);
         }
     }
 
     public void Turn(int amount)
     {
         Send($"(turn {amount})");
+        if (!RoboCup.singleton.seriousMode)
+        {
+            //if (!turnSource.isPlaying)
+                turn.Play(turnSource);
+        }
     }
 
     public void Kick(int power)
     {
         Send($"(kick {power} 0)");
         if (!RoboCup.singleton.seriousMode)
-            kickVo.Play(source2);
+            kickVo.Play(kickVoSource);
     }
 
     public void Catch()
@@ -443,13 +452,13 @@ public class RcPlayer : MonoBehaviour, IPlayer
     void OnKick()
     {
         if (!RoboCup.singleton.seriousMode) 
-            kick.Play(source3);
+            kick.Play(kickSource);
     }
 
     void OnCollide()
     {
         if (!RoboCup.singleton.seriousMode) 
-            collide.Play(source4);
+            collide.Play(collideSource);
     }
 }
 

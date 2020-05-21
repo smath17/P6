@@ -44,6 +44,17 @@ public class AgentTrainer : MonoBehaviour
     bool prevBallInGoalArea;
     bool curBallInGoalArea;
 
+    AudioSource source;
+    AudioEvent fail;
+    AudioEvent win;
+    
+    void Awake()
+    {
+        source = GetComponent<AudioSource>();
+        fail = Resources.Load<AudioEvent>("audio/fail");
+        win = Resources.Load<AudioEvent>("audio/win");
+    }
+
     public void SetupTeams()
     {
         switch (trainingScenario)
@@ -202,21 +213,23 @@ public class AgentTrainer : MonoBehaviour
                 else
                     kickerAgent.SetBallInfo(false);
                 
-                RcPerceivedObject kickerGoal = kicker.GetRcObject("g r");
-                if (kickerGoal != null)
-                    kickerAgent.SetGoalInfo(kickerGoal.curVisibility, kickerGoal.direction, kickerGoal.distance);
-                
+                RcPerceivedObject kickerGoalLeft = kicker.GetRcObject("f g r t");
+                RcPerceivedObject kickerGoalRight = kicker.GetRcObject("f g r b");
+
+                if (kickerGoalLeft != null && kickerGoalRight != null)
+                    kickerAgent.SetGoalInfo(kickerGoalLeft.curVisibility, kickerGoalLeft.direction, kickerGoalRight.curVisibility, kickerGoalRight.direction);
+
                 RcPerceivedObject kickerOwnGoal = kicker.GetRcObject("g l");
                 if (kickerOwnGoal != null)
-                    kickerAgent.SetGoalInfo(kickerOwnGoal.curVisibility, kickerOwnGoal.direction, kickerOwnGoal.distance);
+                    kickerAgent.SetOwnGoalInfo(kickerOwnGoal.curVisibility, kickerOwnGoal.direction);
                 
-                RcPerceivedObject kickerLeftSide = kicker.GetRcObject("f b 0");
+                RcPerceivedObject kickerLeftSide = kicker.GetRcObject("f t 0");
                 if (kickerLeftSide != null)
-                    kickerAgent.SetGoalInfo(kickerLeftSide.curVisibility, kickerLeftSide.direction, kickerLeftSide.distance);
+                    kickerAgent.SetLeftSideInfo(kickerLeftSide.curVisibility, kickerLeftSide.direction);
                 
-                RcPerceivedObject kickerRightSide = kicker.GetRcObject("f t 0");
+                RcPerceivedObject kickerRightSide = kicker.GetRcObject("f b 0");
                 if (kickerRightSide != null)
-                    kickerAgent.SetGoalInfo(kickerRightSide.curVisibility, kickerRightSide.direction, kickerRightSide.distance);
+                    kickerAgent.SetRightSideInfo(kickerRightSide.curVisibility, kickerRightSide.direction);
                 
                 kickerAgent.SetSelfInfo(kicker.GetKickBallCount());
                 kickerAgent.RequestDecision();
@@ -240,11 +253,17 @@ public class AgentTrainer : MonoBehaviour
                         Vector2 goalPos = new Vector2(kickerCoachGoal.position.x, kickerCoachGoal.position.y);
 
                         kickerAgent.OnBallMovedLeft((ballPos - goalPos).magnitude);
+                        
+                        if (ballPos.x < 0)
+                            kickerAgent.OnBallEnteredLeftSide();
                     }
                     
                     // Ball enters goal
                     if (kickerCoachBall.position.y < 10 && kickerCoachBall.position.y > -10 && kickerCoachBall.position.x > 52)
                     {
+                        if (!RoboCup.singleton.seriousMode)
+                            win.Play(source);
+                        
                         kickerAgent.OnScored();
                         OnEpisodeBegin();
                         return;
@@ -253,6 +272,9 @@ public class AgentTrainer : MonoBehaviour
                     if (kickerCoachBall.position.y < -32 || kickerCoachBall.position.y > 32 ||
                         kickerCoachBall.position.x > 52 || kickerCoachBall.position.x < -52)
                     {
+                        if (!RoboCup.singleton.seriousMode)
+                            fail.Play(source);
+                        
                         kickerAgent.OnBallOutOfField();
                         OnEpisodeBegin();
                         return;
