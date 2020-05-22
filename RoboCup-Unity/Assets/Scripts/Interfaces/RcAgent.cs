@@ -4,13 +4,13 @@ using UnityEngine;
 
 public interface RcAgent
 {
-    void SetBallInfo(bool ballCurVisibility, float ballDirection, float ballDistance);
-    void SetGoalInfo(bool kickerGoalLeftVisible, float kickerGoalLeftDir, bool kickerGoalRightVisible, float kickerGoalRightDir);
-    void SetSelfInfo(int getKickBallCount);
     void SetPlayer(RcPlayer player);
     void SetRealMatch();
     void RequestDecision();
-    void SetOwnGoalInfo(bool curVisibility, float direction);
-    void SetLeftSideInfo(bool curVisibility, float direction);
-    void SetRightSideInfo(bool curVisibility, float direction);
+    void SetBallInfo(bool visible, float direction, float distance);
+    void SetGoalInfo(bool leftPoleVisible, float leftPoleDirection, bool rightPoleVisible, float rightPoleDirection);
+    void SetSelfInfo(int kickedBallCount);
+    void SetOwnGoalInfo(bool visible, float direction);
+    void SetLeftSideInfo(bool visible, float direction);
+    void SetRightSideInfo(bool visible, float direction);
 }
