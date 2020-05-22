@@ -259,7 +259,7 @@ public class AgentTrainer : MonoBehaviour
                     }
                     
                     // Ball enters goal
-                    if (kickerCoachBall.position.y < 10 && kickerCoachBall.position.y > -10 && kickerCoachBall.position.x > 52)
+                    if (kickerCoachBall.position.y < 7 && kickerCoachBall.position.y > -7 && kickerCoachBall.position.x > 52)
                     {
                         if (!RoboCup.singleton.seriousMode)
                             win.Play(source);
@@ -364,10 +364,10 @@ public class AgentTrainer : MonoBehaviour
                         attackerAgent.OnBallMovedLeft();
                     
                     prevBallInGoalArea = curBallInGoalArea;
-                    curBallInGoalArea = coachBall.position.y < 10 && coachBall.position.y > -10 && coachBall.position.x < -46 && coachBall.position.x > -52;
+                    curBallInGoalArea = coachBall.position.y < 7 && coachBall.position.y > -7 && coachBall.position.x < -46 && coachBall.position.x > -52;
             
                     // Ball enters goal
-                    if (coachBall.position.y < 10 && coachBall.position.y > -10 && coachBall.position.x < -52)
+                    if (coachBall.position.y < 7 && coachBall.position.y > -7 && coachBall.position.x < -52)
                     {
                         attackerAgent.OnScored();
                         if (trainingScenario != TrainingScenario.AttackDefendAttackOnly)
