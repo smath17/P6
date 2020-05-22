@@ -10,8 +10,8 @@ public class RoboCupAgent : Agent
 {
     AgentTrainer.TrainingScenario trainingScenario;
 
-    IPlayer player;
-    ICoach coach;
+    RcPlayer player;
+    RcCoach coach;
     
     [Header("Settings")]
     public bool resetBallEachEpisode = true;
@@ -25,12 +25,12 @@ public class RoboCupAgent : Agent
         trainingScenario = scenario;
     }
 
-    public void SetPlayer(IPlayer player)
+    public void SetPlayer(RcPlayer player)
     {
         this.player = player;
     }
     
-    public void SetCoach(ICoach coach)
+    public void SetCoach(RcCoach coach)
     {
         this.coach = coach;
     }

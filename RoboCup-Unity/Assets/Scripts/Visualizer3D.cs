@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-public class Visualizer3D : MonoBehaviour, IVisualizer
+public class Visualizer3D : MonoBehaviour
 {
     [Header("Settings")]
     public bool interpolate;

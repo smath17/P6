@@ -8,7 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
-public class RcCoach : MonoBehaviour, ICoach
+public class RcCoach : MonoBehaviour
 {
     IPEndPoint endPoint;
     UdpClient client;

@@ -8,7 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
-public class RcPlayer : MonoBehaviour, IPlayer
+public class RcPlayer : MonoBehaviour
 {   
     IPEndPoint endPoint;
     UdpClient client;
@@ -41,7 +41,7 @@ public class RcPlayer : MonoBehaviour, IPlayer
 
     int kickBallCount;
 
-    IVisualizer visualizer;
+    Visualizer3D visualizer;
     AudioSource dashSource;
     AudioSource kickVoSource;
     AudioSource kickSource;

@@ -5,14 +5,14 @@ using Unity.MLAgents.Sensors;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class RoboCupKickerAgent : Agent
+public class RoboCupKickerAgent : Agent, RcAgent
 {
     public enum TrainingPhase {CloseToGoalKick, CloseToGoalMoveAndKick, FarFromGoalMoveAndKick, RandomPositionsMoveAndKick}
     
     AgentTrainer agentTrainer;
     
-    IPlayer player;
-    ICoach coach;
+    RcPlayer player;
+    RcCoach coach;
 
     [Header("Settings")]
     public bool rewardMoveToBall;
@@ -113,12 +113,12 @@ public class RoboCupKickerAgent : Agent
         this.agentTrainer = agentTrainer;
     }
     
-    public void SetPlayer(IPlayer player)
+    public void SetPlayer(RcPlayer player)
     {
         this.player = player;
     }
     
-    public void SetCoach(ICoach coach)
+    public void SetCoach(RcCoach coach)
     {
         this.coach = coach;
     }
@@ -153,7 +153,7 @@ public class RoboCupKickerAgent : Agent
                         ballX = (int)startPositions[positionIndex].x;
                         ballY = (int)startPositions[positionIndex].y;
                         playerX = ballX - 5;
-                        playerY = ballY;
+                        playerY = ballY + ballY/2;
 
                         positionIndex++;
                         if (positionIndex > startPositions.Length - 1)
@@ -301,12 +301,12 @@ public class RoboCupKickerAgent : Agent
         AddObservation(sensor, "bDir", ballVisible ? ballDirection / 45 : -1);
         AddObservation(sensor, "bDist", ballVisible ? ballDistance / 65 : -1);
 
-        AddObservation(sensor, "egLDir", goalLeftFlagVisible ? goalLeftFlagDirection / 45 : -1);
-        AddObservation(sensor, "egRDir", goalRightFlagVisible ? goalRightFlagDirection / 45 : -1);
+        AddObservation(sensor, "enemyGL", goalLeftFlagVisible ? goalLeftFlagDirection / 45 : -1);
+        AddObservation(sensor, "enemyGR", goalRightFlagVisible ? goalRightFlagDirection / 45 : -1);
 
-        AddObservation(sensor, "ogDir", ownGoalVisible ? ownGoalDirection / 45 : -1);
-        AddObservation(sensor, "lDir", leftSideVisible ? leftSideDirection / 45 : -1);
-        AddObservation(sensor, "rDir", rightSideVisible ? rightSideDirection / 45 : -1);
+        AddObservation(sensor, "ownG", ownGoalVisible ? ownGoalDirection / 45 : -1);
+        AddObservation(sensor, "left", leftSideVisible ? leftSideDirection / 45 : -1);
+        AddObservation(sensor, "right", rightSideVisible ? rightSideDirection / 45 : -1);
         
         DisplayObservations();
     }
@@ -506,10 +506,10 @@ public class RoboCupKickerAgent : Agent
             goalsScoredCurPos = 0;
         }
 
-        if (goalsScoredOverall > 500)
+        if (goalsScoredOverall > 300)
             trainingPhase = TrainingPhase.CloseToGoalMoveAndKick;
 
-        if (goalsScoredOverall > 750)
+        if (goalsScoredOverall > 600)
             trainingPhase = TrainingPhase.FarFromGoalMoveAndKick;
         
         if (goalsScoredOverall > 1000)

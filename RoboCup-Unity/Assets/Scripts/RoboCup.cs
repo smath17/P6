@@ -14,7 +14,7 @@ public class RoboCup : MonoBehaviour
     public const int OnlineCoachPort = 6002;
     
     public static RoboCup singleton;
-    IVisualizer visualizer;
+    Visualizer3D visualizer;
     bool visualizerInitialized;
 
     [Header("Connection")]
@@ -56,8 +56,8 @@ public class RoboCup : MonoBehaviour
     List<PlayerSetupInfo> team1Setup = new List<PlayerSetupInfo>();
     List<PlayerSetupInfo> team2Setup = new List<PlayerSetupInfo>();
 
-    List<RoboCupKickerAgent> team1Agents = new List<RoboCupKickerAgent>();
-    List<RoboCupKickerAgent> team2Agents = new List<RoboCupKickerAgent>();
+    List<RcAgent> team1Agents = new List<RcAgent>();
+    List<RcAgent> team2Agents = new List<RcAgent>();
 
     #region FlagNames
     public static string[] other = new[]
@@ -150,7 +150,7 @@ public class RoboCup : MonoBehaviour
 
         playerPrefab = Resources.Load<GameObject>("prefabs/RC Player");
         coachPrefab = Resources.Load<GameObject>("prefabs/RC Coach");
-        visualizer = visualizerObject.GetComponent<IVisualizer>();
+        visualizer = visualizerObject.GetComponent<Visualizer3D>();
     }
     
     void Start()
@@ -223,7 +223,7 @@ public class RoboCup : MonoBehaviour
                 roboCupMode == RoboCupMode.Agent2Teams)
             {
                 GameObject agentObj = Instantiate(agentPrefab);
-                RoboCupKickerAgent agent = agentObj.GetComponent<RoboCupKickerAgent>();
+                RcAgent agent = agentObj.GetComponent<RcAgent>();
                 agent.SetPlayer(player);
                 agent.SetRealMatch();
                 agentObj.SetActive(true);
@@ -247,7 +247,7 @@ public class RoboCup : MonoBehaviour
                 roboCupMode == RoboCupMode.Agent2Teams)
             {
                 GameObject agentObj = Instantiate(agentPrefab);
-                RoboCupKickerAgent agent = agentObj.GetComponent<RoboCupKickerAgent>();
+                RcAgent agent = agentObj.GetComponent<RcAgent>();
                 agent.SetPlayer(player);
                 agent.SetRealMatch();
                 agentObj.SetActive(true);
@@ -500,7 +500,7 @@ public class RoboCup : MonoBehaviour
         overlayInfo.DisplayText(txt, type);
     }
 
-    public IVisualizer InitVisualizer(RcPlayer player)
+    public Visualizer3D InitVisualizer(RcPlayer player)
     {
         if (!visualizerInitialized)
         {

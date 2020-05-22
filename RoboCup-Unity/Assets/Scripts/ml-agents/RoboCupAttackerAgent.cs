@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class RoboCupAttackerAgent : Agent
 {
-    IPlayer player;
-    ICoach coach;
+    RcPlayer player;
+    RcCoach coach;
 
     float selfPositionX;
     float selfPositionY;
@@ -31,12 +31,12 @@ public class RoboCupAttackerAgent : Agent
 
     public RewardDisplay rewardDisplay;
 
-    public void SetPlayer(IPlayer player)
+    public void SetPlayer(RcPlayer player)
     {
         this.player = player;
     }
 
-    public void SetCoach(ICoach coach)
+    public void SetCoach(RcCoach coach)
     {
         this.coach = coach;
     }
