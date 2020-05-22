@@ -47,12 +47,14 @@ public class AgentTrainer : MonoBehaviour
     AudioSource source;
     AudioEvent fail;
     AudioEvent win;
+    AudioEvent timeout;
     
     void Awake()
     {
         source = GetComponent<AudioSource>();
         fail = Resources.Load<AudioEvent>("audio/fail");
         win = Resources.Load<AudioEvent>("audio/win");
+        timeout = Resources.Load<AudioEvent>("audio/timeout");
     }
 
     public void SetupTeams()
@@ -186,6 +188,10 @@ public class AgentTrainer : MonoBehaviour
                         defenderAgent.EndEpisode();
                     break;
             }
+            
+            if (!RoboCup.singleton.seriousMode)
+                timeout.Play(source);
+            
             OnEpisodeBegin();
             return;
         }

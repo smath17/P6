@@ -13,8 +13,15 @@ public class RoboCupKickerAgent : Agent
     
     IPlayer player;
     ICoach coach;
-    
+
     [Header("Settings")]
+    public bool rewardMoveToBall;
+    public bool rewardKickTowardsGoal;
+    public bool rewardBallMoveToGoal;
+    public bool penalizeBallNotVisible;
+    public bool penalizeBallMoveToOwnGoal;
+    
+    [Header("References")]
     public RewardDisplay rewardDisplay;
     public ObservationDisplay observationDisplay;
 
@@ -240,7 +247,7 @@ public class RoboCupKickerAgent : Agent
     {
         if (this.kickBallCount < kickBallCount)
         {
-            if (goalLeftFlagVisible && goalRightFlagVisible)
+            if (rewardKickTowardsGoal && goalLeftFlagVisible && goalRightFlagVisible)
             {
                 AddReward(0.1f);
                 if (goalLeftFlagDirection < 0 && goalRightFlagDirection > 0)
@@ -401,7 +408,7 @@ public class RoboCupKickerAgent : Agent
     {
         if (ballVisible)
         {
-            if (ballDistance >= 0.7 && ballDistance < bestPlayerDistanceFromBallThisEpisode - 2.5f)
+            if (rewardMoveToBall && ballDistance >= 0.7 && ballDistance < bestPlayerDistanceFromBallThisEpisode - 2.5f)
             {
                 bestPlayerDistanceFromBallThisEpisode = ballDistance;
                 float distanceReward = (ballDistance - 50) / (0.7f - 50);
@@ -420,7 +427,8 @@ public class RoboCupKickerAgent : Agent
         }
         else
         {
-            AddReward(-0.02f);
+            if (penalizeBallNotVisible)
+                AddReward(-0.02f);
         }
         
         if (rewardDisplay != null)
@@ -429,6 +437,9 @@ public class RoboCupKickerAgent : Agent
 
     public void OnBallMovedRight(float distanceFromGoal)
     {
+        if (!rewardBallMoveToGoal)
+            return;
+        
         if (distanceFromGoal < bestBallDistanceFromEnemyGoalThisEpisode - 2.5f)
         {
             bestBallDistanceFromEnemyGoalThisEpisode = distanceFromGoal;
@@ -449,6 +460,9 @@ public class RoboCupKickerAgent : Agent
     
     public void OnBallMovedLeft(float distanceFromGoal)
     {
+        if (!penalizeBallMoveToOwnGoal)
+            return;
+        
         if (distanceFromGoal < worstBallDistanceFromOwnGoalThisEpisode - 2.5f)
         {
             worstBallDistanceFromOwnGoalThisEpisode = distanceFromGoal;
