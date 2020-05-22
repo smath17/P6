@@ -45,12 +45,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 3
+    VectorObservationSize: 7
     NumStackedVectorObservations: 1
-    VectorActionSize: 04000000
+    VectorActionSize: 05000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
-  m_Model: {fileID: 5022602860645237092, guid: 08bee3971b4297a41a479bfbd01a8e6b, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: 999f2b8165a8f0342aee6015e976ad8f, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: RoboCupBrain
@@ -72,4 +72,12 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
+  rewardMoveToBall: 0
+  rewardKickTowardsGoal: 0
+  rewardBallMoveToGoal: 0
+  penalizeBallNotVisible: 0
+  penalizeBallMoveToOwnGoal: 0
   rewardDisplay: {fileID: 0}
+  observationDisplay: {fileID: 0}
+  goalsScoredCurPos: 0
+  goalsScoredOverall: 0

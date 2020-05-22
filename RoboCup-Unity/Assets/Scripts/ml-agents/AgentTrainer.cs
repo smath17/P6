@@ -214,10 +214,8 @@ public class AgentTrainer : MonoBehaviour
             case TrainingScenario.RunTowardsBallAndKick:
                 
                 RcPerceivedObject kickerBall = kicker.GetRcObject("b");
-                if (kickerBall.curVisibility)
-                    kickerAgent.SetBallInfo(true, kickerBall.direction, kickerBall.distance);
-                else
-                    kickerAgent.SetBallInfo(false);
+                if (kickerBall != null)
+                    kickerAgent.SetBallInfo(kickerBall.curVisibility, kickerBall.direction, kickerBall.distance);
                 
                 RcPerceivedObject kickerGoalLeft = kicker.GetRcObject("f g r t");
                 RcPerceivedObject kickerGoalRight = kicker.GetRcObject("f g r b");

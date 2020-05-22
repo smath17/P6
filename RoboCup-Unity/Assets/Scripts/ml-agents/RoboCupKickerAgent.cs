@@ -7,7 +7,7 @@ using Random = UnityEngine.Random;
 
 public class RoboCupKickerAgent : Agent, RcAgent
 {
-    public enum TrainingPhase {CloseToGoalKick, CloseToGoalMoveAndKick, FarFromGoalMoveAndKick, RandomPositionsMoveAndKick}
+    public enum TrainingPhase {NoTraining, CloseToGoalKick, CloseToGoalMoveAndKick, FarFromGoalMoveAndKick, RandomPositionsMoveAndKick}
     
     AgentTrainer agentTrainer;
     
@@ -15,6 +15,7 @@ public class RoboCupKickerAgent : Agent, RcAgent
     RcCoach coach;
 
     [Header("Settings")]
+    public TrainingPhase trainingPhase = TrainingPhase.CloseToGoalKick;
     public bool rewardMoveToBall;
     public bool rewardKickTowardsGoal;
     public bool rewardBallMoveToGoal;
@@ -61,7 +62,6 @@ public class RoboCupKickerAgent : Agent, RcAgent
 
     bool realMatch;
 
-    TrainingPhase trainingPhase = TrainingPhase.CloseToGoalKick;
 
     int ballX = 20;
     int ballY = 0;

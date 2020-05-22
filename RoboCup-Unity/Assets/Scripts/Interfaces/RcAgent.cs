@@ -10,4 +10,7 @@ public interface RcAgent
     void SetPlayer(RcPlayer player);
     void SetRealMatch();
     void RequestDecision();
+    void SetOwnGoalInfo(bool curVisibility, float direction);
+    void SetLeftSideInfo(bool curVisibility, float direction);
+    void SetRightSideInfo(bool curVisibility, float direction);
 }

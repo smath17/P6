@@ -347,18 +347,26 @@ public class RoboCup : MonoBehaviour
         for (int i = 0; i < team1Agents.Count; i++)
         {
             RcPerceivedObject ball = team1[i].GetRcObject("b");
-            team1Agents[i].SetBallInfo(ball.curVisibility, ball.direction, ball.distance);
+            if (ball != null)
+               team1Agents[i].SetBallInfo(ball.curVisibility, ball.direction, ball.distance);
 
-            RcPerceivedObject kickerGoalLeft = team1[i].GetRcObject("g r t");
-            RcPerceivedObject kickerGoalRight = team1[i].GetRcObject("g r b");
+            RcPerceivedObject kickerGoalLeft = team1[i].GetRcObject("f g r t");
+            RcPerceivedObject kickerGoalRight = team1[i].GetRcObject("f g r b");
 
-            bool kickerGoalLeftVisible = kickerGoalLeft != null;
-            bool kickerGoalRightVisible = kickerGoalRight != null;
+            if (kickerGoalLeft != null && kickerGoalRight != null)
+                team1Agents[i].SetGoalInfo(kickerGoalLeft.curVisibility, kickerGoalLeft.direction, kickerGoalRight.curVisibility, kickerGoalRight.direction);
 
-            float kickerGoalLeftDir = kickerGoalLeftVisible ? kickerGoalLeft.direction : -1f;
-            float kickerGoalRightDir = kickerGoalRightVisible ? kickerGoalRight.direction : -1f;
+            RcPerceivedObject kickerOwnGoal = team1[i].GetRcObject("g l");
+            if (kickerOwnGoal != null)
+                team1Agents[i].SetOwnGoalInfo(kickerOwnGoal.curVisibility, kickerOwnGoal.direction);
                 
-            team1Agents[i].SetGoalInfo(kickerGoalLeftVisible, kickerGoalLeftDir, kickerGoalRightVisible, kickerGoalRightDir);
+            RcPerceivedObject kickerLeftSide = team1[i].GetRcObject("f t 0");
+            if (kickerLeftSide != null)
+                team1Agents[i].SetLeftSideInfo(kickerLeftSide.curVisibility, kickerLeftSide.direction);
+                
+            RcPerceivedObject kickerRightSide = team1[i].GetRcObject("f b 0");
+            if (kickerRightSide != null)
+                team1Agents[i].SetRightSideInfo(kickerRightSide.curVisibility, kickerRightSide.direction);
                 
             team1Agents[i].SetSelfInfo(team1[i].GetKickBallCount());
             team1Agents[i].RequestDecision();
@@ -367,18 +375,26 @@ public class RoboCup : MonoBehaviour
         for (int i = 0; i < team2Agents.Count; i++)
         {
             RcPerceivedObject ball = team2[i].GetRcObject("b");
-            team2Agents[i].SetBallInfo(ball.curVisibility, ball.direction, ball.distance);
+            if (ball != null)
+                team2Agents[i].SetBallInfo(ball.curVisibility, ball.direction, ball.distance);
 
-            RcPerceivedObject kickerGoalLeft = team1[i].GetRcObject("g l b");
-            RcPerceivedObject kickerGoalRight = team1[i].GetRcObject("g l t");
+            RcPerceivedObject kickerGoalLeft = team2[i].GetRcObject("f g l b");
+            RcPerceivedObject kickerGoalRight = team2[i].GetRcObject("f g l t");
 
-            bool kickerGoalLeftVisible = kickerGoalLeft != null;
-            bool kickerGoalRightVisible = kickerGoalRight != null;
+            if (kickerGoalLeft != null && kickerGoalRight != null)
+                team2Agents[i].SetGoalInfo(kickerGoalLeft.curVisibility, kickerGoalLeft.direction, kickerGoalRight.curVisibility, kickerGoalRight.direction);
 
-            float kickerGoalLeftDir = kickerGoalLeftVisible ? kickerGoalLeft.direction : -1f;
-            float kickerGoalRightDir = kickerGoalRightVisible ? kickerGoalRight.direction : -1f;
+            RcPerceivedObject kickerOwnGoal = team2[i].GetRcObject("g r");
+            if (kickerOwnGoal != null)
+                team2Agents[i].SetOwnGoalInfo(kickerOwnGoal.curVisibility, kickerOwnGoal.direction);
                 
-            team1Agents[i].SetGoalInfo(kickerGoalLeftVisible, kickerGoalLeftDir, kickerGoalRightVisible, kickerGoalRightDir);
+            RcPerceivedObject kickerLeftSide = team2[i].GetRcObject("f b 0");
+            if (kickerLeftSide != null)
+                team2Agents[i].SetLeftSideInfo(kickerLeftSide.curVisibility, kickerLeftSide.direction);
+                
+            RcPerceivedObject kickerRightSide = team2[i].GetRcObject("f t 0");
+            if (kickerRightSide != null)
+                team2Agents[i].SetRightSideInfo(kickerRightSide.curVisibility, kickerRightSide.direction);
                 
             team2Agents[i].SetSelfInfo(team2[i].GetKickBallCount());
             team2Agents[i].RequestDecision();

@@ -8511,6 +8511,12 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
+  trainingPhase: 1
+  rewardMoveToBall: 0
+  rewardKickTowardsGoal: 0
+  rewardBallMoveToGoal: 0
+  penalizeBallNotVisible: 0
+  penalizeBallMoveToOwnGoal: 0
   rewardDisplay: {fileID: 1968320745}
   observationDisplay: {fileID: 1601095451}
   goalsScoredCurPos: 0
