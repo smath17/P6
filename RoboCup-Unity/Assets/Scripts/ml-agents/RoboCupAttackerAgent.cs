@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
 using UnityEngine;
@@ -6,20 +7,50 @@ public class RoboCupAttackerAgent : Agent
 {
     RcPlayer player;
     RcCoach coach;
+    
+    //rewards
+    bool rewardKickTowardsGoal = true;
+    bool rewardBallMoveToGoal = true;
+    bool penalizeBallMoveToOwnGoal = true;
+    
+    [Header("References")]
+    public RewardDisplay rewardDisplay;
+    public ObservationDisplay observationDisplay;
+    
+    List<string> observationNames = new List<string>();
+    List<float> observations = new List<float>();
 
-    float selfPositionX;
-    float selfPositionY;
     float selfDirection;
 
     int kickBallCount;
 
     bool ballVisible;
-    int ballDirection;
-    int ballDistance;
+    float ballDirection;
+    float ballDistance;
+    
+    bool goalLeftFlagVisible;
+    bool goalRightFlagVisible;
+    float goalLeftFlagDirection;
+    float goalRightFlagDirection;
+    
+    bool ownGoalVisible;
+    float ownGoalDirection;
+    
+    bool leftSideVisible;
+    float leftSideDirection;
+    
+    bool rightSideVisible;
+    float rightSideDirection;
+    
+    float bestPlayerDistanceFromBallThisEpisode;
+    float bestBallDistanceFromEnemyGoalThisEpisode;
+    float worstBallDistanceFromOwnGoalThisEpisode;
+    
+    bool hasKicked;
 
     bool defenderVisible;
-    int defenderDirection;
-    int defenderDistance;
+    float defenderDirection;
+    float defenderDistance;
     
     bool goalVisible;
     int goalDirection;
@@ -28,8 +59,6 @@ public class RoboCupAttackerAgent : Agent
     int dashSpeed = 100;
 
     public bool printRewards;
-
-    public RewardDisplay rewardDisplay;
 
     public void SetPlayer(RcPlayer player)
     {
@@ -45,33 +74,42 @@ public class RoboCupAttackerAgent : Agent
     {
     }
     
-    public void SetSelfInfo(float positionX, float positionY, float direction, int kickBallCount)
+    public void SetSelfInfo(int kickBallCount)
     {
-        selfPositionX = positionX;
-        selfPositionY = positionY;
-        selfDirection = direction;
-        
         if (this.kickBallCount < kickBallCount)
-            OnKickedBall();
+        {
+            AddReward(0.1f);
+            if (rewardKickTowardsGoal && goalLeftFlagVisible && goalRightFlagVisible)
+            {
+                AddReward(0.3f);
+                if (goalLeftFlagDirection < 0 && goalRightFlagDirection > 0)
+                {
+                    AddReward(0.6f);
+                }
+            }
+            hasKicked = true;
+        }
 
         this.kickBallCount = kickBallCount;
     }
     
-    public void SetBallInfo(bool visible, int direction = 0, int distance = 0)
+    public void SetBallInfo(bool visible, float direction = 0, float distance = 0)
     {
         ballVisible = visible;
         ballDirection = direction;
         ballDistance = distance;
     }
     
-    public void SetGoalInfo(bool visible, int direction = 0, int distance = 0)
+    public void SetGoalInfo(bool leftFlagVisible, float leftFlagDirection, bool rightFlagVisible, float rightFlagDirection)
     {
-        goalVisible = visible;
-        goalDirection = direction;
-        goalDistance = distance;
+        goalLeftFlagVisible = leftFlagVisible;
+        goalLeftFlagDirection = leftFlagDirection;
+
+        goalRightFlagVisible = rightFlagVisible;
+        goalRightFlagDirection = rightFlagDirection;
     }
     
-    public void SetDefenderInfo(bool visible, int direction = 0, int distance = 0)
+    public void SetDefenderInfo(bool visible, float direction = 0, float distance = 0)
     {
         defenderVisible = visible;
         defenderDirection = direction;
@@ -80,18 +118,36 @@ public class RoboCupAttackerAgent : Agent
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        sensor.AddObservation(selfPositionX);
-        sensor.AddObservation(selfPositionY);
-        sensor.AddObservation(selfDirection);
+        AddObservation(sensor, "bDir", ballVisible ? ballDirection / 45 : -1);
+        AddObservation(sensor, "bDist", ballVisible ? ballDistance / 65 : -1);
 
-        sensor.AddObservation(ballVisible ? ballDirection : -1);
-        sensor.AddObservation(ballVisible ? ballDistance : -1);
+        AddObservation(sensor, "enemyGL", goalLeftFlagVisible ? goalLeftFlagDirection / 45 : -1);
+        AddObservation(sensor, "enemyGR", goalRightFlagVisible ? goalRightFlagDirection / 45 : -1);
+
+        AddObservation(sensor, "ownG", ownGoalVisible ? ownGoalDirection / 45 : -1);
+        AddObservation(sensor, "left", leftSideVisible ? leftSideDirection / 45 : -1);
+        AddObservation(sensor, "right", rightSideVisible ? rightSideDirection / 45 : -1);
+
+        AddObservation(sensor, "defDir", defenderVisible ? defenderDirection / 45 : -1);
+        AddObservation(sensor, "defDist", defenderVisible ? defenderDistance / 60 : -1);
         
-        sensor.AddObservation(goalVisible ? goalDirection : -1);
-        sensor.AddObservation(goalVisible ? goalDistance : -1);
+        DisplayObservations();
+    }
+    
+    void AddObservation(VectorSensor sensor, string name, float obs)
+    {
+        sensor.AddObservation(obs);
+        observationNames.Add(name);
+        observations.Add(obs);
+    }
 
-        sensor.AddObservation(defenderVisible ? defenderDirection : -1);
-        sensor.AddObservation(defenderVisible ? defenderDistance : -1);
+    void DisplayObservations()
+    {
+        if (observationDisplay != null)
+            observationDisplay.DisplayObservations(observationNames, observations);
+        
+        observationNames.Clear();
+        observations.Clear();
     }
 
     public override void OnActionReceived(float[] vectorAction)
@@ -100,52 +156,67 @@ public class RoboCupAttackerAgent : Agent
 
         switch (action)
         {
-            case 0: // do nothing
-                break;
-            
-            case 1: // move left
-                player.Dash(dashSpeed, -90);
-                break;
-            
-            case 2: // move right
-                player.Dash(dashSpeed, 90);
-                break;
-            
-            case 3: // move up
+            case 0: // move
                 player.Dash(dashSpeed, 0);
                 break;
             
-            case 4: // move down
-                player.Dash(dashSpeed, 180);
-                break;
-            
-            case 5: // turn left
+            case 1: // turn left
                 player.Turn(-10);
                 break;
             
-            case 6: // turn right
+            case 2: // turn right
                 player.Turn(10);
                 break;
             
-            case 7: // kick
+            case 3: // kick
                 player.Kick(100);
                 break;
         }
+        
+        DoRewards();
     }
+
+    void DoRewards()
+    {
+        if(!ballVisible)
+            OnBallNotVisible();
+        
+        if (rewardDisplay != null)
+            rewardDisplay.DisplayRewards(GetReward(), GetCumulativeReward());
+    }
+    
     
     public void OnBallWithinRange()
     {
-        AddReward(0.2f, "Ball Within Range");
+        //AddReward(0.2f, "Ball Within Range");
     }
 
     public void OnKickedBall()
     {
-        AddReward(0.2f, "Kicked Ball");
+        //AddReward(0.2f, "Kicked Ball");
     }
     
-    public void OnBallMovedLeft()
+    public void OnBallMovedLeft(float distanceFromGoal)
     {
-        AddReward(0.1f, "Ball Moved Left");
+        if (!penalizeBallMoveToOwnGoal)
+            return;
+        
+        if (distanceFromGoal < worstBallDistanceFromOwnGoalThisEpisode - 2.5f)
+        {
+            worstBallDistanceFromOwnGoalThisEpisode = distanceFromGoal;
+            float ballMoveReward = (distanceFromGoal - 50) / (0.7f - 50);
+            if (ballMoveReward > 1)
+            {
+                ballMoveReward = 1;
+            }
+        
+            ballMoveReward *= 0.1f;
+        
+            if (ballMoveReward > 0)
+            {
+                //AddReward(-ballMoveReward);
+            }
+        } 
     }
 
     public void OnScored()
@@ -156,27 +227,27 @@ public class RoboCupAttackerAgent : Agent
 
     public void OnTimePassed()
     {
-        AddReward(-0.1f, "Time Passed");
+        //AddReward(-0.1f, "Time Passed");
     }
 
     public void OnBallNotVisible()
     {
-        AddReward(-0.2f, "Ball Not Visible");
+        AddReward(-0.02f, "Ball Not Visible");
     }
     
     public void OnLookRight()
     {
-        AddReward(-0.5f, "Looked To The Right");
+        //AddReward(-0.5f, "Looked To The Right");
     }
     
     public void OnEnteredGoalArea()
     {
-        AddReward(-0.5f, "Entered Goal Area");
+        //AddReward(-0.5f, "Entered Goal Area");
     }
 
     public void OnFailedToScore()
     {
-        AddReward(-1f, "Failed To Score");
+        //AddReward(-1f, "Failed To Score");
         EndEpisode();
     }
 
@@ -226,5 +297,57 @@ public class RoboCupAttackerAgent : Agent
         
         if (Input.GetKey(KeyCode.Space))
             actionsOut[0] = 7;
+    }
+
+    public void SetOwnGoalInfo(bool visible, float direction = 0)
+    {
+        ownGoalVisible = visible;
+        ownGoalDirection = direction;
+    }
+
+    public void SetLeftSideInfo(bool visible, float direction = 0)
+    {
+        leftSideVisible = visible;
+        leftSideDirection = direction;
+    }
+
+    public void SetRightSideInfo(bool visible, float direction = 0)
+    {
+        rightSideVisible = visible;
+        rightSideDirection = direction;
+    }
+
+    public void OnBallMovedRight(float distanceFromGoal)
+    {
+        if (!rewardBallMoveToGoal)
+            return;
+                
+        if (distanceFromGoal < bestBallDistanceFromEnemyGoalThisEpisode - 2.5f)
+        {
+            bestBallDistanceFromEnemyGoalThisEpisode = distanceFromGoal;
+            float ballMoveReward = (distanceFromGoal - 50) / (0.7f - 50);
+            if (ballMoveReward > 1)
+            {
+                ballMoveReward = 1;
+            }
+        
+            ballMoveReward *= 0.15f;
+        
+            if (ballMoveReward > 0)
+            {
+                //AddReward(ballMoveReward);
+            }
+        } 
+    }
+
+    public void OnBallEnteredLeftSide()
+    {
+        //AddReward(-0.1f);
+    }
+
+    public void OnBallOutOfField()
+    {
+        //AddReward(-1f);
+                EndEpisode();
     }
 }

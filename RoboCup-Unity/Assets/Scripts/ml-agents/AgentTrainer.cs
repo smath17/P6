@@ -31,7 +31,7 @@ public class AgentTrainer : MonoBehaviour
 
     bool initialized;
     
-    int stepsPerEpisode = 50;
+    int stepsPerEpisode = 2000;
     int stepsLeftInCurrentEpisode;
 
     RcCoach coach;
@@ -155,9 +155,9 @@ public class AgentTrainer : MonoBehaviour
                 int goalieY = Random.Range(-10, 10);
                 
                 coach.MovePlayer(RoboCup.singleton.GetTeamName(), 1, -50, goalieY, 0);
-                coach.MovePlayer(RoboCup.singleton.GetEnemyTeamName(), 1, -20, 0, 180);
+                coach.MovePlayer(RoboCup.singleton.GetEnemyTeamName(), 1, Random.Range(-52,52), Random.Range(-32,32), Random.Range(-180, 180));
                 
-                coach.MoveBall(-25, 0);
+                coach.MoveBall(Random.Range(-52,52), Random.Range(-32,32));
                 coach.Recover();
                 break;
         }
@@ -319,25 +319,85 @@ public class AgentTrainer : MonoBehaviour
                 }
                 
                 // Attacker Observations
-                attackerAgent.SetSelfInfo(attacker.GetCalculatedPosition().x, attacker.GetCalculatedPosition().y, attacker.GetCalculatedAngle(), attacker.GetKickBallCount());
+                //attackerAgent.SetSelfInfo(attacker.GetCalculatedPosition().x, attacker.GetCalculatedPosition().y, attacker.GetCalculatedAngle(), attacker.GetKickBallCount());
                 
                 RcPerceivedObject attackerBall = attacker.GetRcObject("b");
                 if (attackerBall != null)
+                    attackerAgent.SetBallInfo(attackerBall.curVisibility, attackerBall.direction, attackerBall.distance);
+
+                RcPerceivedObject attackerGoalLeft = attacker.GetRcObject("f g l b");
+                RcPerceivedObject attackerGoalRight = attacker.GetRcObject("f g l t");
+                
+                if (attackerGoalLeft != null && attackerGoalRight != null)
+                    attackerAgent.SetGoalInfo(attackerGoalLeft.curVisibility, attackerGoalLeft.direction, attackerGoalRight.curVisibility, attackerGoalRight.direction);
+
+                RcPerceivedObject attackerOwnGoal = attacker.GetRcObject("g r");
+                if (attackerOwnGoal != null)
+                    attackerAgent.SetOwnGoalInfo(attackerOwnGoal.curVisibility, attackerOwnGoal.direction);
+                
+                RcPerceivedObject attackerLeftSide = attacker.GetRcObject("f b 0");
+                if (attackerLeftSide != null)
+                    attackerAgent.SetLeftSideInfo(attackerLeftSide.curVisibility, attackerLeftSide.direction);
+                
+                RcPerceivedObject attackerRightSide = attacker.GetRcObject("f t 0");
+                if (attackerRightSide != null)
+                    attackerAgent.SetRightSideInfo(attackerRightSide.curVisibility, attackerRightSide.direction);
+                
+                attackerAgent.SetSelfInfo(attacker.GetKickBallCount());
+                attackerAgent.RequestDecision();
+                
+                RcObject attackerCoachBall = coach.GetRcObject("b");
+                if (attackerCoachBall != null)
                 {
-                    attackerAgent.SetBallInfo(attackerBall.curVisibility, (int)attackerBall.direction, (int)attackerBall.distance);
-                    if (!attackerBall.curVisibility)
-                        attackerAgent.OnBallNotVisible();
-                    else if (attackerBall.distance < 0.7f)
-                        attackerAgent.OnBallWithinRange();
+                    if (attackerCoachBall.delta.x > 0.1f)
+                    {
+                        Vector2 ballPos = new Vector2(attackerCoachBall.position.x, attackerCoachBall.position.y);
+                        RcObject attackerCoachGoal = coach.GetRcObject("g l");
+                        Vector2 goalPos = new Vector2(attackerCoachGoal.position.x, attackerCoachGoal.position.y);
+
+                        attackerAgent.OnBallMovedRight((ballPos - goalPos).magnitude);
+                    }
+                    
+                    if (attackerCoachBall.delta.x < -0.1f)
+                    {
+                        Vector2 ballPos = new Vector2(attackerCoachBall.position.x, attackerCoachBall.position.y);
+                        RcObject attackerCoachGoal = coach.GetRcObject("g r");
+                        Vector2 goalPos = new Vector2(attackerCoachGoal.position.x, attackerCoachGoal.position.y);
+
+                        attackerAgent.OnBallMovedLeft((ballPos - goalPos).magnitude);
+                        
+                        if (ballPos.x < 0)
+                            attackerAgent.OnBallEnteredLeftSide();
+                    }
+                    
+                    // Ball enters goal
+                    if (attackerCoachBall.position.y < 7 && attackerCoachBall.position.y > -7 && attackerCoachBall.position.x > 52)
+                    {
+                        if (!RoboCup.singleton.seriousMode)
+                            win.Play(source);
+                        
+                        attackerAgent.OnScored();
+                        OnEpisodeBegin();
+                        return;
+                    }
+
+                    if (attackerCoachBall.position.y < -32 || attackerCoachBall.position.y > 32 ||
+                        attackerCoachBall.position.x > 52 ||attackerCoachBall.position.x < -52)
+                    {
+                        if (!RoboCup.singleton.seriousMode)
+                            fail.Play(source);
+                        
+                        attackerAgent.OnBallOutOfField();
+                        OnEpisodeBegin();
+                        return;
+                    }
+
                 }
                 
-                RcPerceivedObject attackerGoal = attacker.GetRcObject("g l");
-                if (attackerGoal != null)
-                    attackerAgent.SetGoalInfo(attackerGoal.curVisibility, (int)attackerGoal.direction, (int)attackerGoal.distance);
                 
                 RcPerceivedObject attackerOpponent = attacker.GetRcObject("p \"Defender\" 1 goalie");
                 if (attackerOpponent != null)
-                    attackerAgent.SetDefenderInfo(attackerOpponent.curVisibility, (int)attackerOpponent.direction, (int)attackerOpponent.distance);
+                    attackerAgent.SetDefenderInfo(attackerOpponent.curVisibility, attackerOpponent.direction, attackerOpponent.distance);
                 
                 // Rewards
                 if (trainingScenario != TrainingScenario.AttackDefendAttackOnly)
@@ -359,41 +419,6 @@ public class AgentTrainer : MonoBehaviour
 
                 if (attacker.GetCalculatedAngle() > 0)
                     attackerAgent.OnLookRight();
-                
-                
-                RcObject coachBall = coach.GetRcObject("b");
-                if (coachBall != null)
-                {
-                    if (coachBall.delta.x < 0)
-                        attackerAgent.OnBallMovedLeft();
-                    
-                    prevBallInGoalArea = curBallInGoalArea;
-                    curBallInGoalArea = coachBall.position.y < 7 && coachBall.position.y > -7 && coachBall.position.x < -46 && coachBall.position.x > -52;
-            
-                    // Ball enters goal
-                    if (coachBall.position.y < 7 && coachBall.position.y > -7 && coachBall.position.x < -52)
-                    {
-                        attackerAgent.OnScored();
-                        if (trainingScenario != TrainingScenario.AttackDefendAttackOnly)
-                            defenderAgent.OnFailedToDefend();
-                        
-                        coach.Goal(false);
-                        OnEpisodeBegin();
-                        return;
-                    }
-
-                    // Ball exits goal area
-                    if (prevBallInGoalArea && !curBallInGoalArea)
-                    {
-                        attackerAgent.OnFailedToScore();
-                        if (trainingScenario != TrainingScenario.AttackDefendAttackOnly)
-                            defenderAgent.OnDefended();
-                        
-                        OnEpisodeBegin();
-                        return;
-                    }
-                    
-                }
 
                 // Request Decisions
                 attackerAgent.RequestDecision();
