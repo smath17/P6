@@ -210,24 +210,8 @@ public class RoboCup : MonoBehaviour
         int playerIndex = 0;
         foreach (PlayerSetupInfo setupInfo in team1Setup)
         {
-            RcPlayer player = CreatePlayer(playerIndex, setupInfo.goalie, setupInfo.x, setupInfo.y, true, reconnect);
-            team1.Add(player);
+            SetupPlayer(setupInfo, playerIndex, true);
             playerIndex++;
-            
-            if (roboCupMode == RoboCupMode.AgentSinglePlayer ||
-                roboCupMode == RoboCupMode.Agent1V1 ||
-                roboCupMode == RoboCupMode.AgentFullTeam ||
-                roboCupMode == RoboCupMode.Agent2Teams)
-            {
-                GameObject agentObj = Instantiate(agentPrefab);
-                RcAgent agent = agentObj.GetComponent<RcAgent>();
-                agent.SetPlayer(player);
-                agent.SetRealMatch();
-                agentObj.SetActive(true);
-                
-                team1Agents.Add(agent);
-            }
-            
             yield return new WaitForSeconds(0.2f);
         }
         
@@ -235,24 +219,8 @@ public class RoboCup : MonoBehaviour
         playerIndex = 0;
         foreach (PlayerSetupInfo setupInfo in team2Setup)
         {
-            RcPlayer player = CreatePlayer(playerIndex, setupInfo.goalie, setupInfo.x, setupInfo.y, false, reconnect);
-            team2.Add(player);
+            SetupPlayer(setupInfo, playerIndex, false);
             playerIndex++;
-            
-            if (roboCupMode == RoboCupMode.AgentSinglePlayer ||
-                roboCupMode == RoboCupMode.Agent1V1 ||
-                roboCupMode == RoboCupMode.AgentFullTeam ||
-                roboCupMode == RoboCupMode.Agent2Teams)
-            {
-                GameObject agentObj = Instantiate(agentPrefab);
-                RcAgent agent = agentObj.GetComponent<RcAgent>();
-                agent.SetPlayer(player);
-                agent.SetRealMatch();
-                agentObj.SetActive(true);
-                
-                team2Agents.Add(agent);
-            }
-            
             yield return new WaitForSeconds(0.2f);
         }
         
@@ -272,25 +240,35 @@ public class RoboCup : MonoBehaviour
         OnInitialized();
     }
 
-    void OnInitialized()
+    // Sets up a player and adds it to a team
+    // (Also creates an RcAgent if applicable)
+    void SetupPlayer(PlayerSetupInfo setupInfo, int playerNumber, bool mainTeam)
     {
-        switch (roboCupMode)
-        {
-            case RoboCupMode.Training:
-                agentTrainer.Init();
-                break;
-            
-            case RoboCupMode.AgentSinglePlayer:
-            case RoboCupMode.Agent1V1:
-            case RoboCupMode.AgentFullTeam:
-            case RoboCupMode.Agent2Teams:
-                coach.InitMatch();
-                break;
-        }
+        RcPlayer player = CreatePlayer(playerNumber, setupInfo.goalie, setupInfo.x, setupInfo.y, true, reconnect);
         
-        OnSwitchPlayer();
+        if (mainTeam)
+            team1.Add(player);
+        else
+            team2.Add(player);
+            
+        if (roboCupMode == RoboCupMode.AgentSinglePlayer ||
+            roboCupMode == RoboCupMode.Agent1V1 ||
+            roboCupMode == RoboCupMode.AgentFullTeam ||
+            roboCupMode == RoboCupMode.Agent2Teams)
+        {
+            GameObject agentObj = Instantiate(agentPrefab);
+            RcAgent agent = agentObj.GetComponent<RcAgent>();
+            agent.SetPlayer(player);
+            agent.SetRealMatch();
+            agentObj.SetActive(true);
+                
+            if (mainTeam)
+                team1Agents.Add(agent);
+            else
+                team2Agents.Add(agent);
+        }
     }
-
+    
     // Creates an RcPlayer which corresponds to a player in the Soccer Simulator
     RcPlayer CreatePlayer(int playerNumber, bool goalie, int x, int y, bool mainTeam = true, bool reconnect = false)
     {
@@ -317,6 +295,25 @@ public class RoboCup : MonoBehaviour
             rcCoach.Send($"({(reconnect ? "reconnect" : "init")} (version 16))");
 
         return rcCoach;
+    }
+
+    void OnInitialized()
+    {
+        switch (roboCupMode)
+        {
+            case RoboCupMode.Training:
+                agentTrainer.Init();
+                break;
+            
+            case RoboCupMode.AgentSinglePlayer:
+            case RoboCupMode.Agent1V1:
+            case RoboCupMode.AgentFullTeam:
+            case RoboCupMode.Agent2Teams:
+                coach.InitMatch();
+                break;
+        }
+        
+        OnSwitchPlayer();
     }
 
     void Update()
