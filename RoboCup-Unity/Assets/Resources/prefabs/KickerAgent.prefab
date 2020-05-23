@@ -72,6 +72,7 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
+  trainingPhase: 0
   rewardMoveToBall: 0
   rewardKickTowardsGoal: 0
   rewardBallMoveToGoal: 0
