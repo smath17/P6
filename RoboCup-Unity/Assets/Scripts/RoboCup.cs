@@ -348,28 +348,35 @@ public class RoboCup : MonoBehaviour
         {
             RcPerceivedObject ball = team1[i].GetRcObject("b");
             if (ball != null)
-               team1Agents[i].SetBallInfo(ball.curVisibility, ball.direction, ball.distance);
+                team1Agents[i].SetBallInfo(ball.curVisibility, ball.direction, ball.distance);
 
             RcPerceivedObject kickerGoalLeft = team1[i].GetRcObject("f g r t");
             RcPerceivedObject kickerGoalRight = team1[i].GetRcObject("f g r b");
 
             if (kickerGoalLeft != null && kickerGoalRight != null)
-                team1Agents[i].SetGoalInfo(kickerGoalLeft.curVisibility, kickerGoalLeft.direction, kickerGoalRight.curVisibility, kickerGoalRight.direction);
+                team1Agents[i].SetGoalInfo(kickerGoalLeft.curVisibility, kickerGoalLeft.direction,
+                    kickerGoalRight.curVisibility, kickerGoalRight.direction);
 
             RcPerceivedObject kickerOwnGoal = team1[i].GetRcObject("g l");
             if (kickerOwnGoal != null)
                 team1Agents[i].SetOwnGoalInfo(kickerOwnGoal.curVisibility, kickerOwnGoal.direction);
-                
+
             RcPerceivedObject kickerLeftSide = team1[i].GetRcObject("f t 0");
             if (kickerLeftSide != null)
                 team1Agents[i].SetLeftSideInfo(kickerLeftSide.curVisibility, kickerLeftSide.direction);
-                
+
             RcPerceivedObject kickerRightSide = team1[i].GetRcObject("f b 0");
             if (kickerRightSide != null)
                 team1Agents[i].SetRightSideInfo(kickerRightSide.curVisibility, kickerRightSide.direction);
-                
+
             team1Agents[i].SetSelfInfo(team1[i].GetKickBallCount());
-            team1Agents[i].RequestDecision();
+
+            // manage stamina for the current RcPlayer
+            StaminaManagement(team1[i], ball);
+            
+            // Check if time to recover or new action
+            if (!team1[i].recovering)
+                team1Agents[i].RequestDecision();
         }
         
         for (int i = 0; i < team2Agents.Count; i++)
@@ -397,7 +404,42 @@ public class RoboCup : MonoBehaviour
                 team2Agents[i].SetRightSideInfo(kickerRightSide.curVisibility, kickerRightSide.direction);
                 
             team2Agents[i].SetSelfInfo(team2[i].GetKickBallCount());
-            team2Agents[i].RequestDecision();
+            
+            // manage stamina for the current RcPlayer
+            StaminaManagement(team2[i], ball);
+            
+            // Check if time to recover or new action
+            if (!team2[i].recovering)
+                team2Agents[i].RequestDecision();
+        }
+    }
+
+    void StaminaManagement(RcPlayer player, RcPerceivedObject ball)
+    {
+        player.recovering = false;
+        
+        // Stamina management only for trained models
+        // Recover at start
+        if (player.GetStamina() < 2500 && player.GetGameStatus().Substring(0, 4).Equals("goal") ||
+            player.recoverAtStart)
+        {
+            // recover at start = false if above 3000 stamina
+            player.recoverAtStart = !(player.GetStamina() > 3000);
+            // Recover stamina == no action request
+            player.recovering = true;
+        }
+
+        // Recover depending on ball pos
+        if (ball != null)
+            // Add up distance
+            player.recoverDistanceToBall += ball.distance;
+        // If sum distance is above 100, recover stamina
+        if (player.recoverDistanceToBall > 100 && player.GetStamina() < 8000)
+        {
+            player.recoverDistanceToBall -= 100;
+            // Recover stamina == no action request
+            player.recovering = true;
+
         }
     }
 

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Net;
+using System.Net.Configuration;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -43,6 +44,11 @@ public class RcPlayer : MonoBehaviour
     int kickBallCount;
     private float stamina;
     private String gameStatus = "before_kick_off";
+    
+    // Stamina management
+    public bool recoverAtStart = false;
+    public float recoverDistanceToBall = 0;
+    public bool recovering = false;
 
     Visualizer3D visualizer;
     AudioSource dashSource;
@@ -425,6 +431,11 @@ public class RcPlayer : MonoBehaviour
     public float GetStamina()
     {
         return stamina;
+    }
+
+    public string GetGameStatus()
+    {
+        return gameStatus;
     }
 
     public void Move(int x, int y)
