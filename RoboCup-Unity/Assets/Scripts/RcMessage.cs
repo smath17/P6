@@ -191,6 +191,7 @@ public class MessageObject
     { 
         public int kick;
         public bool colliding;
+        public float stamina;
     }
     
     public struct SeenObjectData
@@ -309,6 +310,16 @@ public class MessageObject
                             else
                                 senseBodyData.colliding = true;
                         }
+                    }
+
+                    // Extract stamina info from msg
+                    if (senseName.Equals("stamina"))
+                    {
+                        float stamina = 0;
+                        if (senseObject.values.Count > 1)
+                            float.TryParse(senseObject.values[1].MString, out stamina);
+                        
+                        senseBodyData.stamina = stamina;
                     }
                 }
             }
@@ -430,5 +441,18 @@ public class MessageObject
         }
 
         return seenObjectsData;
+    }
+
+    // Hear referee
+    public String GetGameStatus()
+    {
+        String gameStatus = "";
+        
+        if (values.Count > 2)
+        {
+            gameStatus = values[3].MString;
+        }
+
+        return gameStatus;
     }
 }

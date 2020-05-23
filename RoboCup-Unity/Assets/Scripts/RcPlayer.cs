@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
@@ -40,6 +41,8 @@ public class RcPlayer : MonoBehaviour
     bool angleIsKnown;
 
     int kickBallCount;
+    private float stamina;
+    private String gameStatus = "before_kick_off";
 
     Visualizer3D visualizer;
     AudioSource dashSource;
@@ -224,7 +227,7 @@ public class RcPlayer : MonoBehaviour
                 break;
             
             case RcMessage.RcMessageType.Hear:
-                //process hear
+                Hear(rcMessage.GetMessageObject().values[0].MObject);
                 break;
             
             case RcMessage.RcMessageType.Other:
@@ -233,6 +236,11 @@ public class RcPlayer : MonoBehaviour
         }
         
         RoboCup.singleton.ReceiveMessage(msg, rcMessage.MessageType);
+    }
+
+    void Hear(MessageObject messageObject)
+    {
+        gameStatus = messageObject.GetGameStatus();
     }
 
     void Sense(MessageObject messageObject)
@@ -245,6 +253,8 @@ public class RcPlayer : MonoBehaviour
         
         if (senseBodyData.colliding)
             OnCollide();
+
+        stamina = senseBodyData.stamina;
     }
 
     void See(MessageObject messageObject)
@@ -410,6 +420,11 @@ public class RcPlayer : MonoBehaviour
     public int GetKickBallCount()
     {
         return kickBallCount;
+    }
+
+    public float GetStamina()
+    {
+        return stamina;
     }
 
     public void Move(int x, int y)
