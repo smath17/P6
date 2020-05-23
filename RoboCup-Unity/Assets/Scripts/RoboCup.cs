@@ -14,6 +14,7 @@ public class RoboCup : MonoBehaviour
     public const int OnlineCoachPort = 6002;
     
     public static RoboCup singleton;
+    
     Visualizer3D visualizer;
     bool visualizerInitialized;
 
@@ -35,7 +36,7 @@ public class RoboCup : MonoBehaviour
     public LocationCalculator locationCalculator;
     public GameObject agentPrefab;
 
-    // Tickrate
+    // Tickrate (for manual control)
     float currentTick = 0f;
     float tickTime = 0.1f;
 
@@ -43,19 +44,18 @@ public class RoboCup : MonoBehaviour
     string enemyTeamName = "EnemyTeam";
     bool enemyTeamNameFound;
     
-    // Player objects
+    // Player and coach objects
     GameObject playerPrefab;
     GameObject coachPrefab;
     List<RcPlayer> team1 = new List<RcPlayer>();
     List<RcPlayer> team2 = new List<RcPlayer>();
-    
     RcCoach coach;
     
-    //Dictionary<string, RcObject> rcObjects = new Dictionary<string, RcObject>();
-    
+    // Team setup information
     List<PlayerSetupInfo> team1Setup = new List<PlayerSetupInfo>();
     List<PlayerSetupInfo> team2Setup = new List<PlayerSetupInfo>();
 
+    // Agent objects
     List<RcAgent> team1Agents = new List<RcAgent>();
     List<RcAgent> team2Agents = new List<RcAgent>();
 
@@ -155,10 +155,12 @@ public class RoboCup : MonoBehaviour
     
     void Start()
     {
-        // Setup teams
+        // Setup team compositions
         switch (roboCupMode)
         {
             case RoboCupMode.ManualControlFullTeam:
+            case RoboCupMode.AgentFullTeam:
+                // Full team of players (1 goalie)
                 for (int i = 0; i < FullTeamSize-1; i++)
                     team1Setup.Add(new PlayerSetupInfo(false, -20, i*5 - 30));
         
@@ -166,32 +168,26 @@ public class RoboCup : MonoBehaviour
                 break;
             
             case RoboCupMode.ManualControlSinglePlayer:
+            case RoboCupMode.AgentSinglePlayer:
+                // Single player
                 team1Setup.Add(new PlayerSetupInfo(false, -20, 0));
                 break;
             
             case RoboCupMode.Training:
+                // Use AgentTrainer's teams
                 agentTrainer.SetupTeams();
                 team1Setup = agentTrainer.GetTeam1Setup();
                 team2Setup = agentTrainer.GetTeam2Setup();
                 break;
             
-            case RoboCupMode.AgentSinglePlayer:
-                team1Setup.Add(new PlayerSetupInfo(false, -20, 0));
-                break;
-            
             case RoboCupMode.Agent1V1:
+                // 2 Teams of 1
                 team1Setup.Add(new PlayerSetupInfo(false, -20, 0));
                 team2Setup.Add(new PlayerSetupInfo(false, 20, 0));
                 break;
             
-            case RoboCupMode.AgentFullTeam:
-                for (int i = 0; i < FullTeamSize-1; i++)
-                    team1Setup.Add(new PlayerSetupInfo(false, -20, i*5 - 30));
-        
-                team1Setup.Add(new PlayerSetupInfo(true, -50, 20));
-                break;
-            
             case RoboCupMode.Agent2Teams:
+                // 2 Full teams (1 goalie each)
                 for (int i = 0; i < FullTeamSize-1; i++)
                     team1Setup.Add(new PlayerSetupInfo(false, -20, i*5 - 30));
         
@@ -204,12 +200,13 @@ public class RoboCup : MonoBehaviour
                 break;
         }
         
-        // Create players based on setup
+        // Create players based on team setup
         StartCoroutine(CreatePlayers());
     }
     
     IEnumerator CreatePlayers()
     {
+        // Setup team 1 Players
         int playerIndex = 0;
         foreach (PlayerSetupInfo setupInfo in team1Setup)
         {
@@ -234,6 +231,7 @@ public class RoboCup : MonoBehaviour
             yield return new WaitForSeconds(0.2f);
         }
         
+        // Setup team 2 players
         playerIndex = 0;
         foreach (PlayerSetupInfo setupInfo in team2Setup)
         {
@@ -258,9 +256,11 @@ public class RoboCup : MonoBehaviour
             yield return new WaitForSeconds(0.2f);
         }
         
+        // Setup offline coach for training
         if (roboCupMode == RoboCupMode.Training)
             coach = CreateCoach(false, reconnect);
         
+        // Setup online coach for regular match
         if (roboCupMode == RoboCupMode.AgentSinglePlayer ||
             roboCupMode == RoboCupMode.Agent1V1 ||
             roboCupMode == RoboCupMode.AgentFullTeam ||
@@ -276,10 +276,6 @@ public class RoboCup : MonoBehaviour
     {
         switch (roboCupMode)
         {
-            case RoboCupMode.ManualControlFullTeam:
-            case RoboCupMode.ManualControlSinglePlayer:
-                break;
-            
             case RoboCupMode.Training:
                 agentTrainer.Init();
                 break;
@@ -295,6 +291,7 @@ public class RoboCup : MonoBehaviour
         OnSwitchPlayer();
     }
 
+    // Creates an RcPlayer which corresponds to a player in the Soccer Simulator
     RcPlayer CreatePlayer(int playerNumber, bool goalie, int x, int y, bool mainTeam = true, bool reconnect = false)
     {
         GameObject p = Instantiate(playerPrefab);
@@ -306,6 +303,7 @@ public class RoboCup : MonoBehaviour
         return rcPlayer;
     }
     
+    // Creates an RcCoach which corresponds to a coach in the Soccer Simulator
     RcCoach CreateCoach(bool online, bool reconnect = false)
     {
         GameObject c = Instantiate(coachPrefab);
@@ -336,89 +334,65 @@ public class RoboCup : MonoBehaviour
                     PlayerControl();
                 }
                 break;
-            
-            case RoboCupMode.Training:
-                break;
         }
     }
 
+    // Used to update agents during normal match
     public void StepAgents()
     {
+        // Team 1 agents
         for (int i = 0; i < team1Agents.Count; i++)
-        {
-            RcPerceivedObject ball = team1[i].GetRcObject("b");
-            if (ball != null)
-                team1Agents[i].SetBallInfo(ball.curVisibility, ball.direction, ball.distance);
-
-            RcPerceivedObject kickerGoalLeft = team1[i].GetRcObject("f g r t");
-            RcPerceivedObject kickerGoalRight = team1[i].GetRcObject("f g r b");
-
-            if (kickerGoalLeft != null && kickerGoalRight != null)
-                team1Agents[i].SetGoalInfo(kickerGoalLeft.curVisibility, kickerGoalLeft.direction,
-                    kickerGoalRight.curVisibility, kickerGoalRight.direction);
-
-            RcPerceivedObject kickerOwnGoal = team1[i].GetRcObject("g l");
-            if (kickerOwnGoal != null)
-                team1Agents[i].SetOwnGoalInfo(kickerOwnGoal.curVisibility, kickerOwnGoal.direction);
-
-            RcPerceivedObject kickerLeftSide = team1[i].GetRcObject("f t 0");
-            if (kickerLeftSide != null)
-                team1Agents[i].SetLeftSideInfo(kickerLeftSide.curVisibility, kickerLeftSide.direction);
-
-            RcPerceivedObject kickerRightSide = team1[i].GetRcObject("f b 0");
-            if (kickerRightSide != null)
-                team1Agents[i].SetRightSideInfo(kickerRightSide.curVisibility, kickerRightSide.direction);
-
-            team1Agents[i].SetSelfInfo(team1[i].GetKickBallCount());
-
-            // manage stamina for the current RcPlayer
-            StaminaManagement(team1[i], ball);
-            
-            // Check if time to recover or new action
-            if (!team1[i].recovering)
-                team1Agents[i].RequestDecision();
-        }
+            StepAgent(team1Agents[i], team1[i]);
         
+        // Team 2 agents
         for (int i = 0; i < team2Agents.Count; i++)
-        {
-            RcPerceivedObject ball = team2[i].GetRcObject("b");
-            if (ball != null)
-                team2Agents[i].SetBallInfo(ball.curVisibility, ball.direction, ball.distance);
-
-            RcPerceivedObject kickerGoalLeft = team2[i].GetRcObject("f g l b");
-            RcPerceivedObject kickerGoalRight = team2[i].GetRcObject("f g l t");
-
-            if (kickerGoalLeft != null && kickerGoalRight != null)
-                team2Agents[i].SetGoalInfo(kickerGoalLeft.curVisibility, kickerGoalLeft.direction, kickerGoalRight.curVisibility, kickerGoalRight.direction);
-
-            RcPerceivedObject kickerOwnGoal = team2[i].GetRcObject("g r");
-            if (kickerOwnGoal != null)
-                team2Agents[i].SetOwnGoalInfo(kickerOwnGoal.curVisibility, kickerOwnGoal.direction);
-                
-            RcPerceivedObject kickerLeftSide = team2[i].GetRcObject("f b 0");
-            if (kickerLeftSide != null)
-                team2Agents[i].SetLeftSideInfo(kickerLeftSide.curVisibility, kickerLeftSide.direction);
-                
-            RcPerceivedObject kickerRightSide = team2[i].GetRcObject("f t 0");
-            if (kickerRightSide != null)
-                team2Agents[i].SetRightSideInfo(kickerRightSide.curVisibility, kickerRightSide.direction);
-                
-            team2Agents[i].SetSelfInfo(team2[i].GetKickBallCount());
-            
-            // manage stamina for the current RcPlayer
-            StaminaManagement(team2[i], ball);
-            
-            // Check if time to recover or new action
-            if (!team2[i].recovering)
-                team2Agents[i].RequestDecision();
-        }
+            StepAgent(team2Agents[i], team2[i]);
     }
 
+    // Updates agent observations, manages stamina, and requests new decisions
+    void StepAgent(RcAgent agent, RcPlayer player)
+    {
+        // Update info used for observations
+        
+        RcPerceivedObject ball = player.GetRcObject("b");
+        if (ball != null)
+            agent.SetBallInfo(ball.curVisibility, ball.direction, ball.distance);
+
+        RcPerceivedObject kickerGoalLeft = player.GetRcObject("f g r t");
+        RcPerceivedObject kickerGoalRight = player.GetRcObject("f g r b");
+
+        if (kickerGoalLeft != null && kickerGoalRight != null)
+            agent.SetGoalInfo(kickerGoalLeft.curVisibility, kickerGoalLeft.direction,
+                kickerGoalRight.curVisibility, kickerGoalRight.direction);
+
+        RcPerceivedObject kickerOwnGoal = player.GetRcObject("g l");
+        if (kickerOwnGoal != null)
+            agent.SetOwnGoalInfo(kickerOwnGoal.curVisibility, kickerOwnGoal.direction);
+
+        RcPerceivedObject kickerLeftSide = player.GetRcObject("f t 0");
+        if (kickerLeftSide != null)
+            agent.SetLeftSideInfo(kickerLeftSide.curVisibility, kickerLeftSide.direction);
+
+        RcPerceivedObject kickerRightSide = player.GetRcObject("f b 0");
+        if (kickerRightSide != null)
+            agent.SetRightSideInfo(kickerRightSide.curVisibility, kickerRightSide.direction);
+
+        agent.SetSelfInfo(player.GetKickBallCount());
+
+        
+        // Manage stamina for the current RcPlayer
+        StaminaManagement(player, ball);
+            
+        // Check if time to recover or new action
+        if (!player.recovering)
+            agent.RequestDecision();
+    }
+
+    // Stamina management only for trained models
     void StaminaManagement(RcPlayer player, RcPerceivedObject ball)
     {
         player.recovering = false;
         
-        // Stamina management only for trained models
         // Recover at start
         if (player.GetStamina() < 2500 && player.GetGameStatus().Substring(0, 4).Equals("goal") ||
             player.recoverAtStart)
@@ -439,10 +413,10 @@ public class RoboCup : MonoBehaviour
             player.recoverDistanceToBall -= 100;
             // Recover stamina == no action request
             player.recovering = true;
-
         }
     }
 
+    // Switching player viewpoint (and control if using manual control)
     void PlayerSwitching()
     {
         if (Input.GetKeyDown(KeyCode.Z))
@@ -514,6 +488,7 @@ public class RoboCup : MonoBehaviour
         visualizer.ResetVisualPositions(newPlayer);
     }
 
+    // Manual player control
     void PlayerControl()
     {
         sendDashInput = !sendDashInput;

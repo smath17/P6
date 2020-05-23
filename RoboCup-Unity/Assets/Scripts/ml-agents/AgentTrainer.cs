@@ -36,9 +36,9 @@ public class AgentTrainer : MonoBehaviour
 
     RcCoach coach;
 
-    // AttackVsDefend
     RcPlayer defender;
     RcPlayer attacker;
+    
     RcPlayer kicker;
     
     bool prevBallInGoalArea;
