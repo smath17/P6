@@ -244,7 +244,7 @@ public class RoboCup : MonoBehaviour
     // (Also creates an RcAgent if applicable)
     void SetupPlayer(PlayerSetupInfo setupInfo, int playerNumber, bool mainTeam)
     {
-        RcPlayer player = CreatePlayer(playerNumber, setupInfo.goalie, setupInfo.x, setupInfo.y, true, reconnect);
+        RcPlayer player = CreatePlayer(playerNumber, setupInfo.goalie, setupInfo.x, setupInfo.y, mainTeam, reconnect);
         
         if (mainTeam)
             team1.Add(player);
