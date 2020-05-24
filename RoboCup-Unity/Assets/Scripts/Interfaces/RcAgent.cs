@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public interface RcAgent
+﻿public interface RcAgent
 {
     void SetAgentTrainer(AgentTrainer agentTrainer);
     void SetPlayer(RcPlayer player);
