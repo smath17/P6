@@ -208,7 +208,7 @@ public class RcPlayer : MonoBehaviour
             
             case RcMessage.RcMessageType.Init:
             case RcMessage.RcMessageType.Reconnect:
-                Debug.Log("Initialized");
+                Debug.Log("Player Initialized");
                 visualizer = RoboCup.singleton.InitVisualizer(this);
                 break;
             

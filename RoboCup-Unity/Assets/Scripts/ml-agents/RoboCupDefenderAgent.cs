@@ -2,49 +2,44 @@ using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
 using UnityEngine;
 
-public class RoboCupDefenderAgent : Agent
+public class RoboCupDefenderAgent : Agent, RcAgent
 {
     RcPlayer player;
     RcCoach coach;
-
-    float selfPositionX;
-    float selfPositionY;
-    float selfDirection;
-
+    
     bool ballVisible;
-    int ballDirection;
-    int ballDistance;
+    float ballDirection;
+    float ballDistance;
     
     bool attackerVisible;
-    int attackerDirection;
-    int attackerDistance;
+    float attackerDirection;
+    float attackerDistance;
     
     int dashSpeed = 100;
     
     public bool printRewards;
 
+    bool initialized = false;
+    bool realMatch = false;
+
+    public void SetAgentTrainer(AgentTrainer agentTrainer)
+    {
+        // eh
+    }
+
     public void SetPlayer(RcPlayer player)
     {
         this.player = player;
     }
-    
-    public void SetCoach(RcCoach coach)
+
+    public void Init(bool realMatch)
     {
-        this.coach = coach;
+        initialized = true;
+        this.realMatch = realMatch;
+        coach = RoboCup.singleton.GetCoach();
     }
     
-    public override void OnEpisodeBegin()
-    {
-    }
-    
-    public void SetSelfInfo(float positionX, float positionY, float direction)
-    {
-        selfPositionX = positionX;
-        selfPositionY = positionY;
-        selfDirection = direction;
-    }
-    
-    public void SetBallInfo(bool visible, int direction = 0, int distance = 0)
+    public void SetBallInfo(bool visible, float direction, float distance)
     {
         if (ballVisible && !visible)
             OnLostBall();
@@ -53,20 +48,47 @@ public class RoboCupDefenderAgent : Agent
         ballDirection = direction;
         ballDistance = distance;
     }
-    
-    public void SetAttackerInfo(bool visible, int direction = 0, int distance = 0)
+
+    public void SetGoalInfo(bool leftPoleVisible, float leftPoleDirection, bool rightPoleVisible, float rightPoleDirection)
+    {
+    }
+
+    public void SetSelfInfo(int kickedBallCount)
+    {
+    }
+
+    public void SetOpponentInfo(bool visible, float direction, float distance)
     {
         attackerVisible = visible;
         attackerDirection = direction;
         attackerDistance = distance;
     }
+
+    public void SetOwnGoalInfo(bool visible, float direction)
+    {
+    }
+
+    public void SetLeftSideInfo(bool visible, float direction)
+    {
+    }
+
+    public void SetRightSideInfo(bool visible, float direction)
+    {
+    }
+
+    public RcPlayer GetPlayer()
+    {
+        return player;
+    }
+
+    public override void OnEpisodeBegin()
+    {
+        if (!initialized)
+            return;
+    }
     
     public override void CollectObservations(VectorSensor sensor)
     {
-        sensor.AddObservation(selfPositionX);
-        sensor.AddObservation(selfPositionY);
-        sensor.AddObservation(selfDirection);
-
         sensor.AddObservation(ballVisible ? ballDirection : -1);
         sensor.AddObservation(ballVisible ? ballDistance : -1);
         

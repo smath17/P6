@@ -17,7 +17,8 @@ public class ObservationDisplay : MonoBehaviour
             nameSb.Append(": ");
             nameSb.Append("\n");
         }
-        nameText.text = nameSb.ToString();
+        if (nameText != null)
+            nameText.text = nameSb.ToString();
         
         StringBuilder obsSb = new StringBuilder();
         foreach (float observation in observations)
@@ -25,6 +26,7 @@ public class ObservationDisplay : MonoBehaviour
             obsSb.Append(observation);
             obsSb.Append("\n");
         }
-        obsText.text = obsSb.ToString();
+        if (obsText != null)
+            obsText.text = obsSb.ToString();
     }
 }

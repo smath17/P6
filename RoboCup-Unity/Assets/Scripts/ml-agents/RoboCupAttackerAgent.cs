@@ -3,19 +3,18 @@ using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
 using UnityEngine;
 
-public class RoboCupAttackerAgent : Agent
+public class RoboCupAttackerAgent : Agent, RcAgent
 {
     RcPlayer player;
     RcCoach coach;
+    
+    RewardDisplay rewardDisplay;
+    ObservationDisplay observationDisplay;
     
     //rewards
     bool rewardKickTowardsGoal = true;
     bool rewardBallMoveToGoal = true;
     bool penalizeBallMoveToOwnGoal = true;
-    
-    [Header("References")]
-    public RewardDisplay rewardDisplay;
-    public ObservationDisplay observationDisplay;
     
     List<string> observationNames = new List<string>();
     List<float> observations = new List<float>();
@@ -46,8 +45,6 @@ public class RoboCupAttackerAgent : Agent
     float bestBallDistanceFromEnemyGoalThisEpisode;
     float worstBallDistanceFromOwnGoalThisEpisode;
     
-    bool hasKicked;
-
     bool defenderVisible;
     float defenderDirection;
     float defenderDistance;
@@ -57,21 +54,47 @@ public class RoboCupAttackerAgent : Agent
     int goalDistance;
 
     int dashSpeed = 100;
+    
+    bool initialized = false;
+    bool realMatch;
 
     public bool printRewards;
+    
+    void Awake()
+    {
+        rewardDisplay = FindObjectOfType<RewardDisplay>();
+        observationDisplay = FindObjectOfType<ObservationDisplay>();
+    }
+
+    public void SetAgentTrainer(AgentTrainer agentTrainer)
+    {
+        // nop
+    }
 
     public void SetPlayer(RcPlayer player)
     {
         this.player = player;
     }
 
-    public void SetCoach(RcCoach coach)
+    public void Init(bool realMatch)
     {
-        this.coach = coach;
+        initialized = true;
+        this.realMatch = realMatch;
+        coach = RoboCup.singleton.GetCoach();
     }
 
     public override void OnEpisodeBegin()
     {
+        if (!initialized)
+            return;
+        
+        int goalieY = Random.Range(-10, 10);
+                
+        coach.MovePlayer(RoboCup.singleton.GetTeamName(), 1, -50, goalieY, 0);
+        coach.MovePlayer(RoboCup.singleton.GetEnemyTeamName(), 1, Random.Range(-52,52), Random.Range(-32,32), Random.Range(-180, 180));
+                
+        coach.MoveBall(Random.Range(-52,52), Random.Range(-32,32));
+        coach.Recover();
     }
     
     public void SetSelfInfo(int kickBallCount)
@@ -87,7 +110,6 @@ public class RoboCupAttackerAgent : Agent
                     AddReward(0.6f);
                 }
             }
-            hasKicked = true;
         }
 
         this.kickBallCount = kickBallCount;
@@ -109,7 +131,7 @@ public class RoboCupAttackerAgent : Agent
         goalRightFlagDirection = rightFlagDirection;
     }
     
-    public void SetDefenderInfo(bool visible, float direction = 0, float distance = 0)
+    public void SetOpponentInfo(bool visible, float direction = 0, float distance = 0)
     {
         defenderVisible = visible;
         defenderDirection = direction;
@@ -315,6 +337,11 @@ public class RoboCupAttackerAgent : Agent
     {
         rightSideVisible = visible;
         rightSideDirection = direction;
+    }
+
+    public RcPlayer GetPlayer()
+    {
+        return player;
     }
 
     public void OnBallMovedRight(float distanceFromGoal)

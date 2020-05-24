@@ -21,9 +21,6 @@ public class RcCoach : MonoBehaviour
     
     Dictionary<string, RcObject> rcObjects = new Dictionary<string, RcObject>();
 
-    AgentTrainer agentTrainer;
-    bool reportSeeToRoboCup;
-
     public void Init(bool online)
     {
         endPoint = new IPEndPoint(IPAddress.Parse(RoboCup.singleton.ip), online ? RoboCup.OnlineCoachPort : RoboCup.OfflineCoachPort);
@@ -76,6 +73,11 @@ public class RcCoach : MonoBehaviour
                 See(rcMessage.GetMessageObject().values[0].MObject);
                 break;
             
+            case RcMessage.RcMessageType.Init:
+            case RcMessage.RcMessageType.Reconnect:
+                Debug.Log("Coach Initialized");
+                break;
+            
             default:
                 Debug.Log($"Coach received: {rcMessage}");
                 break;
@@ -90,12 +92,8 @@ public class RcCoach : MonoBehaviour
         {
             UpdateRcObject(data.objectName, data.x, data.y, data.deltaX, data.deltaY, data.bodyAngle, data.neckAngle);
         }
-
-        if (agentTrainer != null)
-            agentTrainer.Step();
         
-        if (reportSeeToRoboCup)
-            RoboCup.singleton.StepAgents();
+        RoboCup.singleton.StepAgents();
     }
     
     void UpdateRcObject(string objectName, float x, float y, float deltaX, float deltaY, float bodyAngle, float neckAngle)
@@ -122,17 +120,9 @@ public class RcCoach : MonoBehaviour
         else
             return null;
     }
-    
-    public void InitTraining(AgentTrainer trainer)
-    {
-        agentTrainer = trainer;
-        Send("(eye on)");
-        KickOff();
-    }
 
-    public void InitMatch()
+    public void Init()
     {
-        reportSeeToRoboCup = true;
         Send("(eye on)");
     }
 

@@ -13,6 +13,9 @@ public class RoboCupKickerAgent : Agent, RcAgent
     
     RcPlayer player;
     RcCoach coach;
+    
+    RewardDisplay rewardDisplay;
+    ObservationDisplay observationDisplay;
 
     [Header("Settings")]
     public TrainingPhase trainingPhase = TrainingPhase.CloseToGoalKick;
@@ -22,10 +25,6 @@ public class RoboCupKickerAgent : Agent, RcAgent
     public bool penalizeBallNotVisible;
     public bool penalizeBallMoveToOwnGoal;
     
-    [Header("References")]
-    public RewardDisplay rewardDisplay;
-    public ObservationDisplay observationDisplay;
-
     List<string> observationNames = new List<string>();
     List<float> observations = new List<float>();
     
@@ -57,11 +56,13 @@ public class RoboCupKickerAgent : Agent, RcAgent
 
     [SerializeField] int goalsScoredCurPos;
     [SerializeField] int goalsScoredOverall;
+    [SerializeField] int ballsOOBCurPos;
+    [SerializeField] int ballsOOBOverall;
 
     bool changePosition = true;
 
+    bool initialized = false;
     bool realMatch;
-
 
     int ballX = 20;
     int ballY = 0;
@@ -103,14 +104,23 @@ public class RoboCupKickerAgent : Agent, RcAgent
 
     int positionIndex;
 
-    public void SetRealMatch()
+    void Awake()
     {
-        realMatch = true;
+        rewardDisplay = FindObjectOfType<RewardDisplay>();
+        observationDisplay = FindObjectOfType<ObservationDisplay>();
+    }
+
+    public void Init(bool realMatch)
+    {
+        initialized = true;
+        this.realMatch = realMatch;
+        coach = RoboCup.singleton.GetCoach();
     }
     
     public void SetAgentTrainer(AgentTrainer agentTrainer)
     {
         this.agentTrainer = agentTrainer;
+        agentTrainer.SetEpisodeLength(50);
     }
     
     public void SetPlayer(RcPlayer player)
@@ -118,14 +128,18 @@ public class RoboCupKickerAgent : Agent, RcAgent
         this.player = player;
     }
     
-    public void SetCoach(RcCoach coach)
-    {
-        this.coach = coach;
-    }
-    
     public override void OnEpisodeBegin()
     {
+        if (!initialized)
+            return;
+        
         hasKicked = false;
+
+        if (changePosition)
+        {
+            goalsScoredCurPos = 0;
+            ballsOOBCurPos = 0;
+        }
         
         if (!realMatch)
         {
@@ -261,7 +275,12 @@ public class RoboCupKickerAgent : Agent, RcAgent
         this.kickBallCount = kickBallCount;
         
     }
-    
+
+    public void SetOpponentInfo(bool visible, float direction, float distance)
+    {
+        // Not Implemented
+    }
+
     public void SetBallInfo(bool visible, float direction = 0, float distance = 0)
     {
         ballVisible = visible;
@@ -295,7 +314,12 @@ public class RoboCupKickerAgent : Agent, RcAgent
         rightSideVisible = visible;
         rightSideDirection = direction;
     }
-    
+
+    public RcPlayer GetPlayer()
+    {
+        return player;
+    }
+
     public override void CollectObservations(VectorSensor sensor)
     {
         AddObservation(sensor, "bDir", ballVisible ? ballDirection / 45 : -1);
@@ -384,7 +408,8 @@ public class RoboCupKickerAgent : Agent, RcAgent
         
         DoRewards();
         
-        Academy.Instance.StatsRecorder.Add("GoalsScored", goalsScoredOverall);
+        Academy.Instance.StatsRecorder.Add("RoboCup/GoalsScored", goalsScoredOverall);
+        Academy.Instance.StatsRecorder.Add("RoboCup/BallsOutOfBounds", goalsScoredOverall);
     }
     
     public override void Heuristic(float[] actionsOut)
@@ -501,10 +526,7 @@ public class RoboCupKickerAgent : Agent, RcAgent
         goalsScoredOverall++;
 
         if (goalsScoredCurPos > 9)
-        {
             changePosition = true;
-            goalsScoredCurPos = 0;
-        }
 
         if (goalsScoredOverall > 300)
             trainingPhase = TrainingPhase.CloseToGoalMoveAndKick;
@@ -527,6 +549,9 @@ public class RoboCupKickerAgent : Agent, RcAgent
     
     public void OnBallOutOfField()
     {
+        ballsOOBCurPos++;
+        ballsOOBOverall++;
+        
         AddReward(-1f);
         EndEpisode();
     }

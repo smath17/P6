@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using UnityEngine;
 
 public class RoboCup : MonoBehaviour
@@ -27,6 +25,11 @@ public class RoboCup : MonoBehaviour
 
     [Header("Settings")]
     public RoboCupMode roboCupMode;
+    public GameObject team1AgentPrefab;
+    public bool team1AgentsEnabled = true;
+    public GameObject team2AgentPrefab;
+    public bool team2AgentsEnabled = true;
+    public AgentTrainer.TrainingScenario trainingScenario;
     public bool seriousMode = true;
 
     [Header("References")]
@@ -34,7 +37,6 @@ public class RoboCup : MonoBehaviour
     public OverlayInfo overlayInfo;
     public GameObject visualizerObject;
     public LocationCalculator locationCalculator;
-    public GameObject agentPrefab;
 
     // Tickrate (for manual control)
     float currentTick = 0f;
@@ -140,6 +142,8 @@ public class RoboCup : MonoBehaviour
     bool visualizeMainTeam = true;
     int currentPlayer = 0;
     bool sendDashInput;
+
+    bool trainerReady = false;
     
     void Awake()
     {
@@ -175,7 +179,7 @@ public class RoboCup : MonoBehaviour
             
             case RoboCupMode.Training:
                 // Use AgentTrainer's teams
-                agentTrainer.SetupTeams();
+                agentTrainer.SetupTeams(trainingScenario);
                 team1Setup = agentTrainer.GetTeam1Setup();
                 team2Setup = agentTrainer.GetTeam2Setup();
                 break;
@@ -200,11 +204,11 @@ public class RoboCup : MonoBehaviour
                 break;
         }
         
-        // Create players based on team setup
-        StartCoroutine(CreatePlayers());
+        // Create players based on team setup, and create Coach
+        StartCoroutine(Initialize());
     }
     
-    IEnumerator CreatePlayers()
+    IEnumerator Initialize()
     {
         // Setup team 1 Players
         int playerIndex = 0;
@@ -227,15 +231,28 @@ public class RoboCup : MonoBehaviour
         // Setup offline coach for training
         if (roboCupMode == RoboCupMode.Training)
             coach = CreateCoach(false, reconnect);
-        
-        // Setup online coach for regular match
-        if (roboCupMode == RoboCupMode.AgentSinglePlayer ||
-            roboCupMode == RoboCupMode.Agent1V1 ||
-            roboCupMode == RoboCupMode.AgentFullTeam ||
-            roboCupMode == RoboCupMode.Agent2Teams)
+        else // Setup online coach for regular match
             coach = CreateCoach(true, reconnect);
         
         yield return new WaitForSeconds(0.2f);
+
+        coach.Init();
+        
+        yield return new WaitForSeconds(0.2f);
+        
+        if (roboCupMode == RoboCupMode.Training)
+            agentTrainer.Init(team1Agents, team2Agents);
+        else
+        {
+            foreach (RcAgent team1Agent in team1Agents)
+            {
+                team1Agent.Init(true);
+            }
+            foreach (RcAgent team2Agent in team2Agents)
+            {
+                team2Agent.Init(true);
+            }
+        }
         
         OnInitialized();
     }
@@ -251,17 +268,13 @@ public class RoboCup : MonoBehaviour
         else
             team2.Add(player);
             
-        if (roboCupMode == RoboCupMode.AgentSinglePlayer ||
-            roboCupMode == RoboCupMode.Agent1V1 ||
-            roboCupMode == RoboCupMode.AgentFullTeam ||
-            roboCupMode == RoboCupMode.Agent2Teams)
+        if (roboCupMode != RoboCupMode.ManualControlSinglePlayer && roboCupMode != RoboCupMode.ManualControlFullTeam)
         {
-            GameObject agentObj = Instantiate(agentPrefab);
+            GameObject agentObj = Instantiate(mainTeam ? team1AgentPrefab : team2AgentPrefab);
             RcAgent agent = agentObj.GetComponent<RcAgent>();
             agent.SetPlayer(player);
-            agent.SetRealMatch();
-            agentObj.SetActive(true);
-                
+            agent.SetAgentTrainer(agentTrainer);
+            
             if (mainTeam)
                 team1Agents.Add(agent);
             else
@@ -299,20 +312,6 @@ public class RoboCup : MonoBehaviour
 
     void OnInitialized()
     {
-        switch (roboCupMode)
-        {
-            case RoboCupMode.Training:
-                agentTrainer.Init();
-                break;
-            
-            case RoboCupMode.AgentSinglePlayer:
-            case RoboCupMode.Agent1V1:
-            case RoboCupMode.AgentFullTeam:
-            case RoboCupMode.Agent2Teams:
-                coach.InitMatch();
-                break;
-        }
-        
         OnSwitchPlayer();
     }
 
@@ -334,20 +333,43 @@ public class RoboCup : MonoBehaviour
         }
     }
 
-    // Used to update agents during normal match
+    // Used to update agents
     public void StepAgents()
     {
+        bool requestDecisions = true;
+        
+        if (roboCupMode == RoboCupMode.Training)
+        {
+            if (!trainerReady)
+                return;
+            
+            // if TrainingStep returns true, request decision
+            requestDecisions = agentTrainer.TrainingStep(team1Agents, team2Agents);
+        }
+        
         // Team 1 agents
-        for (int i = 0; i < team1Agents.Count; i++)
-            StepAgent(team1Agents[i], team1[i]);
+        if (team1AgentsEnabled)
+        {
+            for (int i = 0; i < team1Agents.Count; i++)
+            {
+                if (requestDecisions)
+                    StepAgent(team1Agents[i], team1[i], true);
+            }
+        }
         
         // Team 2 agents
-        for (int i = 0; i < team2Agents.Count; i++)
-            StepAgent(team2Agents[i], team2[i]);
+        if (team2AgentsEnabled)
+        {
+            for (int i = 0; i < team2Agents.Count; i++)
+            {
+                if (requestDecisions)
+                    StepAgent(team2Agents[i], team2[i], false);
+            }
+        }
     }
 
     // Updates agent observations, manages stamina, and requests new decisions
-    void StepAgent(RcAgent agent, RcPlayer player)
+    void StepAgent(RcAgent agent, RcPlayer player, bool mainTeam)
     {
         // Update info used for observations
         
@@ -355,24 +377,24 @@ public class RoboCup : MonoBehaviour
         if (ball != null)
             agent.SetBallInfo(ball.curVisibility, ball.direction, ball.distance);
 
-        RcPerceivedObject kickerGoalLeft = player.GetRcObject("f g r t");
-        RcPerceivedObject kickerGoalRight = player.GetRcObject("f g r b");
+        RcPerceivedObject goalLeft = player.GetRcObject(mainTeam ? "f g r t" : "f g l b");
+        RcPerceivedObject goalRight = player.GetRcObject(mainTeam ? "f g r b" : "f g l t");
 
-        if (kickerGoalLeft != null && kickerGoalRight != null)
-            agent.SetGoalInfo(kickerGoalLeft.curVisibility, kickerGoalLeft.direction,
-                kickerGoalRight.curVisibility, kickerGoalRight.direction);
+        if (goalLeft != null && goalRight != null)
+            agent.SetGoalInfo(goalLeft.curVisibility, goalLeft.direction,
+                goalRight.curVisibility, goalRight.direction);
 
-        RcPerceivedObject kickerOwnGoal = player.GetRcObject("g l");
-        if (kickerOwnGoal != null)
-            agent.SetOwnGoalInfo(kickerOwnGoal.curVisibility, kickerOwnGoal.direction);
+        RcPerceivedObject ownGoal = player.GetRcObject(mainTeam ? "g l" : "g r");
+        if (ownGoal != null)
+            agent.SetOwnGoalInfo(ownGoal.curVisibility, ownGoal.direction);
 
-        RcPerceivedObject kickerLeftSide = player.GetRcObject("f t 0");
-        if (kickerLeftSide != null)
-            agent.SetLeftSideInfo(kickerLeftSide.curVisibility, kickerLeftSide.direction);
+        RcPerceivedObject leftSide = player.GetRcObject(mainTeam ? "f t 0" : "f b 0");
+        if (leftSide != null)
+            agent.SetLeftSideInfo(leftSide.curVisibility, leftSide.direction);
 
-        RcPerceivedObject kickerRightSide = player.GetRcObject("f b 0");
-        if (kickerRightSide != null)
-            agent.SetRightSideInfo(kickerRightSide.curVisibility, kickerRightSide.direction);
+        RcPerceivedObject rightSide = player.GetRcObject(mainTeam ? "f b 0" : "f t 0");
+        if (rightSide != null)
+            agent.SetRightSideInfo(rightSide.curVisibility, rightSide.direction);
 
         agent.SetSelfInfo(player.GetKickBallCount());
 
@@ -570,6 +592,11 @@ public class RoboCup : MonoBehaviour
     public void SetEnemyTeamName(string newName)
     {
         enemyTeamName = newName;
+    }
+
+    public void SetTrainerReady()
+    {
+        trainerReady = true;
     }
 }
 

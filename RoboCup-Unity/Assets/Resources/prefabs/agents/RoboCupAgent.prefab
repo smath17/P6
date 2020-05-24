@@ -12,12 +12,12 @@ GameObject:
   - component: {fileID: 4421219108359849155}
   - component: {fileID: 4421219108359849154}
   m_Layer: 0
-  m_Name: KickerAgent
+  m_Name: RoboCupAgent
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &4421219108359849165
 Transform:
   m_ObjectHideFlags: 0
@@ -78,7 +78,7 @@ MonoBehaviour:
   rewardBallMoveToGoal: 0
   penalizeBallNotVisible: 0
   penalizeBallMoveToOwnGoal: 0
-  rewardDisplay: {fileID: 0}
-  observationDisplay: {fileID: 0}
   goalsScoredCurPos: 0
   goalsScoredOverall: 0
+  ballsOOBCurPos: 0
+  ballsOOBOverall: 0
