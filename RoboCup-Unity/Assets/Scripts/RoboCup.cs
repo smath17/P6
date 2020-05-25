@@ -413,7 +413,7 @@ public class RoboCup : MonoBehaviour
         player.recovering = false;
         
         // Recover after goal
-        if (player.GetGameStatus().Substring(0, 4).Equals("goal_l") || player.GetGameStatus().Substring(0, 4).Equals("goal_r") || player.recoverAtStart)
+        if (player.GetGameStatus().Substring(0, 6).Equals("goal_l") || player.GetGameStatus().Substring(0, 6).Equals("goal_r") || player.recoverAtStart)
         {
             // recover at start = false if above 3000 stamina
             player.recoverAtStart = !(player.GetStamina() > 3000);
