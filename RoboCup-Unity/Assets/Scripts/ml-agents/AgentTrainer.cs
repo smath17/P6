@@ -139,7 +139,8 @@ public class AgentTrainer : MonoBehaviour
 
             case TrainingScenario.AttackDefend:
                 DefenderStep((RoboCupDefenderAgent)team1Agents[0]);
-                return AttackerStep((RoboCupAttackerAgent)team2Agents[0]);
+                break;
+
         }
 
         return true;

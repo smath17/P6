@@ -316,7 +316,7 @@ public class MessageObject
                     {
                         float stamina = 0;
                         if (senseObject.values.Count > 1)
-                            float.TryParse(senseObject.values[1].MString, out stamina);
+                            stamina = float.Parse(senseObject.values[1].MString, CultureInfo.InvariantCulture);
                         
                         senseBodyData.stamina = stamina;
                     }

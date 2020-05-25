@@ -350,6 +350,11 @@ public class RoboCup : MonoBehaviour
         // Team 1 agents
         if (team1AgentsEnabled)
         {
+            using (System.IO.StreamWriter file =
+                new System.IO.StreamWriter(@"C:\Users\mrynk\Documents\GitHub\P6\team1.txt", true))
+            {
+                file.WriteLine(team1[0].GetStamina().ToString("0.#"));
+            }
             for (int i = 0; i < team1Agents.Count; i++)
             {
                 if (requestDecisions)
