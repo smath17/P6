@@ -121,8 +121,11 @@ public class RcPlayer : MonoBehaviour
         RcPerceivedObject.RcObjectType objectType = enemyTeam ? RcPerceivedObject.RcObjectType.EnemyPlayer : RcPerceivedObject.RcObjectType.TeamPlayer;
         string tName = enemyTeam ? enemyTeamName : teamName;
         RcPerceivedObject rcPlayerObj = new RcPerceivedObject(objectType, tName, playerNumber, goalie);
-        rcObjects.Add(rcPlayerObj.name, rcPlayerObj);
-        rcObjects[rcPlayerObj.name].curVisibility = true;
+        if (!rcObjects.ContainsKey(rcPlayerObj.name))
+        {
+            rcObjects.Add(rcPlayerObj.name, rcPlayerObj);
+            rcObjects[rcPlayerObj.name].curVisibility = true;
+        }
     }
     
     void Update()
