@@ -6,7 +6,7 @@ using Random = UnityEngine.Random;
 
 public class RoboCupKickerAgent : Agent, RcAgent
 {
-    public enum TrainingPhase {NoTraining, CloseToGoalKick, CloseToGoalMoveAndKick, FarFromGoalMoveAndKick, RandomPositionsMoveAndKick}
+    public enum TrainingPhase {NoTraining, CloseToGoalKick, CloseToGoalMoveAndKick, FarFromGoalMoveAndKick, RandomPositionsMoveAndKick, OnlyKick, OnlyMove}
     
     AgentTrainer agentTrainer;
     
@@ -198,7 +198,25 @@ public class RoboCupKickerAgent : Agent, RcAgent
                     }
                     break;
                 
+                case TrainingPhase.OnlyKick:
+                    ballX += 10;
+                    if (ballX > 50)
+                    {
+                        ballX = -50;
+                
+                        ballY += 10;
+                        if (ballY > 30)
+                        {
+                            ballY = -30;
+                        }
+                    }
+                    
+                    playerX = ballX - 1;
+                    playerY = ballY;
+                    break;
+                
                 case TrainingPhase.RandomPositionsMoveAndKick:
+                case TrainingPhase.OnlyMove:
                     ballX += 10;
                     if (ballX > 50)
                     {
@@ -243,13 +261,17 @@ public class RoboCupKickerAgent : Agent, RcAgent
             switch (trainingPhase)
             {
                 case TrainingPhase.CloseToGoalKick:
+                case TrainingPhase.OnlyKick:
                     agentTrainer.SetEpisodeLength(50);
                     break;
+                
                 case TrainingPhase.CloseToGoalMoveAndKick:
                 case TrainingPhase.FarFromGoalMoveAndKick:
                     agentTrainer.SetEpisodeLength(75);
                     break;
+                
                 case TrainingPhase.RandomPositionsMoveAndKick:
+                case TrainingPhase.OnlyMove:
                     agentTrainer.SetEpisodeLength(((int)distance + 1) * 8);
                     break;
             }
@@ -285,6 +307,15 @@ public class RoboCupKickerAgent : Agent, RcAgent
         ballVisible = visible;
         ballDirection = direction;
         ballDistance = distance;
+
+        if (trainingPhase == TrainingPhase.OnlyMove)
+        {
+            if (visible && ballDistance < 1)
+            {
+                EndEpisode();
+                agentTrainer.OnEpisodeBegin();
+            }
+        }
     }
     
     public void SetGoalInfo(bool leftFlagVisible, float leftFlagDirection, bool rightFlagVisible, float rightFlagDirection)
@@ -355,15 +386,20 @@ public class RoboCupKickerAgent : Agent, RcAgent
         switch (trainingPhase)
         {
             case TrainingPhase.CloseToGoalKick:
+            case TrainingPhase.OnlyKick:
                 if (hasKicked)
                     actionMasker.SetMask(0, new int[4]{1,2,3,4}); // Can't do anything after kicking ball
                 else
-                    actionMasker.SetMask(0, new int[1]{1}); // Not able to dash
+                    actionMasker.SetMask(0, new int[2]{0,1}); // Not able to stand still or dash
                 break;
             
             case TrainingPhase.CloseToGoalMoveAndKick:
                 if (hasKicked)
                     actionMasker.SetMask(0, new int[4]{1,2,3,4}); // Can't do anything after kicking ball
+                break;
+                
+            case TrainingPhase.OnlyMove:
+                actionMasker.SetMask(0, new int[2]{0,4}); // Can't stand still or kick
                 break;
         }
     }
@@ -408,7 +444,7 @@ public class RoboCupKickerAgent : Agent, RcAgent
         DoRewards();
         
         Academy.Instance.StatsRecorder.Add("RoboCup/GoalsScored", goalsScoredOverall);
-        Academy.Instance.StatsRecorder.Add("RoboCup/BallsOutOfBounds", goalsScoredOverall);
+        Academy.Instance.StatsRecorder.Add("RoboCup/BallsOutOfBounds", ballsOOBOverall);
     }
     
     public override void Heuristic(float[] actionsOut)
@@ -467,7 +503,7 @@ public class RoboCupKickerAgent : Agent, RcAgent
         if (distanceFromGoal < bestBallDistanceFromEnemyGoalThisEpisode - 2.5f)
         {
             bestBallDistanceFromEnemyGoalThisEpisode = distanceFromGoal;
-            float ballMoveReward = (distanceFromGoal - 50) / (0.7f - 50);
+            float ballMoveReward = (distanceFromGoal - 100) / (0.7f - 100);
             if (ballMoveReward > 1)
             {
                 ballMoveReward = 1;
@@ -490,7 +526,7 @@ public class RoboCupKickerAgent : Agent, RcAgent
         if (distanceFromGoal < worstBallDistanceFromOwnGoalThisEpisode - 2.5f)
         {
             worstBallDistanceFromOwnGoalThisEpisode = distanceFromGoal;
-            float ballMoveReward = (distanceFromGoal - 50) / (0.7f - 50);
+            float ballMoveReward = (distanceFromGoal - 100) / (0.7f - 100);
             if (ballMoveReward > 1)
             {
                 ballMoveReward = 1;
@@ -527,14 +563,20 @@ public class RoboCupKickerAgent : Agent, RcAgent
         if (goalsScoredCurPos > 9)
             changePosition = true;
 
-        if (goalsScoredOverall > 300)
-            trainingPhase = TrainingPhase.CloseToGoalMoveAndKick;
-
-        if (goalsScoredOverall > 600)
-            trainingPhase = TrainingPhase.FarFromGoalMoveAndKick;
+        if (trainingPhase != TrainingPhase.NoTraining ||
+            trainingPhase != TrainingPhase.OnlyKick ||
+            trainingPhase != TrainingPhase.OnlyMove)
+        {
         
-        if (goalsScoredOverall > 1000)
-            trainingPhase = TrainingPhase.RandomPositionsMoveAndKick;
+            if (goalsScoredOverall > 300)
+                trainingPhase = TrainingPhase.CloseToGoalMoveAndKick;
+
+            if (goalsScoredOverall > 600)
+                trainingPhase = TrainingPhase.FarFromGoalMoveAndKick;
+        
+            if (goalsScoredOverall > 1000)
+                trainingPhase = TrainingPhase.RandomPositionsMoveAndKick;
+        }
         
         AddReward(1f);
         EndEpisode();

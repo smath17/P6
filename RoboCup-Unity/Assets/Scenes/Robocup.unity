@@ -5120,14 +5120,14 @@ MonoBehaviour:
   ip: 172.29.56.20
   teamName: Unity
   reconnect: 0
-  roboCupMode: 6
-  team1AgentPrefab: {fileID: 4421219108359849164, guid: 8d0660b6986e8ab488907740c96d4867,
+  roboCupMode: 3
+  team1AgentPrefab: {fileID: 9009529226213735049, guid: f5232270266e9d04286dc485d6eacbb2,
     type: 3}
   team1AgentsEnabled: 1
   team2AgentPrefab: {fileID: 4421219108359849164, guid: 8d0660b6986e8ab488907740c96d4867,
     type: 3}
   team2AgentsEnabled: 1
-  trainingScenario: 0
+  trainingScenario: 1
   seriousMode: 1
   agentTrainer: {fileID: 529227137}
   overlayInfo: {fileID: 1193947861}
@@ -5830,7 +5830,6 @@ GameObject:
   - component: {fileID: 1186269406}
   - component: {fileID: 1186269409}
   - component: {fileID: 1186269408}
-  - component: {fileID: 1186269407}
   m_Layer: 5
   m_Name: Observations
   m_TagString: Untagged
@@ -5857,20 +5856,6 @@ RectTransform:
   m_AnchoredPosition: {x: 100, y: 0}
   m_SizeDelta: {x: 400, y: 50}
   m_Pivot: {x: 1, y: 1}
---- !u!114 &1186269407
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1186269405}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 908de2ab07d14a2fbb53b047147cfd0b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  nameText: {fileID: 0}
-  obsText: {fileID: 1186269408}
 --- !u!114 &1186269408
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8116,7 +8101,6 @@ GameObject:
   - component: {fileID: 1582875216}
   - component: {fileID: 1582875219}
   - component: {fileID: 1582875218}
-  - component: {fileID: 1582875217}
   m_Layer: 5
   m_Name: Names
   m_TagString: Untagged
@@ -8143,20 +8127,6 @@ RectTransform:
   m_AnchoredPosition: {x: -309.85, y: 0}
   m_SizeDelta: {x: 400, y: 50}
   m_Pivot: {x: 1, y: 1}
---- !u!114 &1582875217
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1582875215}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 908de2ab07d14a2fbb53b047147cfd0b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  nameText: {fileID: 0}
-  obsText: {fileID: 1582875218}
 --- !u!114 &1582875218
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -41,6 +41,8 @@ public class RcPlayer : MonoBehaviour
     int kickBallCount;
     private float stamina;
     private String gameStatus = "before_kick_off";
+
+    bool kicking;
     
     // Stamina management
     public bool recoverAtStart = false;
@@ -292,6 +294,7 @@ public class RcPlayer : MonoBehaviour
         RoboCup.singleton.locationCalculator.TrilateratePlayerPosition(this, seenObjectsData);
 
         visualizer.UpdateVisualPositions(this);
+        kicking = false;
     }
 
     public void SetCalculatedAngle(float angle, bool blendWithPreviousAngle = false)
@@ -462,6 +465,7 @@ public class RcPlayer : MonoBehaviour
 
     public void Kick(int power)
     {
+        kicking = true;
         Send($"(kick {power} 0)");
         if (!RoboCup.singleton.seriousMode)
             kickVo.Play(kickVoSource);
@@ -482,6 +486,11 @@ public class RcPlayer : MonoBehaviour
     {
         if (!RoboCup.singleton.seriousMode) 
             collide.Play(collideSource);
+    }
+
+    public bool IsKicking()
+    {
+        return kicking;
     }
 }
 
