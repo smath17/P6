@@ -308,7 +308,7 @@ public class RoboCupKickerAgent : Agent, RcAgent
         ballDirection = direction;
         ballDistance = distance;
 
-        if (trainingPhase == TrainingPhase.OnlyMove)
+        if (trainingPhase == TrainingPhase.OnlyMove && RoboCup.singleton.trainingScenario == AgentTrainer.TrainingScenario.MoveToBall)
         {
             if (visible && ballDistance < 1)
             {
