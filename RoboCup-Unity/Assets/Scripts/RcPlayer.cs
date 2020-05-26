@@ -147,7 +147,7 @@ public class RcPlayer : MonoBehaviour
         socket.Blocking = false;
 
         onMainTeam = mainTeam;
-        teamName = onMainTeam ? RoboCup.singleton.GetTeamName() : RoboCup.singleton.GetEnemyTeamName();
+        teamName = onMainTeam ? RoboCup.singleton.GetMainTeamName() : RoboCup.singleton.GetEnemyTeamName();
         
         string goalieString = (goalie) ? " (goalie)" : "";
         

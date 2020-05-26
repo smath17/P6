@@ -49,22 +49,22 @@ public class AgentTrainer : MonoBehaviour
         switch (trainingScenario)
         {
             case TrainingScenario.MoveToBall:
-                RoboCup.singleton.SetTeamName("MoveToBall");
+                RoboCup.singleton.SetMainTeamName("MoveToBall");
                 team1Setup.Add(new PlayerSetupInfo(false, -20, 0));
                 break;
             
             case TrainingScenario.KickToGoal:
-                RoboCup.singleton.SetTeamName("KickToGoal");
+                RoboCup.singleton.SetMainTeamName("KickToGoal");
                 team1Setup.Add(new PlayerSetupInfo(false, -20, 0));
                 break;
             
             case TrainingScenario.RunTowardsBallAndKick:
-                RoboCup.singleton.SetTeamName("RunAndKick");
+                RoboCup.singleton.SetMainTeamName("RunAndKick");
                 team1Setup.Add(new PlayerSetupInfo(false, -20, 0));
                 break;
             
             case TrainingScenario.AttackDefend:
-                RoboCup.singleton.SetTeamName("Defender");
+                RoboCup.singleton.SetMainTeamName("Defender");
                 team1Setup.Add(new PlayerSetupInfo(true, -50, 0));
                 
                 RoboCup.singleton.SetEnemyTeamName("Attacker");
@@ -195,7 +195,7 @@ public class AgentTrainer : MonoBehaviour
 
         }
         
-        RcObject kickerCoachPlayer = coach.GetRcObject($"p \"{RoboCup.singleton.GetTeamName()}\" 1");
+        RcObject kickerCoachPlayer = coach.GetRcObject($"p \"{RoboCup.singleton.GetMainTeamName()}\" 1");
         if (kickerCoachPlayer != null)
         {
             if (kickerCoachPlayer.position.y < -32 || kickerCoachPlayer.position.y > 32 ||

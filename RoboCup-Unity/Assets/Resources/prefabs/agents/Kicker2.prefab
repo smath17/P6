@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 9209374339455025867}
   - component: {fileID: 9209374339455025866}
   m_Layer: 0
-  m_Name: Kicker
+  m_Name: Kicker2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -50,7 +50,7 @@ MonoBehaviour:
     VectorActionSize: 05000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
-  m_Model: {fileID: 5022602860645237092, guid: 08bee3971b4297a41a479bfbd01a8e6b, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: be2c892f2457db7469de721757d0f328, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: KickerBrain

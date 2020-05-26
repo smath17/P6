@@ -90,7 +90,7 @@ public class RoboCupAttackerAgent : Agent, RcAgent
         
         int goalieY = Random.Range(-10, 10);
                 
-        coach.MovePlayer(RoboCup.singleton.GetTeamName(), 1, -50, goalieY, 0);
+        coach.MovePlayer(RoboCup.singleton.GetMainTeamName(), 1, -50, goalieY, 0);
         coach.MovePlayer(RoboCup.singleton.GetEnemyTeamName(), 1, Random.Range(-52,52), Random.Range(-32,32), Random.Range(-180, 180));
                 
         coach.MoveBall(Random.Range(-52,52), Random.Range(-32,32));

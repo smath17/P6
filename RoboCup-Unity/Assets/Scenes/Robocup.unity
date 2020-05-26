@@ -5120,14 +5120,16 @@ MonoBehaviour:
   ip: 172.29.56.20
   teamName: Unity
   reconnect: 0
-  roboCupMode: 2
-  team1AgentPrefab: {fileID: 7169566645040895983, guid: bec863d0d8d43f14fb3675b82579c313,
+  roboCupMode: 4
+  team1Name: KickerOne
+  team1AgentPrefab: {fileID: 9009529226213735049, guid: f5232270266e9d04286dc485d6eacbb2,
     type: 3}
   team1AgentsEnabled: 1
-  team2AgentPrefab: {fileID: 9009529226213735049, guid: f5232270266e9d04286dc485d6eacbb2,
+  team2Name: KickerTwo
+  team2AgentPrefab: {fileID: 9009529226213735049, guid: 4f43fec9e9a595646b2070ff98d7cf08,
     type: 3}
   team2AgentsEnabled: 1
-  trainingScenario: 3
+  trainingScenario: 1
   seriousMode: 1
   agentTrainer: {fileID: 529227137}
   overlayInfo: {fileID: 1193947861}

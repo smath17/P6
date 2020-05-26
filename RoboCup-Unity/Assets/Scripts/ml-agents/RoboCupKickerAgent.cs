@@ -249,7 +249,7 @@ public class RoboCupKickerAgent : Agent, RcAgent
             bestBallDistanceFromEnemyGoalThisEpisode = Mathf.Infinity;
             worstBallDistanceFromOwnGoalThisEpisode = Mathf.Infinity;
         
-            coach.MovePlayer(RoboCup.singleton.teamName, 1, playerX, playerY, direction);
+            coach.MovePlayer(RoboCup.singleton.team1Name, 1, playerX, playerY, direction);
             coach.Recover();
         
             coach.MoveBall(ballX, ballY);

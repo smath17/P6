@@ -18,17 +18,22 @@ public class RoboCup : MonoBehaviour
 
     [Header("Connection")]
     public string ip = "127.0.0.1";
-    
-    [Header("Team")]
-    public string teamName = "DefaultTeam";
     public bool reconnect;
 
     [Header("Settings")]
     public RoboCupMode roboCupMode;
+    
+    [Header("Team 1")]
+    public string team1Name = "DefaultTeam";
     public GameObject team1AgentPrefab;
     public bool team1AgentsEnabled = true;
+
+    [Header("Team 2")]
+    public string team2Name = "EnemyTeam";
     public GameObject team2AgentPrefab;
     public bool team2AgentsEnabled = true;
+
+    [Header("Training")]
     public AgentTrainer.TrainingScenario trainingScenario;
     public bool seriousMode = true;
 
@@ -41,10 +46,6 @@ public class RoboCup : MonoBehaviour
     // Tickrate (for manual control)
     float currentTick = 0f;
     float tickTime = 0.1f;
-
-    // Enemy team
-    string enemyTeamName = "EnemyTeam";
-    bool enemyTeamNameFound;
     
     // Player and coach objects
     GameObject playerPrefab;
@@ -166,9 +167,9 @@ public class RoboCup : MonoBehaviour
             case RoboCupMode.AgentFullTeam:
                 // Full team of players (1 goalie)
                 for (int i = 0; i < FullTeamSize-1; i++)
-                    team1Setup.Add(new PlayerSetupInfo(false, -20, i*5 - 30));
+                    team1Setup.Add(new PlayerSetupInfo(false, -20, i*5 - 22));
         
-                team1Setup.Add(new PlayerSetupInfo(true, -50, 20));
+                team1Setup.Add(new PlayerSetupInfo(true, -40, 0));
                 break;
             
             case RoboCupMode.ManualControlSinglePlayer:
@@ -187,20 +188,20 @@ public class RoboCup : MonoBehaviour
             case RoboCupMode.Agent1V1:
                 // 2 Teams of 1
                 team1Setup.Add(new PlayerSetupInfo(false, -20, 0));
-                team2Setup.Add(new PlayerSetupInfo(false, 20, 0));
+                team2Setup.Add(new PlayerSetupInfo(false, -20, 0));
                 break;
             
             case RoboCupMode.Agent2Teams:
                 // 2 Full teams (1 goalie each)
                 for (int i = 0; i < FullTeamSize-1; i++)
-                    team1Setup.Add(new PlayerSetupInfo(false, -20, i*5 - 30));
+                    team1Setup.Add(new PlayerSetupInfo(false, -20, i*5 - 22));
         
-                team1Setup.Add(new PlayerSetupInfo(true, -50, 20));
+                team1Setup.Add(new PlayerSetupInfo(true, -40, 0));
                 
                 for (int i = 0; i < FullTeamSize-1; i++)
-                    team2Setup.Add(new PlayerSetupInfo(false, -20, i*5 - 30));
+                    team2Setup.Add(new PlayerSetupInfo(false, -20, i*5 - 22));
         
-                team2Setup.Add(new PlayerSetupInfo(true, -50, 20));
+                team2Setup.Add(new PlayerSetupInfo(true, -40, 0));
                 break;
         }
         
@@ -303,7 +304,7 @@ public class RoboCup : MonoBehaviour
         rcCoach.Init(online);
         
         if (online)
-            rcCoach.Send($"({(reconnect ? "reconnect" : "init")} {teamName} (version 16))");
+            rcCoach.Send($"({(reconnect ? "reconnect" : "init")} {team1Name} (version 16))");
         else
             rcCoach.Send($"({(reconnect ? "reconnect" : "init")} (version 16))");
 
@@ -578,24 +579,24 @@ public class RoboCup : MonoBehaviour
         return coach;
     }
 
-    public string GetTeamName()
+    public string GetMainTeamName()
     {
-        return teamName;
+        return team1Name;
     }
     
     public string GetEnemyTeamName()
     {
-        return enemyTeamName;
+        return team2Name;
     }
 
-    public void SetTeamName(string newName)
+    public void SetMainTeamName(string newName)
     {
-        teamName = newName;
+        team1Name = newName;
     }
 
     public void SetEnemyTeamName(string newName)
     {
-        enemyTeamName = newName;
+        team2Name = newName;
     }
 
     public void SetTrainerReady()
