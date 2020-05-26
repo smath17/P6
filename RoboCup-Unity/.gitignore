@@ -61,6 +61,10 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
+#logs
+rclogs/*
+!rclogs/logs-go-here.txt
+
 # ml-agents stuff
 python-envs/*
 !python-envs/put-venv-folder-here.txt
