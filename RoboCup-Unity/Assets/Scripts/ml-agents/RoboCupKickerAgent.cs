@@ -541,20 +541,6 @@ public class RoboCupKickerAgent : Agent, RcAgent
         } 
     }
 
-    public void OnBallEnteredLeftSide()
-    {
-        switch (trainingPhase)
-        {
-            case TrainingPhase.CloseToGoalKick:
-            case TrainingPhase.CloseToGoalMoveAndKick:
-            case TrainingPhase.FarFromGoalMoveAndKick:
-                AddReward(-1f);
-                EndEpisode();
-                agentTrainer.OnEpisodeBegin();
-                break;
-        }
-    }
-
     public void OnScored()
     {
         goalsScoredCurPos++;

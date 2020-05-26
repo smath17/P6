@@ -167,9 +167,6 @@ public class AgentTrainer : MonoBehaviour
                 Vector2 goalPos = new Vector2(kickerCoachGoal.position.x, kickerCoachGoal.position.y);
 
                 agent.OnBallMovedLeft((ballPos - goalPos).magnitude);
-                
-                if (ballPos.x < 0)
-                    agent.OnBallEnteredLeftSide();
             }
             
             // Ball enters goal
