@@ -103,12 +103,6 @@ public class RcPlayer : MonoBehaviour
         {
             CreateRcObject(flagName, RcPerceivedObject.RcObjectType.Flag);
         }
-
-        for (int i = 0; i < RoboCup.FullTeamSize+1; i++)
-        {
-            bool goalie = i == RoboCup.FullTeamSize;
-            CreatePlayerRcObject(false, i, goalie);
-        }
     }
 
     void CreateRcObject(string objectName, RcPerceivedObject.RcObjectType objectType)
@@ -148,6 +142,13 @@ public class RcPlayer : MonoBehaviour
 
         onMainTeam = mainTeam;
         teamName = onMainTeam ? RoboCup.singleton.GetMainTeamName() : RoboCup.singleton.GetEnemyTeamName();
+        
+        // Create team player objects
+        for (int i = 0; i < RoboCup.FullTeamSize+1; i++)
+        {
+            CreatePlayerRcObject(false, i, true);
+            CreatePlayerRcObject(false, i, false);
+        }
         
         string goalieString = (goalie) ? " (goalie)" : "";
         
